@@ -35,7 +35,7 @@
         <div class="hud-row"><span>Discovered</span><span class="v" id="visited">0 / 45</span></div>
         <div class="hud-row"><span>Season</span><span class="v" id="season">Spring</span></div>
         <div class="hint">W forward · S brake/reverse · A/D steer · Shift boost · E interact · M mute</div>
-        <div class="hint">Park in the yellow bay to view a project.</div>
+        <div class="hint">Scroll wheel: zoom in (driver view) / zoom out (bird's eye). Park in yellow bay to view project.</div>
     </div>
     <div class="panel side-panel"><div class="section-label">Achievements</div><div id="badges"></div></div>
     <div class="prompt" id="prompt"></div><div class="toast" id="toast"></div>
@@ -156,25 +156,31 @@ personal:{label:"Creative Village",dtClass:"dt-per",color:"#cc6088",projects:[
 ]},
 };
 /* ====== COMPUTE BILLBOARD POSITIONS ====== */
-/* Map layout:
-   Ocean z<-65 → Port z=-48 to -32 (road z=-40)
+/* Map layout — all buildings/billboards verified clear of road surfaces:
+   Ocean z<-65 → Port z=-50 to -30 (road z=-40, edges z=-46..-34)
    Tech Hub x=-75 to -35 (road x=-50) ← Town Center x=-20..+20 → Science Park x=35 to 75 (road x=50)
-   Creative Village z=32 to 68 (road z=50)
-   Main roads: x=0 N-S (16 wide), z=0 E-W (16 wide) — generous spacing, easy navigation */
+   Creative Village z=34 to 68 (road z=50, edges z=44..56)
+   Main roads: x=0 N-S (hw=8), z=0 E-W (hw=8), connectors x=±38 (hw=4), entries x=±50 (hw=5) */
 const ALL_PROJECTS=[];
 function addRow(arr,sx,sz,n,dx,dz,dist){arr.forEach((p,i)=>{if(i>=n)return;p.district=dist;p.wx=sx+i*dx;p.wz=sz+i*dz;ALL_PROJECTS.push(p);});}
-// Port: E-W road at z=-40. Two rows: north (z=-33) & south (z=-47)
-addRow(DISTRICTS.maritime.projects, -42,-33, 7, 14,0,"maritime");
-addRow(DISTRICTS.maritime.projects.slice(7), -35,-47, 6, 14,0,"maritime");
-// Science: N-S road at x=50. Two columns: east (x=60) & west (x=40)
-addRow(DISTRICTS.simulations.projects, 60,-12, 5, 0,6,"simulations");
-addRow(DISTRICTS.simulations.projects.slice(5), 40,-12, 5, 0,6,"simulations");
-// Tech: N-S road at x=-50. Two columns: west (x=-60) & east (x=-40)
-addRow(DISTRICTS.tools.projects, -60,-9, 4, 0,6,"tools");
-addRow(DISTRICTS.tools.projects.slice(4), -40,-6, 3, 0,6,"tools");
-// Creative: E-W road at z=50. Two rows: north (z=42) & south (z=58)
-addRow(DISTRICTS.personal.projects, -42,42, 8, 12,0,"personal");
-addRow(DISTRICTS.personal.projects.slice(8), -36,58, 7, 12,0,"personal");
+// Port: road z=-40 (z=-46..-34), avoid N-S road (x=-8..8), W-conn (x=-42..-34 at z>-40)
+const portRow1=[[-50,-30],[-30,-30],[-22,-30],[-14,-30],[14,-30],[22,-30],[50,-30]];
+const portRow2=[[-48,-50],[-34,-50],[-18,-50],[18,-50],[34,-50],[48,-50]];
+DISTRICTS.maritime.projects.forEach((p,i)=>{const pos=i<7?portRow1[i]:portRow2[i-7];if(!pos)return;p.district="maritime";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
+// Science: N-S road at x=50 (x=45..55), also avoid E-W road (z=-8..8)
+// East col (x=60) safe z: skip z=-8..8 → z=-18,-12,12,18,24
+const sciCol1=[[60,-18],[60,-12],[60,12],[60,18],[60,24]];
+const sciCol2=[[40,-18],[40,-12],[40,12],[40,18],[40,24]];
+DISTRICTS.simulations.projects.forEach((p,i)=>{const pos=i<5?sciCol1[i]:sciCol2[i-5];if(!pos)return;p.district="simulations";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
+// Tech: N-S road at x=-50 (x=-55..-45), avoid E-W road (z=-8..8)
+const techCol1=[[-60,-18],[-60,-12],[-60,12],[-60,18]];
+const techCol2=[[-40,-18],[-40,-12],[-40,14]];
+DISTRICTS.tools.projects.forEach((p,i)=>{const pos=i<4?techCol1[i]:techCol2[i-4];if(!pos)return;p.district="tools";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
+// Creative: road z=50 (z=44..56), also avoid N-S road (x=-8..8), connectors (x=-42..-34, x=34..42 at z<50)
+// Row 1 z=38: manually skip road bands
+const creRow1=[[-50,38],[-28,38],[-20,38],[-14,38],[14,38],[20,38],[28,38],[50,38]];
+const creRow2=[[-48,62],[-34,62],[-18,62],[14,62],[28,62],[42,62],[52,62]];
+DISTRICTS.personal.projects.forEach((p,i)=>{const pos=i<8?creRow1[i]:creRow2[i-8];if(!pos)return;p.district="personal";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
 
 /* Billboard rotation: face toward the nearest road */
 function bbRot(p){
@@ -340,14 +346,17 @@ fountain.position.set(0,ROAD_Y,0);scene.add(fountain);
 staticCol.push(new THREE.Box3(new THREE.Vector3(-2,-.5,-2),new THREE.Vector3(2,6,2)));
 // District signs — dynamic (breakable)
 function mkSign(x,z,text,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,2.5,8),botw("#5a4a30","#2a2010"));m.position.y=1.25;return m;})());const cv=document.createElement("canvas");cv.width=256;cv.height=64;const ct=cv.getContext("2d");ct.fillStyle=color;ct.fillRect(0,0,256,64);ct.fillStyle="#fff";ct.font="bold 26px Segoe UI";ct.textAlign="center";ct.fillText(text,128,42);const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.45),new THREE.MeshStandardMaterial({map:tex,emissive:color,emissiveIntensity:.15}));m.position.y=2.6;return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);addDynamic(g);return g;}
-mkSign(5,-25,"PORT DISTRICT","#2a6a66");mkSign(-5,26,"CREATIVE VILLAGE","#8a4060");
-mkSign(24,5,"SCIENCE PARK","#3a4080");mkSign(-24,5,"TECH HUB","#8a6a20");
+// District signs — placed on sidewalks, not in road bands
+mkSign(10,-25,"PORT DISTRICT","#2a6a66");mkSign(-10,26,"CREATIVE VILLAGE","#8a4060");
+mkSign(24,10,"SCIENCE PARK","#3a4080");mkSign(-24,10,"TECH HUB","#8a6a20");
 // Lamp posts — NO collision, just decorative
 function mkLamp(x,z){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,4.2,8),botw("#383840","#1a1a20"));m.position.y=2.1;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.8),botw("#383840","#1a1a20"));m.position.set(0,3.9,.35);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),new THREE.MeshBasicMaterial({color:"#ffe8a0"}));m.position.set(0,3.6,.65);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);return g;}
-[[11,11],[-11,11],[11,-11],[-11,-11],[14,0],[-14,0],[0,14],[0,-14]].forEach(([x,z])=>mkLamp(x,z));
+// Lamp posts at corners of town center — all outside road bands (x=-8..8, z=-8..8)
+[[11,11],[-11,11],[11,-11],[-11,-11],[15,11],[-15,11],[15,-11],[-15,-11]].forEach(([x,z])=>mkLamp(x,z));
 // Benches — dynamic (breakable)
 function mkBench(x,z,r){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.08,.5),botw("#a08060","#504020"));m.position.y=.5;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.5,.06),botw("#907050","#483828"));m.position.set(0,.75,-.2);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);g.rotation.y=r||0;scene.add(g);addDynamic(g);return g;}
-[[-8,6,0],[8,6,Math.PI],[-8,-6,0],[8,-6,Math.PI]].forEach(([x,z,r])=>mkBench(x,z,r));
+// Benches in town center quadrants — outside road bands (x=-8..8, z=-8..8)
+[[-12,10,0],[12,10,Math.PI],[-12,-10,0],[12,-10,Math.PI],[18,18,Math.PI/4],[-18,18,-Math.PI/4]].forEach(([x,z,r])=>mkBench(x,z,r));
 
 /* ====== PORT ====== */
 const dock=new THREE.Mesh(new THREE.BoxGeometry(120,.6,20),botw("#7d5a38","#3a2818"));dock.position.set(0,-.1,-55);scene.add(dock);addStatic(dock);
@@ -362,18 +371,55 @@ const crateMat=botw("#8a7048","#4a3820"),barrelMat=botw("#6a5838","#3a2818");
 // Crane
 const crane=new THREE.Group();crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.8,16,.8),botw("#d08030","#704010"));m.position.y=8;return m;})());crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(12,.6,.6),botw("#d08030","#704010"));m.position.set(4,15.5,0);return m;})());crane.position.set(62,terrainHeight(62,-55),-55);scene.add(crane);addStatic(crane,.3);
 
+// Kotor-class frigate docked at port (GLB model)
+new GLTFLoader().load('models/ship/kotor-class_frigate.glb',gltf=>{
+    const m=gltf.scene;
+    m.updateMatrixWorld(true);
+    // Measure raw bounds for scaling
+    const b=realBounds(m);
+    const rawLen=Math.max(b.max.x-b.min.x,b.max.z-b.min.z);
+    // Scale so ship is ~35 units long (fills port nicely)
+    const sc=35/rawLen;m.scale.setScalar(sc);
+    m.updateMatrixWorld(true);
+    const b2=realBounds(m);
+    // Create group, ground the model so bottom sits at water level
+    const shipGroup=new THREE.Group();shipGroup.add(m);
+    m.position.y=-b2.min.y-1.0; // sink slightly into water
+    m.position.x-=(b2.min.x+b2.max.x)/2; // center X
+    m.position.z-=(b2.min.z+b2.max.z)/2; // center Z
+    // Fix materials — ensure everything renders solid
+    m.traverse(ch=>{if(ch.isMesh&&ch.material){
+        const mats=Array.isArray(ch.material)?ch.material:[ch.material];
+        mats.forEach(mt=>{mt.depthWrite=true;mt.side=THREE.FrontSide;});}});
+    // Position at port dock — rotated so bow faces along dock (parallel to shore)
+    shipGroup.position.set(10,-0.5,-70);
+    shipGroup.rotation.y=Math.PI/2+0.08;
+    scene.add(shipGroup);
+    addStatic(shipGroup,1);
+    console.log('Ship loaded: length='+(b2.max.x-b2.min.x).toFixed(1)+' scaled='+sc.toFixed(3));
+},undefined,e=>{
+    console.warn('Ship GLB failed, placing fallback:',e);
+    // Fallback: simple hull shape
+    const fb=new THREE.Group();
+    fb.add(new THREE.Mesh(new THREE.BoxGeometry(32,4.5,10),botw("#2a3a4a","#101820")));
+    fb.children[0].position.y=2.25;
+    fb.add(new THREE.Mesh(new THREE.BoxGeometry(8,6,7),botw("#e0dcd0","#808078")));
+    fb.children[1].position.set(-8,7,0);
+    fb.position.set(10,-1.5,-70);fb.rotation.y=.08;scene.add(fb);addStatic(fb,.3);
+});
+
 /* ====== SCIENCE PARK ====== */
 function mkModern(x,z,h,w,d,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),botw(color));m.position.y=h/2;return m;})());
 const wm=new THREE.MeshBasicMaterial({color:"#88b8dd",transparent:true,opacity:.6});
 for(let fy=2;fy<h-1;fy+=2.2)for(let fx=-(w/2-.8);fx<w/2;fx+=1.6){g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.9,1.3),wm);m.position.set(fx,fy,d/2+.01);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.9,1.3),wm);m.position.set(fx,fy,-d/2-.01);m.rotation.y=Math.PI;return m;})());}
 g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.3);return g;}
-mkModern(52,16,10,5,4,"#9098b0");mkModern(66,-14,8,4,4,"#8090a8");mkModern(72,14,12,5,4,"#a0a8c0");mkModern(48,-16,7,4,3,"#8898b0");
+mkModern(62,20,10,5,4,"#9098b0");mkModern(68,-18,8,4,4,"#8090a8");mkModern(74,18,12,5,4,"#a0a8c0");mkModern(66,-20,7,4,3,"#8898b0");
 
 /* ====== TECH HUB ====== */
 function mkWarehouse(x,z,w,d,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,d),botw(color));m.position.y=2.5;return m;})());
 g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w*.35,3,.1),new THREE.MeshBasicMaterial({color:"#88aacc",transparent:true,opacity:.5}));m.position.set(0,2.5,d/2+.05);return m;})());
 g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.3);return g;}
-mkWarehouse(-62,16,8,6,"#a09888");mkWarehouse(-75,-12,6,5,"#90a090");mkWarehouse(-72,14,7,5,"#a0a898");mkWarehouse(-48,-14,7,5,"#988880");
+mkWarehouse(-64,18,8,6,"#a09888");mkWarehouse(-75,-14,6,5,"#90a090");mkWarehouse(-72,16,7,5,"#a0a898");mkWarehouse(-62,-16,7,5,"#988880");
 
 /* ====== CREATIVE VILLAGE ====== */
 function mkHouse(x,z,wallColor,sc){const g=new THREE.Group(),s=sc||1;
@@ -384,13 +430,14 @@ g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.4*s,1.2*s,.4*s),botw("
 for(const wx of[-.8,.8])for(const wy of[1.5,2.3])g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.4*s,.45*s),new THREE.MeshBasicMaterial({color:"#d8e0ff"}));m.position.set(wx*s,wy*s,1.61*s);return m;})());
 g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.2);return g;}
 const hCols=["#e8d8c0","#f0e8e0","#d0e0d0","#e0d0c0","#e8e0d8","#d8e0d8","#e0e0d0","#d8d0c0"];
-[[-35,36],[-20,36],[-5,36],[10,36],[25,36],[40,36],[-28,64],[-12,64],[4,64],[20,64],[36,64]].forEach(([x,z],i)=>mkHouse(x,z,hCols[i%hCols.length],.85+Math.random()*.3));
+// Houses placed clear of all roads: N-S(x=-8..8), W-conn(x=-42..-34), E-conn(x=34..42), Creative(z=44..56)
+[[-52,34],[-28,34],[-16,34],[14,34],[26,34],[50,34],[-48,66],[-30,66],[-16,66],[16,66],[30,66],[48,66]].forEach(([x,z],i)=>mkHouse(x,z,hCols[i%hCols.length],.85+Math.random()*.3));
 // Windmill
 const windmill=new THREE.Group();windmill.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.3,8,10),botw("#d8d0c0","#8a8070"));m.position.y=4;return m;})());windmill.add((()=>{const m=new THREE.Mesh(new THREE.ConeGeometry(1.3,2.2,10),botw("#8a5030","#4a2818"));m.position.y=9.1;return m;})());
 const bladeGroup=new THREE.Group();for(let i=0;i<4;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.3,3.5,.05),botw("#d0c8b0","#706850"));bl.position.set(0,1.75,0);const pv=new THREE.Group();pv.add(bl);pv.rotation.z=i*Math.PI/2;bladeGroup.add(pv);}
 bladeGroup.position.set(0,8,1.2);windmill.add(bladeGroup);windmill.position.set(42,terrainHeight(42,72),72);scene.add(windmill);addStatic(windmill,.5);
-// Dynamic garden props in village
-[[- 24,40],[0,40],[24,40],[-16,58],[8,58],[32,58]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),botw("#7a6040","#3a2818"));cr.position.set(x,.2+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(cr);addDynamic(cr);});
+// Garden props clear of roads
+[[-24,36],[16,36],[28,36],[-18,66],[18,66],[44,66]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),botw("#7a6040","#3a2818"));cr.position.set(x,.2+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(cr);addDynamic(cr);});
 
 /* ====== MOUNTAINS ====== */
 const mtMats=[botw("#707078","#383840"),botw("#7a7a82","#404048"),botw("#686870","#303038")];
@@ -441,13 +488,72 @@ ALL_PROJECTS.forEach((pr,idx)=>{
     billboards.push({group:g,project:pr,boardMat:bm,bayPos,gifIdx:idx});
 });
 
+/* ====== ARCADE INTERACTION FRAME ====== */
+// Retro arcade-style indicator when parked near a billboard
+const arcadeFrame=new THREE.Group();
+// Glowing animated border
+const arcGlowMat=new THREE.MeshBasicMaterial({color:"#00ff88",transparent:true,opacity:.8,side:THREE.DoubleSide});
+const arcBars=[];
+[{s:[5.6,.12,.06],p:[0,5.15,0]},{s:[5.6,.12,.06],p:[0,2.85,0]},{s:[.12,2.42,.06],p:[-2.8,4,0]},{s:[.12,2.42,.06],p:[2.8,4,0]}].forEach(({s,p})=>{
+    const b=new THREE.Mesh(new THREE.BoxGeometry(...s),arcGlowMat.clone());b.position.set(...p);arcadeFrame.add(b);arcBars.push(b);});
+// Corner chevrons
+const chevGeo=new THREE.BufferGeometry();chevGeo.setAttribute("position",new THREE.BufferAttribute(new Float32Array([0,0,0,.4,0,0,0,.4,0]),3));chevGeo.setIndex([0,1,2]);
+const chevMat=new THREE.MeshBasicMaterial({color:"#ffcc00",transparent:true,opacity:.9,side:THREE.DoubleSide});
+[[-2.9,5.25,1,1],[-2.9,2.75,1,-1],[2.9,5.25,-1,1],[2.9,2.75,-1,-1]].forEach(([x,y,sx,sy])=>{
+    const c=new THREE.Mesh(chevGeo,chevMat.clone());c.position.set(x,y,.08);c.scale.set(sx,sy,1);arcadeFrame.add(c);});
+// "PRESS E" floating text
+const pressCv=document.createElement("canvas");pressCv.width=256;pressCv.height=64;
+const pressCtx=pressCv.getContext("2d");
+const pressTex=new THREE.CanvasTexture(pressCv);pressTex.colorSpace=THREE.SRGBColorSpace;
+const pressPlane=new THREE.Mesh(new THREE.PlaneGeometry(2.8,.7),new THREE.MeshBasicMaterial({map:pressTex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+pressPlane.position.set(0,6,.1);arcadeFrame.add(pressPlane);
+// Coin-slot arrows pointing down at billboard
+const coinArrowGeo=new THREE.ConeGeometry(.18,.5,4);
+const coinMat=new THREE.MeshBasicMaterial({color:"#ffcc00",transparent:true,opacity:.85});
+const coinArr=[];
+for(let i=-1;i<=1;i++){const a=new THREE.Mesh(coinArrowGeo,coinMat.clone());a.position.set(i*1.8,5.8,.1);a.rotation.z=Math.PI;arcadeFrame.add(a);coinArr.push(a);}
+arcadeFrame.visible=false;scene.add(arcadeFrame);
+// Arcade frame update function (called in game loop)
+let arcadeBB=null,arcadeT=0;
+function updateArcade(t,dt,active,bb){
+    if(!active){arcadeFrame.visible=false;arcadeBB=null;return;}
+    if(bb!==arcadeBB){arcadeBB=bb;arcadeT=t;audio.chime(660,.06);setTimeout(()=>audio.chime(880,.05),80);}
+    arcadeFrame.visible=true;
+    arcadeFrame.position.copy(bb.group.position);arcadeFrame.rotation.y=bb.group.rotation.y;
+    const elapsed=t-arcadeT,pulse=Math.sin(t*8)*.5+.5,slowP=Math.sin(t*3)*.5+.5;
+    // Pulsing glow border
+    arcBars.forEach(b=>{b.material.opacity=.4+pulse*.6;b.material.color.setHSL(.38-pulse*.06,1,.55+pulse*.15);});
+    // Bouncing coin arrows
+    coinArr.forEach((a,i)=>{a.position.y=5.6+Math.sin(t*6+i*1.2)*.25;a.material.opacity=.5+slowP*.5;});
+    // Animated "PRESS E" text
+    const pc=pressCtx;pc.clearRect(0,0,256,64);
+    // Scanline background
+    pc.fillStyle=`rgba(0,${Math.floor(40+pulse*30)},${Math.floor(20+pulse*15)},.85)`;
+    pc.fillRect(0,0,256,64);
+    for(let y=0;y<64;y+=3){pc.fillStyle=`rgba(0,0,0,${.15+Math.sin(y*.5+t*12)*.05})`;pc.fillRect(0,y,256,1);}
+    // Border
+    pc.strokeStyle=`hsl(${140+pulse*20},100%,${55+pulse*15}%)`;pc.lineWidth=3;pc.strokeRect(2,2,252,60);
+    // Text
+    const blink=Math.sin(t*4)>.1;
+    if(blink||elapsed<1){
+        pc.fillStyle="#ffcc00";pc.font="bold 28px 'Courier New',monospace";pc.textAlign="center";pc.textBaseline="middle";
+        // Glitch offset
+        const gx=Math.sin(t*47)*.8,gy=Math.cos(t*31)*.4;
+        pc.fillText("INSERT COIN",128+gx,28+gy);
+        pc.fillStyle=`rgba(0,255,136,${.6+slowP*.4})`;pc.font="bold 16px 'Courier New',monospace";
+        pc.fillText("[ PRESS E ]",128,52);
+    }
+    pressTex.needsUpdate=true;
+}
+
 /* ====== COLLECTIBLES ====== */
 const orbs=[];
 for(let i=0;i<15;i++){let ox,oz;do{ox=(Math.random()-.5)*260;oz=(Math.random()-.5)*260;}while(roadDist(ox,oz)<3||oz<-48);const oy=terrainHeight(ox,oz);if(oy<-.3){i--;continue;}const o=new THREE.Mesh(new THREE.IcosahedronGeometry(.5,1),new THREE.MeshStandardMaterial({color:"#60ffc0",emissive:"#1a6a50",emissiveIntensity:1.2}));o.position.set(ox,oy+1.8,oz);o.userData.id=`o${i}`;scene.add(o);orbs.push(o);}
-const arrow=new THREE.Mesh(new THREE.ConeGeometry(.45,1.4,6),new THREE.MeshStandardMaterial({color:"#60ffc0",emissive:"#1a5a40",emissiveIntensity:1.2}));arrow.rotation.x=-Math.PI/2;scene.add(arrow);
+// Direction arrow removed (user request) — minimap compass replaces it
 
 /* ====== CAR ====== */
-function createCar(){const w=new THREE.Group(),body=new THREE.Group();const p=new THREE.MeshMatcapMaterial({matcap:MC.red}),tr=new THREE.MeshMatcapMaterial({matcap:MC.dark}),gl=new THREE.MeshMatcapMaterial({matcap:MC.glass});
+// Procedural fallback while GLB loads
+function createFallbackCar(){const body=new THREE.Group();const p=new THREE.MeshMatcapMaterial({matcap:MC.red}),tr=new THREE.MeshMatcapMaterial({matcap:MC.dark}),gl=new THREE.MeshMatcapMaterial({matcap:MC.glass});
 body.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(3.6,.55,1.8),p);m.position.y=.68;return m;})());
 body.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.3,.18,1.76),p);m.position.set(1.05,.98,0);return m;})());
 body.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.48,.5,1.4),gl);m.position.set(-.28,1.2,0);return m;})());
@@ -459,9 +565,58 @@ body.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.16,.38),new THRE
 body.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.16,.38),new THREE.MeshBasicMaterial({color:"#ff5050"}));m.position.set(-1.84,.85,-.5);return m;})());
 const wG=new THREE.CylinderGeometry(.35,.35,.3,18),wM=new THREE.MeshMatcapMaterial({matcap:MC.dark}),wheels=[];
 [[1.08,.35,.84],[1.08,.35,-.84],[-1.06,.35,.84],[-1.06,.35,-.84]].forEach(([x,y,z])=>{const wh=new THREE.Mesh(wG,wM);wh.rotation.z=Math.PI/2;wh.position.set(x,y,z);body.add(wh);wheels.push(wh);});
-body.rotation.y=Math.PI/2;w.add(body);w.userData.wheels=wheels;return w;}
-const car=createCar();car.position.set(0,ROAD_Y+1,5);scene.add(car);
-const carShadow=new THREE.Mesh(new THREE.PlaneGeometry(3.8,2),new THREE.MeshBasicMaterial({color:"#000",transparent:true,opacity:.18,depthWrite:false}));carShadow.rotation.x=-Math.PI/2;scene.add(carShadow);
+body.rotation.y=Math.PI/2;return{group:body,wheels};}
+const car=new THREE.Group();car.position.set(0,ROAD_Y,18);scene.add(car); // start on N-S road, north of fountain
+const fb=createFallbackCar();car.add(fb.group);car.userData.wheels=fb.wheels;
+// Shared vertex-accurate bounds helper
+const _bv=new THREE.Vector3();
+function realBounds(root){root.updateMatrixWorld(true);const mn=new THREE.Vector3(1e9,1e9,1e9),mx=new THREE.Vector3(-1e9,-1e9,-1e9);
+root.traverse(c=>{if(!c.isMesh||!c.geometry)return;const p=c.geometry.attributes.position;
+    for(let i=0;i<p.count;i++){_bv.fromBufferAttribute(p,i).applyMatrix4(c.matrixWorld);mn.min(_bv);mx.max(_bv);}});return{min:mn,max:mx};}
+
+let carShadowW=3.8,carShadowD=1.8;
+const carShadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:"#000",transparent:true,opacity:.22,depthWrite:false}));carShadow.rotation.x=-Math.PI/2;carShadow.scale.set(carShadowW,carShadowD,1);scene.add(carShadow);
+// Load Mazda RX-7 FD (Lexyc16, CC-BY, Sketchfab)
+new GLTFLoader().load('models/mazda_rx-7_fd.glb',gltf=>{
+    const m=gltf.scene;
+    // 1. Measure raw model to determine scale
+    let b=realBounds(m);
+    const rawW=b.max.x-b.min.x,rawD=b.max.z-b.min.z;
+    const sc=4.0/Math.max(rawW,rawD);
+    m.scale.setScalar(sc);
+    // 1b. Fix materials — solid exterior, tinted windows, hide interior-only meshes
+    m.traverse(ch=>{
+        if(!ch.isMesh)return;
+        if(ch.name.toLowerCase().includes('collider')){ch.visible=false;return;}
+        const mats=Array.isArray(ch.material)?ch.material:[ch.material];
+        mats.forEach(mt=>{
+            mt.depthWrite=true;
+            const nm=(mt.name||'').toLowerCase()+(ch.name||'').toLowerCase();
+            if(nm.includes('glass')||nm.includes('window')||nm.includes('transparent')){
+                mt.transparent=true;mt.opacity=0.3;mt.side=THREE.FrontSide;
+            }else{
+                mt.transparent=false;mt.opacity=1;mt.side=THREE.FrontSide;
+            }});});
+    // 2. Assemble: model → wrap (rotation) → car
+    const wrap=new THREE.Group();wrap.add(m);
+    wrap.rotation.y=Math.PI;
+    car.remove(fb.group);car.add(wrap);
+    // 3. Measure TRUE world-space bounds of the assembled car
+    b=realBounds(car);
+    const cxW=(b.min.x+b.max.x)/2, czW=(b.min.z+b.max.z)/2;
+    // 4. Fix wrap.position (in car local space = world-aligned) so:
+    //    - model bottom Y = car.position.y
+    //    - model center XZ = car.position.xz
+    wrap.position.y+=car.position.y-b.min.y;
+    wrap.position.x+=car.position.x-cxW;
+    wrap.position.z+=car.position.z-czW;
+    // 5. Shadow from real dimensions
+    carShadowW=(b.max.x-b.min.x)*1.05;carShadowD=(b.max.z-b.min.z)*1.05;
+    // 6. Find wheel meshes
+    const wh=[];m.traverse(c=>{if(c.isMesh){const n=c.name.toLowerCase();if(n.includes('wheel')||n.includes('tire')||n.includes('rim'))wh.push(c);}});
+    car.userData.wheels=wh;
+    console.log(`RX-7 FINAL: bottom=${b.min.y.toFixed(3)} → car.y=${car.position.y.toFixed(3)}, center=(${cxW.toFixed(2)},${czW.toFixed(2)}) → car=(${car.position.x},${car.position.z}), fix=(${wrap.position.x.toFixed(3)},${wrap.position.y.toFixed(3)},${wrap.position.z.toFixed(3)}), wheels=${wh.length}`);
+},undefined,e=>{console.warn('Mazda GLB load failed, using fallback:',e);});
 
 /* ====== PARTICLES ====== */
 const LEAF_N=200;const leafPos=new Float32Array(LEAF_N*3),leafSizes=new Float32Array(LEAF_N);
@@ -487,6 +642,10 @@ window.addEventListener("keyup",e=>{const k=KM[e.code];if(k){pressed.delete(k);e
 window.addEventListener("pointerdown",()=>{if(!audio.initialized)audio.init();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)pressed.clear();});
 
+/* ====== ZOOM (mouse wheel) ====== */
+let zoomFactor=1; // 0.12 = bonnet cam, 1 = default, 3 = bird's eye
+renderer.domElement.addEventListener("wheel",e=>{zoomFactor+=e.deltaY*.0008;zoomFactor=THREE.MathUtils.clamp(zoomFactor,.12,3);e.preventDefault();},{passive:false});
+
 /* ====== INTERACTION ====== */
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 function openBB(){if(!state.canInteract)return;window.open(state.canInteract.u,"_blank","noopener");state.visited.add(state.canInteract.t);visitedEl.textContent=`${state.visited.size} / ${ALL_PROJECTS.length}`;unlock("first");
@@ -510,14 +669,193 @@ tColors[i*3]=c.r;tColors[i*3+1]=c.g;tColors[i*3+2]=c.b;}tGeo.setAttribute("color
 function applySeason(){const p=SP[state.seasonIndex];scene.background.set(p.sky);scene.fog.color.set(p.fog);sun.color.set(p.sun);sunSphere.material.color.set(p.sun);hemi.color.set(p.hS);hemi.groundColor.set(p.hG);applyTerrain(p);grassMat.uniforms.uBase.value.set(p.gBase);grassMat.uniforms.uTip.value.set(p.gTip);}
 applySeason();visitedEl.textContent=`0 / ${ALL_PROJECTS.length}`;
 
-/* ====== TRY LOADING GLB MODELS (FindAsset skill) ====== */
+/* ====== LOAD LOCAL GLB MODELS ====== */
 const glbLoader=new GLTFLoader();
-async function tryLoadModel(url){try{return(await glbLoader.loadAsync(url)).scene;}catch{return null;}}
-// Attempt to load enhanced tree from Poimandres market (CC0)
-tryLoadModel('https://market-assets.fra1.cdn.digitaloceanspaces.com/market-assets/models/tree-spruce/model.gltf').then(m=>{
-    if(!m)return;for(let i=0;i<16;i++){const t=m.clone();const a=Math.random()*Math.PI*2,r=18+Math.random()*30;
-    const x=Math.cos(a)*r,z=Math.sin(a)*r;t.position.set(x,terrainHeight(x,z),z);t.scale.setScalar(.8+Math.random()*.6);scene.add(t);}
-}).catch(()=>{});
+// Helper: extract named child from GLTF scene
+function extractChild(root,name){let found=null;root.traverse(c=>{if(!found&&c.name===name)found=c;});return found;}
+// Helper: place a model at world position, auto-grounded, scaled to target height
+function placeGLB(model,x,z,targetH,rotY){
+    const m=model.clone();const b=realBounds(m);
+    const curH=b.max.y-b.min.y;const sc=curH>0?targetH/curH:1;
+    m.scale.multiplyScalar(sc);
+    m.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);
+    // Ground: recompute bounds after scaling and shift so bottom touches position.y
+    const b2=realBounds(m);m.position.y-=(b2.min.y-m.position.y);
+    if(rotY!==undefined)m.rotation.y=rotY;
+    scene.add(m);return m;}
+
+// ---- BUILDINGS PACK ----
+glbLoader.load('models/buidlings/low_poly_public_buildings_pack.glb',gltf=>{
+    const root=gltf.scene;root.updateMatrixWorld(true);
+    const bldgs={};
+    ['Pharmacy','Police','CityHall','Hospital','GasStation','School','Light','Bin'].forEach(n=>{
+        const c=extractChild(root,'PublicBuilding_'+n);if(c)bldgs[n]=c;});
+    // Town Center — CityHall + Police
+    if(bldgs.CityHall)placeGLB(bldgs.CityHall,-18,-18,12,0);
+    if(bldgs.Police)placeGLB(bldgs.Police,18,-18,10,Math.PI);
+    // Science Park — Hospital
+    if(bldgs.Hospital){placeGLB(bldgs.Hospital,64,22,11,Math.PI/2);placeGLB(bldgs.Hospital,70,-20,9,-Math.PI/2);}
+    // Tech Hub — GasStation
+    if(bldgs.GasStation){placeGLB(bldgs.GasStation,-66,20,7,0);placeGLB(bldgs.GasStation,-74,-16,7,Math.PI);}
+    // Creative Village — School + Pharmacy
+    if(bldgs.School)placeGLB(bldgs.School,-50,68,9,0);
+    if(bldgs.Pharmacy){placeGLB(bldgs.Pharmacy,50,68,8,Math.PI);placeGLB(bldgs.Pharmacy,-18,18,8,Math.PI/2);}
+    // Port — extra buildings
+    if(bldgs.CityHall)placeGLB(bldgs.CityHall,18,18,10,Math.PI);
+    // Street Lights — lined along road EDGES, never in the middle of roads
+    // Road bands: N-S x=-8..8, E-W z=-8..8, Port z=-46..-34, Creative z=44..56,
+    //   Connectors x=-42..-34 & x=34..42, Science x=45..55, Tech x=-55..-45
+    if(bldgs.Light){
+        [
+         // Town center corners (outside all road bands)
+         [12,12],[-12,12],[12,-12],[-12,-12],
+         // Along N-S road edges (x=±10, safe z values away from E-W road)
+         [10,-20],[-10,-20],[10,-28],[-10,-28],[10,20],[-10,20],[10,28],[-10,28],
+         // Along E-W road edges (z=±10, safe x values away from N-S road)
+         [20,10],[-20,10],[20,-10],[-20,-10],[30,10],[-30,10],[30,-10],[-30,-10],
+         // Port district road edges (z=-33 or z=-47, x values clear of N-S & connectors)
+         [20,-33],[-20,-33],[40,-33],[-40,-33],[20,-47],[-20,-47],
+         // Creative district road edges (z=43 or z=57, x clear of N-S & connectors)
+         [20,43],[-20,43],[20,57],[-20,57],[44,57],[-44,57],
+         // Science park (x=56 or x=44, z clear of E-W road)
+         [56,14],[56,-14],[44,14],[44,-14],
+         // Tech hub (x=-56 or x=-44, z clear of E-W road)
+         [-56,14],[-56,-14],[-44,14],[-44,-14],
+        ].forEach(([lx,lz])=>placeGLB(bldgs.Light,lx,lz,4.5,Math.random()*Math.PI*2));}
+    // Bins near benches/intersections — all clear of roads
+    if(bldgs.Bin){
+        [[12,12],[-12,12],[12,-12],[-12,-12],[20,20],[-20,-20],
+         [22,-33],[-22,-33],[22,43],[-22,43],[56,20],[-56,20]
+        ].forEach(([bx,bz])=>placeGLB(bldgs.Bin,bx,bz,1.2,Math.random()*Math.PI*2));}
+    console.log('Buildings pack loaded:',Object.keys(bldgs).join(', '));
+},undefined,e=>console.warn('Buildings GLB failed:',e));
+
+// ---- CARS PACK — NPC vehicles for city life ----
+const npcCars=[];
+glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
+    const root=gltf.scene;root.updateMatrixWorld(true);
+    const vehicles=[];
+    for(let i=1;i<=7;i++){const c=extractChild(root,'Transport'+i);if(c){
+        // Fix materials: hide colliders, solid body, tinted windows
+        c.traverse(ch=>{
+            if(!ch.isMesh)return;
+            // Hide invisible collider meshes
+            if(ch.name.toLowerCase().includes('collider')){ch.visible=false;return;}
+            const mats=Array.isArray(ch.material)?ch.material:[ch.material];
+            mats.forEach(mt=>{
+                mt.depthWrite=true;
+                if(ch.name.includes('transparent')){
+                    // Windows — semi-transparent tinted glass
+                    mt.transparent=true;mt.opacity=0.35;mt.side=THREE.FrontSide;
+                }else{
+                    // Body — fully opaque, front-face only (hides interior)
+                    mt.transparent=false;mt.opacity=1;mt.side=THREE.FrontSide;
+                }});});
+        vehicles.push(c);}}
+    if(!vehicles.length)return;
+    // Model orientation offset: test common rotations
+    // Low-poly packs vary — PI/2 means model's +X becomes forward (-Z)
+    const MODEL_ROT=Math.PI/2;
+    // Helper: place car with correct orientation + fixed materials
+    function placeCar(model,x,z,facingAngle){
+        const v=placeGLB(model,x,z,1.4,facingAngle+MODEL_ROT);
+        return v;}
+    // Parked cars along roads — facing matches road direction
+    // N-S roads: facing 0 (north, -Z) or PI (south, +Z)
+    // E-W roads: facing PI/2 (east, -X) or -PI/2 (west, +X)
+    const parkSpots=[
+        // N-S main road — right side parked facing road direction
+        [5,-22,0],[5,-14,0],[5,20,0],[5,30,0],[5,40,0],
+        [-5,-18,Math.PI],[-5,-10,Math.PI],[-5,24,Math.PI],[-5,34,Math.PI],
+        // E-W main road
+        [22,5,Math.PI/2],[32,5,Math.PI/2],[-22,5,-Math.PI/2],[-32,5,-Math.PI/2],
+        // Port road (z=-40)
+        [18,-38,Math.PI/2],[30,-38,Math.PI/2],[-18,-42,-Math.PI/2],[-30,-42,-Math.PI/2],
+        // Creative road (z=50)
+        [18,48,Math.PI/2],[30,48,Math.PI/2],[-18,52,-Math.PI/2],[-30,52,-Math.PI/2],
+        // Science entry (x=50)
+        [48,14,0],[48,-14,Math.PI],
+        // Tech entry (x=-50)
+        [-48,14,0],[-48,-14,Math.PI],
+    ];
+    parkSpots.forEach(([px,pz,pr],i)=>{
+        const v=placeCar(vehicles[i%vehicles.length],px,pz,pr);
+        addStatic(v,.15); // parked cars are solid obstacles
+        npcCars.push(v);});
+    // Driving cars follow actual road waypoint routes
+    const routes=[
+        // Route 0: N-S main road loop (drive north on right, south on left)
+        {pts:[[4,-55],[4,65],[-4,65],[-4,-55]],speed:6},
+        // Route 1: E-W main road loop
+        {pts:[[-75,4],[75,4],[75,-4],[-75,-4]],speed:7},
+        // Route 2: Port road loop
+        {pts:[[-50,-38],[50,-38],[50,-42],[-50,-42]],speed:5},
+        // Route 3: Creative road loop
+        {pts:[[-45,48],[45,48],[45,52],[-45,52]],speed:5},
+    ];
+    const driveCars=[];
+    routes.forEach((route,ri)=>{
+        const v=placeCar(vehicles[(ri+3)%vehicles.length],route.pts[0][0],route.pts[0][1],0);
+        v.userData.route=route;v.userData.wpIdx=0;
+        v.userData.wpT=Math.random(); // start at random point along first segment
+        // Create a dynamic collision box for this driving car
+        v.userData.colBox=new THREE.Box3();
+        staticCol.push(v.userData.colBox); // add to static collision list (updated each tick)
+        driveCars.push(v);npcCars.push(v);});
+    // NPC tick: waypoint-following with proper facing + update collision boxes
+    window._npcTick=function(t,dt){
+        driveCars.forEach(c=>{
+            const r=c.userData.route,pts=r.pts;
+            c.userData.wpT+=dt*r.speed*.02;
+            if(c.userData.wpT>=1){c.userData.wpT-=1;c.userData.wpIdx=(c.userData.wpIdx+1)%pts.length;}
+            const i0=c.userData.wpIdx,i1=(i0+1)%pts.length;
+            const t2=c.userData.wpT;
+            const x=pts[i0][0]+(pts[i1][0]-pts[i0][0])*t2;
+            const z=pts[i0][1]+(pts[i1][1]-pts[i0][1])*t2;
+            const dx=pts[i1][0]-pts[i0][0],dz=pts[i1][1]-pts[i0][1];
+            const facing=Math.atan2(-dx,-dz); // face direction of travel
+            const gy=Math.max(terrainHeight(x,z),ROAD_Y);
+            c.position.set(x,gy,z);
+            c.rotation.y=facing+MODEL_ROT;
+            // Update collision box around current position
+            if(c.userData.colBox){
+                c.userData.colBox.setFromCenterAndSize(
+                    new THREE.Vector3(x,gy+.7,z),new THREE.Vector3(2.2,1.6,4.2));}
+        });};
+    console.log(`Cars pack: ${vehicles.length} types, ${parkSpots.length} parked, ${driveCars.length} driving`);
+},undefined,e=>console.warn('Cars GLB failed:',e));
+
+// ---- TREES — realistic collection ----
+glbLoader.load('models/trees/realistic_trees_collection.glb',gltf=>{
+    const root=gltf.scene;root.updateMatrixWorld(true);
+    // Extract individual tree types
+    const treeTypes=[];
+    const treeNames=['Tree EZTree0.Large','Tree EZTree0.Medium010','Tree EZTree0.Medium011',
+        'Tree EZTree1.Bush006','Tree EZTree1.Large001','Tree EZTree1.Large009','Tree EZTree1.Medium002'];
+    treeNames.forEach(n=>{const c=extractChild(root,n);if(c)treeTypes.push(c);});
+    if(!treeTypes.length){console.warn('No trees found in pack');return;}
+    // Scatter realistic trees — replace some procedural ones
+    let placed=0;const maxTrees=80;
+    while(placed<maxTrees){
+        const x=(Math.random()-.5)*300,z=(Math.random()-.5)*280;
+        if(roadDist(x,z)<5||z<-50)continue;
+        const y=terrainHeight(x,z);if(y<-.3)continue;
+        const tIdx=Math.floor(Math.random()*treeTypes.length);
+        const isBush=treeTypes[tIdx].name.includes('Bush');
+        const targetH=isBush?1.5+Math.random()*2:5+Math.random()*6;
+        placeGLB(treeTypes[tIdx],x,z,targetH,Math.random()*Math.PI*2);
+        placed++;}
+    // Line trees along roads for avenues
+    for(let z2=-55;z2<70;z2+=12){
+        if(Math.abs(z2)<10)continue; // skip intersection
+        placeGLB(treeTypes[0%treeTypes.length],10,z2,7+Math.random()*3,Math.random()*6);
+        placeGLB(treeTypes[1%treeTypes.length],-10,z2,7+Math.random()*3,Math.random()*6);}
+    for(let x2=-55;x2<55;x2+=12){
+        if(Math.abs(x2)<10)continue;
+        placeGLB(treeTypes[2%treeTypes.length],x2,10,6+Math.random()*3,Math.random()*6);
+        placeGLB(treeTypes[3%treeTypes.length],x2,-10,6+Math.random()*3,Math.random()*6);}
+    console.log(`Trees: ${treeTypes.length} types, ${placed} scattered + avenue trees`);
+},undefined,e=>console.warn('Trees GLB failed:',e));
 
 /* ====== GAME LOOP ====== */
 const clock=new THREE.Clock();
@@ -562,32 +900,50 @@ function tick(){
     for(const d of dynCol){if(d.vel.lengthSq()<.01)continue;d.mesh.position.addScaledVector(d.vel,dt);d.mesh.rotation.x+=d.vel.z*dt*2;d.mesh.rotation.z-=d.vel.x*dt*2;d.vel.y-=15*dt;d.vel.multiplyScalar(.96);
     const gy2=terrainHeight(d.mesh.position.x,d.mesh.position.z);if(d.mesh.position.y<gy2+.3){d.mesh.position.y=gy2+.3;d.vel.y=Math.abs(d.vel.y)*.3;d.vel.x*=.85;d.vel.z*=.85;}}
 
-    const gy=terrainHeight(cp.x,cp.z);cp.y=Math.max(gy+1.05,THREE.MathUtils.lerp(cp.y,gy+1.05,.45));
-    carShadow.position.set(cp.x,gy+.06,cp.z);
+    // Ground following — car sits directly on terrain, reacts to bumps/gutters
+    const gy=terrainHeight(cp.x,cp.z);
+    cp.y=THREE.MathUtils.lerp(cp.y,gy,.6); // tight ground follow, no gap
+    carShadow.position.set(cp.x,gy+.03,cp.z);
+    carShadow.scale.set(carShadowW,carShadowD,1);
     const rv=new THREE.Vector3(dir.z,0,-dir.x);
-    const hF=terrainHeight(cp.x+dir.x*1.3,cp.z+dir.z*1.3),hB=terrainHeight(cp.x-dir.x*1.3,cp.z-dir.z*1.3);
-    const hL=terrainHeight(cp.x-rv.x*.7,cp.z-rv.z*.7),hR=terrainHeight(cp.x+rv.x*.7,cp.z+rv.z*.7);
-    car.rotation.x=THREE.MathUtils.lerp(car.rotation.x,-Math.atan2(hF-hB,2.6)*.4,.12);
-    car.rotation.z=THREE.MathUtils.lerp(car.rotation.z,Math.atan2(hR-hL,1.4)*.25,.12);
+    // Sample terrain at wheel positions for pitch & roll
+    const hF=terrainHeight(cp.x+dir.x*1.6,cp.z+dir.z*1.6),hB=terrainHeight(cp.x-dir.x*1.6,cp.z-dir.z*1.6);
+    const hL=terrainHeight(cp.x-rv.x*.9,cp.z-rv.z*.9),hR=terrainHeight(cp.x+rv.x*.9,cp.z+rv.z*.9);
+    const pitchTarget=-Math.atan2(hF-hB,3.2);
+    const rollTarget=Math.atan2(hR-hL,1.8);
+    car.rotation.x=THREE.MathUtils.lerp(car.rotation.x,pitchTarget,.2);
+    car.rotation.z=THREE.MathUtils.lerp(car.rotation.z,rollTarget,.2);
     car.userData.wheels.forEach((w,i)=>{w.rotation.x-=state.speed*dt*2;if(i<2)w.rotation.y=si*.22;});
     speedEl.textContent=`${Math.round(Math.abs(state.speed)*4.2)} km/h`;districtEl.textContent=getDistrict(cp.x,cp.z);audio.update(state.speed,wF?1:0);
     orbs.forEach(o=>{if(!o.visible)return;o.rotation.y+=.025;o.position.y+=Math.sin(t*3+o.position.x)*.004;if(cp.distanceTo(o.position)<2.2){o.visible=false;state.collectibles.add(o.userData.id);audio.chime(1100,.09);if(state.collectibles.size===orbs.length)unlock("collector");}});
 
     // Billboard proximity — park in bay
     let nearBB=null,nearD=Infinity;billboards.forEach(b=>{const d2=cp.distanceTo(b.bayPos);if(d2<nearD){nearD=d2;nearBB=b;}});
-    if(nearD<4&&Math.abs(state.speed)<.4&&nearBB){
+    const parked=nearD<4&&Math.abs(state.speed)<.4&&nearBB;
+    if(parked){
         state.canInteract=nearBB.project;const di=DISTRICTS[nearBB.project.district];
-        promptEl.innerHTML=`<strong>${nearBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br>Click billboard or press E`;
+        promptEl.innerHTML=`<strong>${nearBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span>`;
         promptEl.classList.add("show");renderer.domElement.style.cursor="pointer";
     }else{state.canInteract=null;promptEl.classList.remove("show");renderer.domElement.style.cursor="default";}
-    const und=billboards.find(b=>!state.visited.has(b.project.t));
-    if(und){arrow.visible=true;arrow.position.set(cp.x,cp.y+2.2+Math.sin(t*5)*.12,cp.z);const adx=und.group.position.x-cp.x,adz=und.group.position.z-cp.z;arrow.rotation.y=Math.atan2(-adx,-adz);}else arrow.visible=false;
+    updateArcade(t,dt,parked,nearBB);
     const si3=Math.floor(t/50)%4;if(si3!==state.seasonIndex){state.seasonIndex=si3;applySeason();}seasonEl.textContent=["Spring","Summer","Autumn","Winter"][si3];
-    const sn=Math.min(Math.abs(state.speed)/mxF,1);const camDist=14+sn*4,camH=7+sn*2;
-    const dc=cp.clone().add(new THREE.Vector3(-dir.x*camDist,camH,-dir.z*camDist));
-    camera.position.lerp(dc,1-Math.exp(-dt*4.5));camera.lookAt(cp.x,cp.y+1.2,cp.z);
+    const sn=Math.min(Math.abs(state.speed)/mxF,1);
+    if(zoomFactor<.25){
+        // Bonnet / driver cam — on top of car looking forward
+        const fwd=dir.clone().multiplyScalar(.8);const up=new THREE.Vector3(0,1.8+(.25-zoomFactor)*4,0);
+        const driverPos=cp.clone().add(fwd).add(up);
+        camera.position.lerp(driverPos,1-Math.exp(-dt*8));
+        const lookFwd=cp.clone().add(dir.clone().multiplyScalar(20)).add(new THREE.Vector3(0,1.5,0));
+        camera.lookAt(lookFwd.x,lookFwd.y,lookFwd.z);
+    }else{
+        // Third person — zoom scales distance and height
+        const baseDist=(14+sn*4)*zoomFactor,baseH=(7+sn*2)*zoomFactor;
+        const dc=cp.clone().add(new THREE.Vector3(-dir.x*baseDist,baseH,-dir.z*baseDist));
+        camera.position.lerp(dc,1-Math.exp(-dt*4.5));camera.lookAt(cp.x,cp.y+1.2,cp.z);
+    }
     const so=t*.04;sun.position.set(Math.cos(so)*100,80+Math.sin(so*.6)*20,Math.sin(so)*60);sunSphere.position.copy(sun.position.clone().setLength(170));
     waterMat.uniforms.uTime.value=t;bladeGroup.rotation.z+=dt*.5;
+    if(window._npcTick)window._npcTick(t,dt);
     for(let i=0;i<LEAF_N;i++){const i3=i*3;leafPos[i3]+=(Math.sin(t*.7+i*2.3)*.2+.03)*dt*12;leafPos[i3+1]-=(.6+Math.sin(t+i)*.15)*dt*2;leafPos[i3+2]+=Math.cos(t*.5+i*1.7)*.15*dt*12;if(leafPos[i3+1]<0){leafPos[i3+1]=22+Math.random()*12;leafPos[i3]=cp.x+(Math.random()-.5)*100;leafPos[i3+2]=cp.z+(Math.random()-.5)*100;}}leafGeo.attributes.position.needsUpdate=true;
     // GIF textures — only nearby at ~12fps
     const gf=Math.floor(t*12);if(gf!==tick._lg){tick._lg=gf;billboards.forEach(b=>{const gd=gifData[b.gifIdx];if(!gd.loaded)return;const d2=cp.distanceTo(b.group.position);if(d2>55)return;const c=gd.ctx;c.drawImage(gd.img,0,0,512,256);const gr=c.createLinearGradient(0,180,0,256);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.3,"rgba(0,0,0,.7)");gr.addColorStop(1,"rgba(0,0,0,.85)");c.fillStyle=gr;c.fillRect(0,180,512,76);const di=DISTRICTS[b.project.district];c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,210);c.fillStyle="#fff";c.font="700 18px Segoe UI";c.fillText(gd.title,14,232);c.fillStyle="rgba(255,255,255,.45)";c.font="400 10px Segoe UI";c.fillText("Park + press E",14,250);c.strokeStyle=di.color;c.lineWidth=2;c.strokeRect(1,1,510,254);gd.tex.needsUpdate=true;});}
