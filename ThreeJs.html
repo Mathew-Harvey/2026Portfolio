@@ -227,7 +227,7 @@
         <div class="hud-row"><span>Season</span><span class="v" id="season">Spring</span></div>
         <div class="hint">Driving: W/S forward/brake · A/D steer · Shift boost · E interact · F exit car · G garage · M mute</div>
         <div class="hint">Walking: W/S move · A/D strafe · Space jump · Hold LMB look · E talk · F car · G garage · 1 equip SMG · Scroll zoom</div>
-        <div class="hint">Diving: WASD swim · Space dive deeper · Shift surface · E to exit near dock/ship</div>
+        <div class="hint">Diving: WASD swim · Space up · Shift down · Mouse look · E exit near dock/ship</div>
     </div>
     <div class="panel side-panel"><div class="section-label">Achievements <span id="ach-count" style="float:right;color:var(--a);font-weight:600"></span></div><div id="badges"></div></div>
     <div class="ach-popup" id="ach-popup"><div class="ach-icon" id="ach-popup-icon"></div><div class="ach-body"><div class="ach-label">Achievement Unlocked</div><div class="ach-name" id="ach-popup-name"></div><div class="ach-desc" id="ach-popup-desc"></div><div class="ach-bar"><div class="ach-bar-fill" id="ach-popup-bar"></div></div></div></div>
@@ -242,7 +242,7 @@
             <ellipse cx="960" cy="540" rx="830" ry="470" fill="none" stroke="rgba(60,60,70,.4)" stroke-width="2"/>
         </svg>
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(15,60,90,.2) 0%,rgba(5,25,45,.45) 100%)"></div>
-        <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);color:rgba(120,220,255,.7);font:600 13px/1 'Segoe UI',sans-serif;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,100,180,.5)">Diving — WASD move · Space dive · Shift surface · E exit</div>
+        <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);color:rgba(120,220,255,.7);font:600 13px/1 'Segoe UI',sans-serif;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,100,180,.5)">Diving — WASD swim · Space up · Shift down · Mouse look · E exit</div>
     </div>
     <div class="dialog-overlay" id="dialog"><div class="dialog-box"><div class="dialog-npc" id="dialog-npc">Wizard</div><div class="dialog-title" id="dialog-title"></div><div class="dialog-text" id="dialog-text"></div><div class="dialog-progress" id="dialog-progress"></div><div class="dialog-btns" id="dialog-btns"></div></div></div>
     <div class="garage-overlay" id="garage-overlay">
@@ -321,17 +321,17 @@ if(IS_MOBILE)document.body.classList.add('mobile-active');
 /* ====== PERFORMANCE PROFILE ====== */
 const PERF=IS_MOBILE?{
     antialias:false,
-    pixelRatioCap:1,
+    pixelRatioCap:Math.min(devicePixelRatio,1),
     postFx:false,
-    terrainSegs:100,
-    grassBlades:5000,
-    pineCount:70,
-    deciCount:50,
-    leafCount:30,
-    waterSegX:18,
-    waterSegY:10,
-    extraGltf:true,
-    traffic:true,
+    terrainSegs:64,
+    grassBlades:1500,
+    pineCount:25,
+    deciCount:18,
+    leafCount:8,
+    waterSegX:10,
+    waterSegY:6,
+    extraGltf:false,
+    traffic:false,
     fpsCap:0,
 }:{
     // Desktop — full quality.
@@ -632,11 +632,11 @@ renderBadges();
 function getDistrict(x,z){if(z<-65)return"Open Ocean";if(z<-28)return"Port District";if(z>30)return"Creative Village";if(x>28)return"Science Park";if(x<-28)return"Tech Hub";return"Town Center";}
 
 /* ====== SCENE ====== */
-const scene=new THREE.Scene();scene.background=new THREE.Color("#78b8e6");scene.fog=new THREE.Fog("#a8d4ec",70,240);
-const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,500);camera.position.set(0,10,18);
+const scene=new THREE.Scene();scene.background=new THREE.Color("#78b8e6");scene.fog=new THREE.Fog("#a8d4ec",IS_MOBILE?30:70,IS_MOBILE?120:240);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,IS_MOBILE?180:500);camera.position.set(0,10,18);
 const renderer=new THREE.WebGLRenderer({antialias:PERF.antialias,powerPreference:"high-performance",precision:IS_MOBILE?"mediump":"highp"});
 renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,PERF.pixelRatioCap));
-renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=IS_MOBILE?THREE.NoToneMapping:THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 document.getElementById("app").appendChild(renderer.domElement);
 let composer=null;
 if(PERF.postFx){
@@ -650,8 +650,8 @@ const sunSphere=new THREE.Mesh(new THREE.SphereGeometry(5,16,16),new THREE.MeshB
 /* ====== MATERIALS ====== */
 const sunDir=new THREE.Vector3(.5,.86,.3).normalize();
 function botw(c,s,o){const cc=new THREE.Color(c),ss=s?new THREE.Color(s):cc.clone().multiplyScalar(.35);
-return new THREE.ShaderMaterial({uniforms:{uColor:{value:cc},uShadow:{value:ss},uSunDir:{value:sunDir},fogColor:{value:scene.fog.color},fogNear:{value:70},fogFar:{value:240}},vertexShader:BOTW_VS,fragmentShader:BOTW_FS,side:(o&&o.side)||THREE.FrontSide});}
-const waterMat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uShallow:{value:new THREE.Color("#60d8c8")},uDeep:{value:new THREE.Color("#2888a0")},fogColor:{value:scene.fog.color},fogNear:{value:70},fogFar:{value:240}},vertexShader:WATER_VS,fragmentShader:WATER_FS,transparent:true,side:THREE.DoubleSide});
+return new THREE.ShaderMaterial({uniforms:{uColor:{value:cc},uShadow:{value:ss},uSunDir:{value:sunDir},fogColor:{value:scene.fog.color},fogNear:{value:scene.fog.near},fogFar:{value:scene.fog.far}},vertexShader:BOTW_VS,fragmentShader:BOTW_FS,side:(o&&o.side)||THREE.FrontSide});}
+const waterMat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uShallow:{value:new THREE.Color("#60d8c8")},uDeep:{value:new THREE.Color("#2888a0")},fogColor:{value:scene.fog.color},fogNear:{value:scene.fog.near},fogFar:{value:scene.fog.far}},vertexShader:WATER_VS,fragmentShader:WATER_FS,transparent:true,side:THREE.DoubleSide});
 
 /* ====== TERRAIN ====== */
 function hash2(a,b){const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.floor(s);}
@@ -710,7 +710,7 @@ const grassGeo=new THREE.InstancedBufferGeometry();grassGeo.index=bGeo2.index;gr
 const gO=new Float32Array(GRASS_N*3),gS=new Float32Array(GRASS_N),gA2=new Float32Array(GRASS_N);
 let gi=0;while(gi<GRASS_N){const x=(Math.random()-.5)*320,z=(Math.random()-.5)*300;if(roadDist(x,z)<2||z<-48)continue;const y=terrainHeight(x,z);if(y<-.4)continue;gO[gi*3]=x;gO[gi*3+1]=y;gO[gi*3+2]=z;gS[gi]=.3+Math.random()*1.0;gA2[gi]=Math.random()*Math.PI*2;gi++;}
 grassGeo.setAttribute("aO",new THREE.InstancedBufferAttribute(gO,3));grassGeo.setAttribute("aS",new THREE.InstancedBufferAttribute(gS,1));grassGeo.setAttribute("aA",new THREE.InstancedBufferAttribute(gA2,1));
-const GRASS_DIST=80; // render distance for grass (units from camera)
+const GRASS_DIST=IS_MOBILE?40:80; // render distance for grass (units from camera)
 const grassMat=new THREE.ShaderMaterial({uniforms:{
     uTime:{value:0},uCarPos:{value:new THREE.Vector3()},uCarSpeed:{value:0},
     uCamPos:{value:new THREE.Vector3()},uRenderDist:{value:GRASS_DIST},
@@ -786,13 +786,14 @@ let dp=0;while(dp<DECI_N){const x=(Math.random()-.5)*280,z=(Math.random()-.5)*26
 dm.scale.set(1,1,1);[dTrunkIM,dCanopyIM].forEach(m=>m.instanceMatrix.needsUpdate=true);
 
 /* ====== SCATTER ====== */
-const flowerIM=new THREE.InstancedMesh(new THREE.SphereGeometry(.14,6,6),botw("#e0e0e0","#606060"),500);
-const rockIM=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.35,0),botw("#888890","#404048"),200);
-const bushIM=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.55,1),botw("#4a9a3a","#1a4a1a"),300);
+const _flowerN=IS_MOBILE?100:500,_rockN=IS_MOBILE?50:200,_bushN=IS_MOBILE?60:300;
+const flowerIM=new THREE.InstancedMesh(new THREE.SphereGeometry(.14,IS_MOBILE?4:6,IS_MOBILE?4:6),botw("#e0e0e0","#606060"),_flowerN);
+const rockIM=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.35,0),botw("#888890","#404048"),_rockN);
+const bushIM=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.55,IS_MOBILE?0:1),botw("#4a9a3a","#1a4a1a"),_bushN);
 scene.add(flowerIM,rockIM,bushIM);
-let fi=0;while(fi<500){const x=(Math.random()-.5)*260,z=(Math.random()-.5)*260;if(roadDist(x,z)<2||z<-46)continue;const y=terrainHeight(x,z);if(y<-.2)continue;dm.position.set(x,y+.12,z);dm.scale.setScalar(.5+Math.random()*.8);dm.rotation.set(0,0,0);dm.updateMatrix();flowerIM.setMatrixAt(fi,dm.matrix);flowerIM.setColorAt(fi,new THREE.Color().setHSL(Math.random()*.15+.85,.7,.65));fi++;}
-let ri=0;while(ri<200){const x=(Math.random()-.5)*300,z=(Math.random()-.5)*300;if(roadDist(x,z)<4)continue;const y=terrainHeight(x,z);dm.position.set(x,y+.1,z);dm.scale.set(.5+Math.random(),.4+Math.random()*.6,.5+Math.random());dm.rotation.set(Math.random(),Math.random(),0);dm.updateMatrix();rockIM.setMatrixAt(ri,dm.matrix);ri++;}
-let bi=0;while(bi<300){const x=(Math.random()-.5)*280,z=(Math.random()-.5)*260;if(roadDist(x,z)<4||z<-46)continue;const y=terrainHeight(x,z);if(y<-.2)continue;dm.position.set(x,y+.3,z);dm.scale.setScalar(.4+Math.random()*.7);dm.rotation.set(0,0,0);dm.updateMatrix();bushIM.setMatrixAt(bi,dm.matrix);bi++;}
+let fi=0;while(fi<_flowerN){const x=(Math.random()-.5)*260,z=(Math.random()-.5)*260;if(roadDist(x,z)<2||z<-46)continue;const y=terrainHeight(x,z);if(y<-.2)continue;dm.position.set(x,y+.12,z);dm.scale.setScalar(.5+Math.random()*.8);dm.rotation.set(0,0,0);dm.updateMatrix();flowerIM.setMatrixAt(fi,dm.matrix);flowerIM.setColorAt(fi,new THREE.Color().setHSL(Math.random()*.15+.85,.7,.65));fi++;}
+let ri=0;while(ri<_rockN){const x=(Math.random()-.5)*300,z=(Math.random()-.5)*300;if(roadDist(x,z)<4)continue;const y=terrainHeight(x,z);dm.position.set(x,y+.1,z);dm.scale.set(.5+Math.random(),.4+Math.random()*.6,.5+Math.random());dm.rotation.set(Math.random(),Math.random(),0);dm.updateMatrix();rockIM.setMatrixAt(ri,dm.matrix);ri++;}
+let bi=0;while(bi<_bushN){const x=(Math.random()-.5)*280,z=(Math.random()-.5)*260;if(roadDist(x,z)<4||z<-46)continue;const y=terrainHeight(x,z);if(y<-.2)continue;dm.position.set(x,y+.3,z);dm.scale.setScalar(.4+Math.random()*.7);dm.rotation.set(0,0,0);dm.updateMatrix();bushIM.setMatrixAt(bi,dm.matrix);bi++;}
 dm.rotation.set(0,0,0);[flowerIM,rockIM,bushIM].forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
 
 /* ====== WATER ====== */
@@ -1096,31 +1097,36 @@ bladeGroup.position.set(0,8,1.2);windmill.add(bladeGroup);windmill.position.set(
 
 /* ====== MOUNTAINS ====== */
 const mtMats=[botw("#707078","#383840"),botw("#7a7a82","#404048"),botw("#686870","#303038")];
-for(let i=0;i<30;i++){const a=(i/30)*Math.PI*2,r=150+Math.random()*35;const mt=new THREE.Mesh(new THREE.ConeGeometry(14+Math.random()*12,26+Math.random()*20,6),mtMats[i%3]);mt.position.set(Math.cos(a)*r,6,Math.sin(a)*r);mt.rotation.y=Math.random()*Math.PI;scene.add(mt);}
+const _mtCount=IS_MOBILE?12:30;for(let i=0;i<_mtCount;i++){const a=(i/_mtCount)*Math.PI*2,r=150+Math.random()*35;const mt=new THREE.Mesh(new THREE.ConeGeometry(14+Math.random()*12,26+Math.random()*20,IS_MOBILE?4:6),mtMats[i%3]);mt.position.set(Math.cos(a)*r,6,Math.sin(a)*r);mt.rotation.y=Math.random()*Math.PI;scene.add(mt);}
 
 /* ====== GIF BILLBOARDS + PARKING BAYS ====== */
 const interactables=[],billboards=[];
 // GIF host: images at 0,0 in viewport (behind canvas) so browsers keep animating them
-const gifHost=document.createElement("div");
-gifHost.style.cssText="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-100;pointer-events:none;opacity:0.01;overflow:hidden;";
-document.body.appendChild(gifHost);
+const gifHost=IS_MOBILE?null:(()=>{const d=document.createElement("div");d.style.cssText="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-100;pointer-events:none;opacity:0.01;overflow:hidden;";document.body.appendChild(d);return d;})();
 const pCv=document.createElement("canvas");pCv.width=64;pCv.height=64;const pCtx=pCv.getContext("2d");pCtx.fillStyle="#e8d060";pCtx.font="bold 48px sans-serif";pCtx.textAlign="center";pCtx.fillText("P",32,48);const pTex=new THREE.CanvasTexture(pCv);
 const bayMat=new THREE.MeshBasicMaterial({color:"#e8d060"});const frameMat=botw("#1a1a20","#0a0a10");
 const HAS_IMG_DEC='ImageDecoder' in window;
+const _GIF_W=IS_MOBILE?256:512,_GIF_H=IS_MOBILE?128:256;
 const gifData=ALL_PROJECTS.map(pr=>{
-const cv=document.createElement("canvas");cv.width=512;cv.height=256;const ctx=cv.getContext("2d");
+const cv=document.createElement("canvas");cv.width=_GIF_W;cv.height=_GIF_H;const ctx=cv.getContext("2d");
 // Draw initial static poster
-ctx.fillStyle="#0a0a14";ctx.fillRect(0,0,512,256);
+ctx.fillStyle="#0a0a14";ctx.fillRect(0,0,_GIF_W,_GIF_H);
 const di=DISTRICTS[pr.district]||{color:"#888",label:"Project"};
-ctx.fillStyle=di.color;ctx.font="bold 14px Segoe UI";ctx.fillText(di.label.toUpperCase(),20,30);
-ctx.fillStyle="#fff";ctx.font="bold 22px Segoe UI";ctx.fillText(pr.t,20,65);
-ctx.fillStyle="rgba(255,255,255,.4)";ctx.font="16px Segoe UI";ctx.fillText("\u25B6 Park to preview",20,100);
-ctx.strokeStyle=di.color;ctx.lineWidth=3;ctx.strokeRect(2,2,508,252);
+const _s=IS_MOBILE?.5:1;
+ctx.fillStyle=di.color;ctx.font=`bold ${14*_s}px Segoe UI`;ctx.fillText(di.label.toUpperCase(),20*_s,30*_s);
+ctx.fillStyle="#fff";ctx.font=`bold ${22*_s}px Segoe UI`;ctx.fillText(pr.t,20*_s,65*_s);
+ctx.fillStyle="rgba(255,255,255,.4)";ctx.font=`${16*_s}px Segoe UI`;ctx.fillText("\u25B6 Park to preview",20*_s,100*_s);
+ctx.strokeStyle=di.color;ctx.lineWidth=IS_MOBILE?1.5:3;ctx.strokeRect(1,1,_GIF_W-2,_GIF_H-2);
 const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
 const url=`gifs/${pr.g}`;
 const d={cv,ctx,tex,title:pr.t,district:pr.district,url,
     loaded:false,playing:false,_hasStatic:false,_failed:false,
     img:null,_dec:null,_fCount:0,_fIdx:0,_busy:false};
+if(IS_MOBILE){
+    // On mobile: skip all GIF fetching/decoding — use static posters only to save CPU/bandwidth
+    d.loaded=true;d._failed=false;
+    return d;
+}
 // 1) Fallback: <img> in viewport for browsers that animate visible GIFs
 const img=new Image();img.crossOrigin="anonymous";img.src=url;
 img.style.cssText="width:4px;height:2px;display:inline-block;";
@@ -1355,28 +1361,36 @@ function updateArcade(t,dt,active,bb){
     coinArr.forEach((a,i)=>{a.position.y=5.6+Math.sin(t*6+i*1.2)*.25;a.material.opacity=.5+slowP*.5;});
     // Animated "PRESS E" text
     const pc=pressCtx;pc.clearRect(0,0,256,64);
-    // Scanline background
-    pc.fillStyle=`rgba(0,${Math.floor(40+pulse*30)},${Math.floor(20+pulse*15)},.85)`;
-    pc.fillRect(0,0,256,64);
-    for(let y=0;y<64;y+=3){pc.fillStyle=`rgba(0,0,0,${.15+Math.sin(y*.5+t*12)*.05})`;pc.fillRect(0,y,256,1);}
-    // Border
-    pc.strokeStyle=`hsl(${140+pulse*20},100%,${55+pulse*15}%)`;pc.lineWidth=3;pc.strokeRect(2,2,252,60);
-    // Text
-    const blink=Math.sin(t*4)>.1;
-    if(blink||elapsed<1){
+    if(IS_MOBILE){
+        // Simplified arcade text on mobile (no scanlines/glitch for perf)
+        pc.fillStyle="rgba(0,50,25,.85)";pc.fillRect(0,0,256,64);
         pc.fillStyle="#ffcc00";pc.font="bold 28px 'Courier New',monospace";pc.textAlign="center";pc.textBaseline="middle";
-        // Glitch offset
-        const gx=Math.sin(t*47)*.8,gy=Math.cos(t*31)*.4;
-        pc.fillText("INSERT COIN",128+gx,28+gy);
-        pc.fillStyle=`rgba(0,255,136,${.6+slowP*.4})`;pc.font="bold 16px 'Courier New',monospace";
-        pc.fillText(IS_MOBILE?"[ TAP OPEN ]":"[ PRESS E ]",128,52);
+        pc.fillText("INSERT COIN",128,28);
+        pc.fillStyle="rgba(0,255,136,.8)";pc.font="bold 16px 'Courier New',monospace";
+        pc.fillText("[ TAP OPEN ]",128,52);
+    }else{
+        // Scanline background
+        pc.fillStyle=`rgba(0,${Math.floor(40+pulse*30)},${Math.floor(20+pulse*15)},.85)`;
+        pc.fillRect(0,0,256,64);
+        for(let y=0;y<64;y+=3){pc.fillStyle=`rgba(0,0,0,${.15+Math.sin(y*.5+t*12)*.05})`;pc.fillRect(0,y,256,1);}
+        // Border
+        pc.strokeStyle=`hsl(${140+pulse*20},100%,${55+pulse*15}%)`;pc.lineWidth=3;pc.strokeRect(2,2,252,60);
+        // Text
+        const blink=Math.sin(t*4)>.1;
+        if(blink||elapsed<1){
+            pc.fillStyle="#ffcc00";pc.font="bold 28px 'Courier New',monospace";pc.textAlign="center";pc.textBaseline="middle";
+            const gx=Math.sin(t*47)*.8,gy=Math.cos(t*31)*.4;
+            pc.fillText("INSERT COIN",128+gx,28+gy);
+            pc.fillStyle=`rgba(0,255,136,${.6+slowP*.4})`;pc.font="bold 16px 'Courier New',monospace";
+            pc.fillText("[ PRESS E ]",128,52);
+        }
     }
     pressTex.needsUpdate=true;
 }
 
 /* ====== COLLECTIBLES ====== */
-const orbs=[];
-for(let i=0;i<15;i++){let ox,oz;do{ox=(Math.random()-.5)*260;oz=(Math.random()-.5)*260;}while(roadDist(ox,oz)<3||oz<-48);const oy=terrainHeight(ox,oz);if(oy<-.3){i--;continue;}const o=new THREE.Mesh(new THREE.IcosahedronGeometry(.5,1),new THREE.MeshStandardMaterial({color:"#60ffc0",emissive:"#1a6a50",emissiveIntensity:1.2}));o.position.set(ox,oy+1.8,oz);o.userData.id=`o${i}`;scene.add(o);orbs.push(o);}
+const orbs=[];const _orbCount=IS_MOBILE?6:15;const _orbMat=IS_MOBILE?new THREE.MeshBasicMaterial({color:"#60ffc0"}):new THREE.MeshStandardMaterial({color:"#60ffc0",emissive:"#1a6a50",emissiveIntensity:1.2});
+for(let i=0;i<_orbCount;i++){let ox,oz;do{ox=(Math.random()-.5)*260;oz=(Math.random()-.5)*260;}while(roadDist(ox,oz)<3||oz<-48);const oy=terrainHeight(ox,oz);if(oy<-.3){i--;continue;}const o=new THREE.Mesh(new THREE.IcosahedronGeometry(.5,IS_MOBILE?0:1),_orbMat);o.position.set(ox,oy+1.8,oz);o.userData.id=`o${i}`;scene.add(o);orbs.push(o);}
 // Direction arrow removed (user request) — minimap compass replaces it
 
 /* ====== CAR ====== */
@@ -2584,8 +2598,19 @@ function unscopeGun(){
 // Pointer lock change handler
 document.addEventListener("pointerlockchange",()=>{
     if(!document.pointerLockElement&&state.gunEquipped){
-        // Lost pointer lock — holster
         holsterGun();
+    }
+    // If lost pointer lock while diving, exit diving
+    if(!document.pointerLockElement&&state.mode==="diving"){
+        state.mode="walking";
+        state.swimming=false;state.underwater=false;state.diving=false;
+        avatar.visible=true;
+        avatar.position.set(0,.3,-55);
+        state.jumpVelY=0;state.isJumping=false;
+        diveLight.visible=false;diveAmbient.visible=false;
+        camera.fov=NORMAL_FOV;camera.updateProjectionMatrix();
+        _camPitch=.3;
+        state.divePos=null;
     }
 });
 
@@ -2943,6 +2968,8 @@ window.addEventListener("keydown",e=>{
                 state.jumpVelY=0;state.isJumping=false;
                 diveLight.visible=false;diveAmbient.visible=false;
                 camera.fov=NORMAL_FOV;camera.updateProjectionMatrix();
+                _camPitch=.3; // Reset to walking pitch
+                if(document.pointerLockElement)document.exitPointerLock();
                 showToast("Back on solid ground!");
                 audio.chime(400,.08);setTimeout(()=>audio.chime(500,.06),100);
                 state.divePos=null;
@@ -2961,13 +2988,14 @@ window.addEventListener("keydown",e=>{
                 state.mode="diving";
                 state.diving=true;state.swimming=true;state.underwater=true;
                 state.divePos=new THREE.Vector3(avatar.position.x,WATER_LEVEL-.5,avatar.position.z-3);
-                state.diveCamYaw=_camYaw;state.diveCamPitch=0;
+                _camPitch=0; // Level pitch for diving
                 state.swimVelY=0;
                 if(state.gunEquipped)holsterGun();
                 avatar.visible=false;
                 if(window._avatarGun)window._avatarGun.visible=false;
+                renderer.domElement.requestPointerLock();
                 unlock("swimmer");unlock("diver");
-                showToast("Diving! WASD to swim — Space to dive deeper — Shift to surface — E to exit");
+                showToast("Diving! WASD swim · Space up · Shift down · Mouse look · E exit");
                 audio.chime(180,.15);setTimeout(()=>audio.chime(120,.1),100);
             }
         }else if(state.mode==="dialog"){
@@ -3082,22 +3110,45 @@ function _mobHold(btn,key){
 _mobHold(_btnJump,"j");
 _mobHold(_btnSprint,"x");
 
-// E button — context-sensitive interact
+// E button — context-sensitive interact (direct call, no synthetic events)
 _btnAction.addEventListener("touchstart",e=>{
     e.preventDefault();e.stopPropagation();
     if(!audio.initialized)audio.init();
-    // Use the same E-key logic via synthetic event
-    window.dispatchEvent(new KeyboardEvent("keydown",{code:"KeyE",bubbles:true}));
-    setTimeout(()=>window.dispatchEvent(new KeyboardEvent("keyup",{code:"KeyE",bubbles:true})),80);
+    if(state.mode==="driving"){openBB();}
+    else if(state.mode==="walking"){
+        const ap=avatar.position;
+        if(ap.distanceTo(npcGuide.position)<4){showDialog(npcGuide);}
+        else if(state.canInteract){openBB();}
+    }else if(state.mode==="dialog"){window._closeDialog();}
 },{passive:false});
 
-// F button — enter/exit car
+// F button — enter/exit car (direct call, no synthetic events)
 _btnCar.addEventListener("touchstart",e=>{
     e.preventDefault();e.stopPropagation();
     if(!audio.initialized)audio.init();
-    // Dispatch synthetic key event to reuse existing F-key logic
-    window.dispatchEvent(new KeyboardEvent("keydown",{code:"KeyF",bubbles:true}));
-    setTimeout(()=>window.dispatchEvent(new KeyboardEvent("keyup",{code:"KeyF",bubbles:true})),80);
+    if(state.mode==="driving"&&Math.abs(state.speed)<1){
+        // Exit car → walking mode
+        state.mode="walking";
+        state.carParkedAt=car.position.clone();
+        state.canInteract=null;state.speed=0;
+        unlock("walker");
+        const heading=car.rotation.y;
+        const sideAngle=heading+Math.PI/2;
+        const ox=Math.sin(sideAngle)*2.5,oz=Math.cos(sideAngle)*2.5;
+        avatar.position.set(car.position.x+ox,car.position.y,car.position.z+oz);
+        state.avatarAngle=heading;avatar.rotation.y=heading;
+        _camYaw=heading;_camPitch=1.0;zoomFactor=3;
+        avatar.visible=true;
+        audio.chime(600,.08);
+        showToast("Tap CAR near your vehicle to get back in");
+        updateModeBadge();
+    }else if(state.mode==="walking"){
+        const _fPos=avatar.position;
+        if(_fPos.distanceTo(car.position)<5){
+            if(state.unlockedCars.length>1){openGarage();return;}
+            enterCarMode();audio.chime(800,.08);
+        }
+    }
 },{passive:false});
 
 // Garage button
@@ -3113,9 +3164,11 @@ if(_btnMute)_btnMute.addEventListener("touchstart",e=>{
     _btnMute.textContent=state.muted?"🔇":"🔊";
 },{passive:false});
 
-// ── Mobile UI Update (called from game loop) ──
+// ── Mobile UI Update (called from game loop, throttled to ~15fps for perf) ──
+let _mobUILast=0;
 window._mobileUIUpdate=function(){
     if(!IS_MOBILE)return;
+    const now=performance.now();if(now-_mobUILast<66)return;_mobUILast=now;
     // Contextual button visibility
     const showAction=state.canInteract||state.nearNPC||(state.mode==="dialog");
     _btnAction.classList.toggle("ctx-hidden",!showAction);
@@ -3132,8 +3185,8 @@ window._mobileUIUpdate=function(){
 
     // Jump label changes
     if(state.mode==="diving"){
-        _btnJump.textContent="DIVE";
-        _btnSprint.textContent="SURF";
+        _btnJump.textContent="UP";
+        _btnSprint.textContent="DOWN";
     }else{
         _btnJump.textContent="JUMP";
         _btnSprint.textContent="⚡";
@@ -3205,11 +3258,17 @@ renderer.domElement.addEventListener("contextmenu",e=>{
     if(state.gunEquipped)e.preventDefault();
 });
 window.addEventListener("mousemove",e=>{
-    // FPS aiming with pointer lock — full vertical range like any FPS
+    // FPS aiming with pointer lock — full vertical range
     if(document.pointerLockElement&&state.gunEquipped){
-        const sens=_scoped?.0006:.002; // much slower when scoped
+        const sens=_scoped?.0006:.002;
         _camYaw-=e.movementX*sens;
         _camPitch=THREE.MathUtils.clamp(_camPitch+e.movementY*sens,-1.4,1.4);
+        return;
+    }
+    // Diving: pointer lock mouse look with full vertical range
+    if(document.pointerLockElement&&state.mode==="diving"){
+        _camYaw-=e.movementX*.002;
+        _camPitch=THREE.MathUtils.clamp(_camPitch+e.movementY*.002,-1.3,1.3);
         return;
     }
     if(!_mouseDragging||state.mode!=="walking")return;
@@ -3279,7 +3338,7 @@ if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pac
     // Road bands: N-S x=-8..8, E-W z=-8..8, Port z=-46..-34, Creative z=44..56,
     //   Connectors x=-42..-34 & x=34..42, Science x=45..55, Tech x=-55..-45
     if(bldgs.Light){
-        [
+        const _lights=[
          // Town center corners (outside all road bands, 4+ units from edge)
          [14,14],[-14,14],[14,-14],[-14,-14],
          // Along N-S road edges (x=±12, 4 units from road edge, safe z away from E-W)
@@ -3294,7 +3353,10 @@ if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pac
          [58,14],[58,-14],[44,26],[44,-26],
          // Tech hub (x=-58 or x=-44, z clear of E-W road — note: connector is x=-42..-34)
          [-58,14],[-58,-14],[-44,26],[-44,-26],
-        ].forEach(([lx,lz])=>placeGLB(bldgs.Light,lx,lz,4.5,Math.random()*Math.PI*2));}
+        ];
+        // On mobile only place every 3rd light to reduce draw calls
+        const _lightArr=IS_MOBILE?_lights.filter((_,i)=>i%3===0):_lights;
+        _lightArr.forEach(([lx,lz])=>placeGLB(bldgs.Light,lx,lz,4.5,Math.random()*Math.PI*2));}
     // Bins near benches/intersections — all clear of roads
     if(bldgs.Bin){
         [[12,12],[-12,12],[12,-12],[-12,-12],[20,20],[-20,-20],
@@ -3889,69 +3951,79 @@ function tick(){
 
     // ====== MODE: DIVING (FPS underwater) ======
     else if(state.mode==="diving"){
-    const DIVE_SPEED=4.5;
+    const DIVE_SPEED=5;
     const dp=state.divePos;
-    if(!dp){state.mode="walking";avatar.visible=true;} // safety fallback
+    if(!dp){state.mode="walking";avatar.visible=true;}
+    else{
     // Wider FOV for diving immersion
     const diveFOV=65;
     if(Math.abs(camera.fov-diveFOV)>.1){camera.fov=THREE.MathUtils.lerp(camera.fov,diveFOV,1-Math.exp(-dt*6));camera.updateProjectionMatrix();}
-    else{
-        // Mouse look → update dive cam yaw/pitch
-        state.diveCamYaw=_camYaw;
-        state.diveCamPitch=_camPitch;
-        // Movement — WASD moves in camera look direction
-        const cp2=Math.cos(state.diveCamPitch),sp2=Math.sin(state.diveCamPitch);
-        const fwX=-Math.sin(state.diveCamYaw)*cp2,fwY=-sp2,fwZ=-Math.cos(state.diveCamYaw)*cp2;
-        const rtX=Math.cos(state.diveCamYaw),rtZ=-Math.sin(state.diveCamYaw);
-        const mv=new THREE.Vector3();
-        if(wF){mv.x+=fwX;mv.y+=fwY;mv.z+=fwZ;}
-        if(wB){mv.x-=fwX;mv.y-=fwY;mv.z-=fwZ;}
-        if(wL){mv.x+=rtX;mv.z+=rtZ;}
-        if(wR){mv.x-=rtX;mv.z-=rtZ;}
-        if(pressed.has("j")){mv.y-=1;} // Space = dive deeper
-        if(bst){mv.y+=1;} // Shift = surface
-        if(mv.lengthSq()>.001)mv.normalize();
-        dp.addScaledVector(mv,DIVE_SPEED*dt);
-        // Clamp to ocean area
-        dp.x=THREE.MathUtils.clamp(dp.x,-120,120);
-        dp.z=THREE.MathUtils.clamp(dp.z,-130,-46);
-        const seabedHere=terrainHeight(dp.x,dp.z)+0.3;
-        dp.y=THREE.MathUtils.clamp(dp.y,seabedHere,WATER_LEVEL-.15);
-        // FPS camera — at diver's eye position
-        camera.position.lerp(dp.clone(),1-Math.exp(-dt*12));
-        const lookTarget=dp.clone().add(new THREE.Vector3(fwX,fwY,fwZ).multiplyScalar(10));
-        camera.lookAt(lookTarget);
-        // Headlamp follows diver
-        diveLight.position.copy(dp);diveLight.visible=true;
-        diveAmbient.visible=true;
-        // Avatar hidden during diving
-        avatar.visible=false;
-        if(window._avatarGun)window._avatarGun.visible=false;
-        // Fish group visible
-        fishGroup.visible=true;
-        // Always underwater in dive mode
-        state.underwater=true;state.swimming=true;
-        // Achievements
-        unlock("swimmer");unlock("diver");
-        // Hull inspection
-        if(window._shipGroup&&window._shipGroup.visible){
-            const sdx=dp.x-window._shipGroup.position.x,sdz=dp.z-window._shipGroup.position.z;
-            if(Math.sqrt(sdx*sdx+sdz*sdz)<32)unlock("hull_inspect");
-        }
-        // Exit detection — near dock edge or near ship
-        const nearDockReturn=dp.z>-48&&dp.y>WATER_LEVEL-1;
-        const nearShipSurface=window._shipGroup&&window._shipGroup.visible&&dp.distanceTo(window._shipGroup.position)<20&&dp.y>WATER_LEVEL-1.5;
-        state._nearExitWater=nearDockReturn||nearShipSurface;
-        if(state._nearExitWater){
-            promptEl.innerHTML=`Press <b>E</b> to exit the water`;
-            promptEl.classList.add("show");
-        }else{
-            promptEl.innerHTML=`<b>Diving</b> — WASD move · Space dive · Shift surface · E exit near dock/ship`;
-            promptEl.classList.add("show");
-        }
-        districtEl.textContent="Ocean";
-        speedEl.textContent="Diving";
+
+    // ── Mouse look: yaw/pitch directly from shared _camYaw/_camPitch ──
+    // _camPitch is clamped in the mouse handler; for diving we allow full vertical
+    const dYaw=_camYaw;
+    const dPitch=THREE.MathUtils.clamp(_camPitch,-1.3,1.3);
+
+    // ── Forward/right vectors from look direction (horizontal plane only for WASD) ──
+    const fwdX=-Math.sin(dYaw), fwdZ=-Math.cos(dYaw);
+    const rtX=Math.cos(dYaw), rtZ=-Math.sin(dYaw);
+
+    // ── Build movement vector ──
+    // WASD = horizontal movement in the direction the camera faces (same as walking)
+    const mv=new THREE.Vector3();
+    if(wF){mv.x+=fwdX; mv.z+=fwdZ;}  // W = forward
+    if(wB){mv.x-=fwdX; mv.z-=fwdZ;}  // S = backward
+    if(wL){mv.x+=rtX;  mv.z+=rtZ;}   // A = strafe left
+    if(wR){mv.x-=rtX;  mv.z-=rtZ;}   // D = strafe right
+    if(pressed.has("j")){mv.y+=1;}    // Space = go UP (surface)
+    if(bst){mv.y-=1;}                 // Shift = go DOWN (dive deeper)
+    if(mv.lengthSq()>.001)mv.normalize();
+    dp.addScaledVector(mv,DIVE_SPEED*dt);
+
+    // Clamp to ocean area
+    dp.x=THREE.MathUtils.clamp(dp.x,-120,120);
+    dp.z=THREE.MathUtils.clamp(dp.z,-130,-46);
+    const seabedHere=terrainHeight(dp.x,dp.z)+0.3;
+    dp.y=THREE.MathUtils.clamp(dp.y,seabedHere,WATER_LEVEL-.15);
+
+    // ── FPS camera: position at diver, look in mouse direction ──
+    camera.position.lerp(dp.clone(),1-Math.exp(-dt*14));
+    const lookDir=new THREE.Vector3(
+        -Math.sin(dYaw)*Math.cos(dPitch),
+        -Math.sin(dPitch),
+        -Math.cos(dYaw)*Math.cos(dPitch)
+    );
+    const lookTarget=dp.clone().add(lookDir.multiplyScalar(10));
+    camera.lookAt(lookTarget);
+
+    // Headlamp follows diver
+    diveLight.position.copy(dp);diveLight.visible=true;
+    diveAmbient.visible=true;
+    // Avatar hidden during diving
+    avatar.visible=false;
+    if(window._avatarGun)window._avatarGun.visible=false;
+    fishGroup.visible=true;
+    state.underwater=true;state.swimming=true;
+    // Achievements
+    unlock("swimmer");unlock("diver");
+    if(window._shipGroup&&window._shipGroup.visible){
+        const sdx=dp.x-window._shipGroup.position.x,sdz=dp.z-window._shipGroup.position.z;
+        if(Math.sqrt(sdx*sdx+sdz*sdz)<32)unlock("hull_inspect");
     }
+    // Exit detection — near dock edge or near ship
+    const nearDockReturn=dp.z>-48&&dp.y>WATER_LEVEL-1;
+    const nearShipSurface=window._shipGroup&&window._shipGroup.visible&&dp.distanceTo(window._shipGroup.position)<20&&dp.y>WATER_LEVEL-1.5;
+    state._nearExitWater=nearDockReturn||nearShipSurface;
+    if(state._nearExitWater){
+        promptEl.innerHTML=`Press <b>E</b> to exit the water`;
+        promptEl.classList.add("show");
+    }else{
+        promptEl.innerHTML=`<b>Diving</b> — WASD swim · Space up · Shift down · Mouse look · E exit near dock/ship`;
+        promptEl.classList.add("show");
+    }
+    districtEl.textContent="Ocean";
+    speedEl.textContent="Diving";
+    } // end else(dp exists)
     } // end diving mode
 
     // ====== MODE: DIALOG ======
@@ -3966,8 +4038,8 @@ function tick(){
     const _isDiving=state.mode==="diving";
     if(_isDiving){scene.fog.near=5;scene.fog.far=35;scene.fog.color.lerp(new THREE.Color("#1a4a60"),.1);scene.background.lerp(new THREE.Color("#0a2838"),.1);}
     else{
-        scene.fog.near=THREE.MathUtils.lerp(scene.fog.near,70,.03);
-        scene.fog.far=THREE.MathUtils.lerp(scene.fog.far,240,.03);
+        scene.fog.near=THREE.MathUtils.lerp(scene.fog.near,IS_MOBILE?30:70,.03);
+        scene.fog.far=THREE.MathUtils.lerp(scene.fog.far,IS_MOBILE?120:240,.03);
         scene.fog.color.lerp(new THREE.Color("#a8d4ec"),.05);
         scene.background.lerp(new THREE.Color("#78b8e6"),.05);
     }
@@ -4092,6 +4164,7 @@ function tick(){
                 npcD.idleTimer=3+Math.random()*5;
                 npcD.baseY=Math.max(terrainHeight(npcGuide.position.x,npcGuide.position.z),ROAD_Y);
                 npcGuide.position.y=npcD.baseY;
+                npcD.stuckTimer=0;
                 if(npcD.walkAction&&npcD.idleAction){
                     npcD.idleAction.setEffectiveWeight(1);
                     npcD.walkAction.setEffectiveWeight(0);
@@ -4103,8 +4176,7 @@ function tick(){
                 const nextZ=npcGuide.position.z+nz*spd;
                 // Avoid roads — if next step is on a road, steer perpendicular
                 if(roadDist(nextX,nextZ)<3){
-                    // Try perpendicular directions
-                    const px=-nz, pz=nx; // rotate 90°
+                    const px=-nz, pz=nx;
                     if(roadDist(npcGuide.position.x+px*spd*3,npcGuide.position.z+pz*spd*3)>3){
                         nx=px;nz=pz;
                     }else{nx=-px;nz=-pz;}
@@ -4120,14 +4192,76 @@ function tick(){
                     const len=Math.sqrt(nx*nx+nz*nz);
                     if(len>0){nx/=len;nz/=len;}
                 }
+                // Proactive building avoidance — steer away from nearby static colliders
+                const _wizLook=NPC_R+1.5; // look-ahead distance
+                const _wizPx=npcGuide.position.x, _wizPz=npcGuide.position.z;
+                for(const box of staticCol){
+                    // Only avoid buildings the wizard is near (broad check)
+                    const cx=(box.min.x+box.max.x)*.5, cz=(box.min.z+box.max.z)*.5;
+                    const hw=(box.max.x-box.min.x)*.5+_wizLook, hd=(box.max.z-box.min.z)*.5+_wizLook;
+                    if(Math.abs(_wizPx-cx)>hw||Math.abs(_wizPz-cz)>hd)continue;
+                    // Closest point on box to wizard's future position
+                    const futX=_wizPx+nx*spd*8, futZ=_wizPz+nz*spd*8;
+                    const clX=Math.max(box.min.x,Math.min(futX,box.max.x));
+                    const clZ=Math.max(box.min.z,Math.min(futZ,box.max.z));
+                    const aDx=futX-clX, aDz=futZ-clZ;
+                    const aDist=Math.sqrt(aDx*aDx+aDz*aDz);
+                    if(aDist<NPC_R+0.8&&aDist>0.01){
+                        // Steer away from this building
+                        const str=Math.max(0,(NPC_R+0.8-aDist)/(NPC_R+0.8))*1.2;
+                        nx+=aDx/aDist*str;
+                        nz+=aDz/aDist*str;
+                    }else if(aDist<0.01){
+                        // Future pos is inside the box — push along shortest exit axis
+                        const pXL=futX-box.min.x, pXR=box.max.x-futX;
+                        const pZN=futZ-box.min.z, pZF=box.max.z-futZ;
+                        const minPush=Math.min(pXL,pXR,pZN,pZF);
+                        if(minPush===pXL)nx-=1.2;else if(minPush===pXR)nx+=1.2;
+                        else if(minPush===pZN)nz-=1.2;else nz+=1.2;
+                    }
+                }
+                // Re-normalize direction
+                const _wizLen=Math.sqrt(nx*nx+nz*nz);
+                if(_wizLen>0){nx/=_wizLen;nz/=_wizLen;}
+                // Apply movement
+                const prevX=npcGuide.position.x, prevZ=npcGuide.position.z;
                 npcGuide.position.x+=nx*spd;
                 npcGuide.position.z+=nz*spd;
+                // Reactive collision push-out against buildings (like avatar)
+                const wp2=npcGuide.position;
+                for(const box of staticCol){
+                    const cnx=Math.max(box.min.x,Math.min(wp2.x,box.max.x));
+                    const cnz=Math.max(box.min.z,Math.min(wp2.z,box.max.z));
+                    const cdx=wp2.x-cnx, cdz=wp2.z-cnz;
+                    const cd=Math.sqrt(cdx*cdx+cdz*cdz);
+                    if(cd<NPC_R&&cd>0.01){
+                        const push=(NPC_R-cd)/cd;
+                        wp2.x+=cdx*push; wp2.z+=cdz*push;
+                    }else if(cd<0.01&&wp2.x>=box.min.x&&wp2.x<=box.max.x&&wp2.z>=box.min.z&&wp2.z<=box.max.z){
+                        // Fully inside — push out shortest axis
+                        const pXL=wp2.x-box.min.x, pXR=box.max.x-wp2.x;
+                        const pZN=wp2.z-box.min.z, pZF=box.max.z-wp2.z;
+                        const minP=Math.min(pXL,pXR,pZN,pZF);
+                        if(minP===pXL)wp2.x=box.min.x-NPC_R;else if(minP===pXR)wp2.x=box.max.x+NPC_R;
+                        else if(minP===pZN)wp2.z=box.min.z-NPC_R;else wp2.z=box.max.z+NPC_R;
+                    }
+                }
                 // Clamp to world bounds
                 npcGuide.position.x=THREE.MathUtils.clamp(npcGuide.position.x,-70,70);
                 npcGuide.position.z=THREE.MathUtils.clamp(npcGuide.position.z,-65,70);
                 npcD.baseY=Math.max(terrainHeight(npcGuide.position.x,npcGuide.position.z),ROAD_Y);
                 npcGuide.position.y=npcD.baseY+Math.sin(t*3)*.03;
                 npcGuide.rotation.y=Math.atan2(nx,-nz);
+                // Stuck detection — if wizard barely moved, accumulate stuck time
+                const movedDist=Math.sqrt((npcGuide.position.x-prevX)**2+(npcGuide.position.z-prevZ)**2);
+                if(movedDist<spd*0.15){
+                    npcD.stuckTimer=(npcD.stuckTimer||0)+dt;
+                    if(npcD.stuckTimer>3){
+                        // Skip to next waypoint to escape stuck state
+                        npcD.wpIdx=(npcD.wpIdx+1)%_wizWaypoints.length;
+                        npcD.stuckTimer=0;
+                    }
+                }else{npcD.stuckTimer=0;}
             }
         }
     }
@@ -4153,17 +4287,17 @@ function tick(){
     // Cam position for proximity checks
     const cpRef=state.mode==="driving"?car.position:avatar.position;
     for(let i=0;i<LEAF_N;i++){const i3=i*3;leafPos[i3]+=(Math.sin(t*.7+i*2.3)*.2+.03)*dt*12;leafPos[i3+1]-=(.6+Math.sin(t+i)*.15)*dt*2;leafPos[i3+2]+=Math.cos(t*.5+i*1.7)*.15*dt*12;if(leafPos[i3+1]<0){leafPos[i3+1]=22+Math.random()*12;leafPos[i3]=cpRef.x+(Math.random()-.5)*100;leafPos[i3+2]=cpRef.z+(Math.random()-.5)*100;}}leafGeo.attributes.position.needsUpdate=true;
-    // Hologram ambient animations
-    billboards.forEach(b=>{
+    // Hologram ambient animations (skip on mobile to save CPU)
+    if(!IS_MOBILE){billboards.forEach(b=>{
         if(!b.group.visible)return;
         if(b.displayType==="hologram"){
             b.group.traverse(ch=>{
                 if(ch.userData._holoFloat){ch.position.y=3.2+Math.sin(t*1.5+b.group.position.x)*.15;}
             });
         }
-    });
-    // GIF textures
-    const gf=Math.floor(t*10);
+    });}
+    // GIF textures (5fps on mobile, 10fps on desktop)
+    const gf=Math.floor(t*(IS_MOBILE?5:10));
     if(gf!==tick._lg){tick._lg=gf;
         const parked2=state.mode==="driving"&&state.canInteract;
         billboards.forEach(b=>{
@@ -4175,46 +4309,48 @@ function tick(){
                     gd._busy=true;
                     gd._dec.decode({frameIndex:gd._fIdx}).then(result=>{
                         const c=gd.ctx;
-                        c.drawImage(result.image,0,0,512,256);
+                        c.drawImage(result.image,0,0,_GIF_W,_GIF_H);
                         result.image.close();
-                        c.fillStyle="rgba(0,0,0,.55)";c.fillRect(424,6,80,26);
-                        c.fillStyle="#ff3344";c.beginPath();c.arc(438,19,5,0,Math.PI*2);c.fill();
-                        c.fillStyle="#fff";c.font="bold 12px Segoe UI";c.fillText("LIVE",450,24);
-                        const gr=c.createLinearGradient(0,200,0,256);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
-                        c.fillStyle=gr;c.fillRect(0,200,512,56);
+                        const _gs=IS_MOBILE?.5:1;
+                        c.fillStyle="rgba(0,0,0,.55)";c.fillRect(_GIF_W-88*_gs,6*_gs,80*_gs,26*_gs);
+                        c.fillStyle="#ff3344";c.beginPath();c.arc(_GIF_W-74*_gs,19*_gs,5*_gs,0,Math.PI*2);c.fill();
+                        c.fillStyle="#fff";c.font=`bold ${12*_gs}px Segoe UI`;c.fillText("LIVE",_GIF_W-62*_gs,24*_gs);
+                        const gr=c.createLinearGradient(0,_GIF_H-56*_gs,0,_GIF_H);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
+                        c.fillStyle=gr;c.fillRect(0,_GIF_H-56*_gs,_GIF_W,56*_gs);
                         const di=DISTRICTS[b.project.district];
-                        c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
-                        c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
-                        c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText(IS_MOBILE?"TAP OPEN":"PRESS E TO OPEN",IS_MOBILE?440:390,245);
+                        c.fillStyle=di.color;c.font=`600 ${11*_gs}px Segoe UI`;c.fillText(di.label.toUpperCase(),14*_gs,_GIF_H-31*_gs);
+                        c.fillStyle="#fff";c.font=`700 ${16*_gs}px Segoe UI`;c.fillText(gd.title,14*_gs,_GIF_H-11*_gs);
+                        c.fillStyle="#00ff88";c.font=`bold ${10*_gs}px Segoe UI`;c.fillText(IS_MOBILE?"TAP OPEN":"PRESS E TO OPEN",IS_MOBILE?_GIF_W-72*_gs:_GIF_W-122*_gs,_GIF_H-11*_gs);
                         gd.tex.needsUpdate=true;gd.playing=true;
                         gd._fIdx=(gd._fIdx+1)%gd._fCount;
                         gd._busy=false;
                     }).catch(()=>{gd._busy=false;gd._fIdx=0;});
                 }else if(!gd._dec&&gd.img){
                     const c=gd.ctx;
-                    c.drawImage(gd.img,0,0,512,256);
-                    c.fillStyle="rgba(0,0,0,.55)";c.fillRect(424,6,80,26);
-                    c.fillStyle="#ff3344";c.beginPath();c.arc(438,19,5,0,Math.PI*2);c.fill();
-                    c.fillStyle="#fff";c.font="bold 12px Segoe UI";c.fillText("LIVE",450,24);
-                    const gr=c.createLinearGradient(0,200,0,256);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
-                    c.fillStyle=gr;c.fillRect(0,200,512,56);
+                    c.drawImage(gd.img,0,0,_GIF_W,_GIF_H);
+                    const _gs=IS_MOBILE?.5:1;
+                    c.fillStyle="rgba(0,0,0,.55)";c.fillRect(_GIF_W-88*_gs,6*_gs,80*_gs,26*_gs);
+                    c.fillStyle="#ff3344";c.beginPath();c.arc(_GIF_W-74*_gs,19*_gs,5*_gs,0,Math.PI*2);c.fill();
+                    c.fillStyle="#fff";c.font=`bold ${12*_gs}px Segoe UI`;c.fillText("LIVE",_GIF_W-62*_gs,24*_gs);
+                    const gr=c.createLinearGradient(0,_GIF_H-56*_gs,0,_GIF_H);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
+                    c.fillStyle=gr;c.fillRect(0,_GIF_H-56*_gs,_GIF_W,56*_gs);
                     const di=DISTRICTS[b.project.district];
-                    c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
-                    c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
-                    c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText(IS_MOBILE?"TAP OPEN":"PRESS E TO OPEN",IS_MOBILE?440:390,245);
+                    c.fillStyle=di.color;c.font=`600 ${11*_gs}px Segoe UI`;c.fillText(di.label.toUpperCase(),14*_gs,_GIF_H-31*_gs);
+                    c.fillStyle="#fff";c.font=`700 ${16*_gs}px Segoe UI`;c.fillText(gd.title,14*_gs,_GIF_H-11*_gs);
+                    c.fillStyle="#00ff88";c.font=`bold ${10*_gs}px Segoe UI`;c.fillText(IS_MOBILE?"TAP OPEN":"PRESS E TO OPEN",IS_MOBILE?_GIF_W-72*_gs:_GIF_W-122*_gs,_GIF_H-11*_gs);
                     gd.tex.needsUpdate=true;gd.playing=true;
                 }
-            }else if(d2<55){
+            }else if(d2<(IS_MOBILE?30:55)){
                 if(gd.playing||!gd._hasStatic){
-                    const c=gd.ctx;
-                    if(gd.img&&gd.img.complete&&gd.img.naturalWidth>0)c.drawImage(gd.img,0,0,512,256);
-                    else{c.fillStyle="#0a0a14";c.fillRect(0,0,512,256);}
-                    c.fillStyle="rgba(0,0,10,.5)";c.fillRect(0,0,512,256);
+                    const c=gd.ctx;const _gs=IS_MOBILE?.5:1;
+                    if(gd.img&&gd.img.complete&&gd.img.naturalWidth>0)c.drawImage(gd.img,0,0,_GIF_W,_GIF_H);
+                    else{c.fillStyle="#0a0a14";c.fillRect(0,0,_GIF_W,_GIF_H);}
+                    c.fillStyle="rgba(0,0,10,.5)";c.fillRect(0,0,_GIF_W,_GIF_H);
                     const di=DISTRICTS[b.project.district];
-                    c.fillStyle=di.color;c.font="bold 14px Segoe UI";c.fillText(di.label.toUpperCase(),20,30);
-                    c.fillStyle="#fff";c.font="bold 22px Segoe UI";c.fillText(gd.title,20,65);
-                    c.fillStyle="rgba(255,255,255,.5)";c.font="16px Segoe UI";c.fillText("\u25B6 Park to preview",20,100);
-                    c.strokeStyle=di.color;c.lineWidth=2;c.strokeRect(2,2,508,252);
+                    c.fillStyle=di.color;c.font=`bold ${14*_gs}px Segoe UI`;c.fillText(di.label.toUpperCase(),20*_gs,30*_gs);
+                    c.fillStyle="#fff";c.font=`bold ${22*_gs}px Segoe UI`;c.fillText(gd.title,20*_gs,65*_gs);
+                    c.fillStyle="rgba(255,255,255,.5)";c.font=`${16*_gs}px Segoe UI`;c.fillText("\u25B6 Park to preview",20*_gs,100*_gs);
+                    c.strokeStyle=di.color;c.lineWidth=IS_MOBILE?1:2;c.strokeRect(1,1,_GIF_W-2,_GIF_H-2);
                     gd.tex.needsUpdate=true;gd.playing=false;gd._hasStatic=true;
                 }
             }
