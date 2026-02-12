@@ -160,13 +160,13 @@
         #mobile-controls{display:none;position:fixed;inset:0;z-index:30;pointer-events:none}
         #mobile-controls>*{pointer-events:auto}
         /* Virtual Joystick */
-        #joystick-zone{position:absolute;left:10px;bottom:10px;width:160px;height:160px;touch-action:none}
+        #joystick-zone{position:absolute;left:10px;bottom:10px;width:160px;height:160px;touch-action:none;z-index:35}
         #joystick-base{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,.06);border:2px solid rgba(110,200,110,.22);backdrop-filter:blur(2px)}
         #joystick-stick{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:rgba(110,200,110,.28);border:2.5px solid rgba(110,200,110,.5)}
         /* Action Buttons — bottom-right */
-        #mobile-btns{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+        #mobile-btns{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:35}
         #mobile-btns-row{display:flex;gap:10px;align-items:center}
-        .mobile-btn{width:60px;height:60px;border-radius:50%;border:2px solid rgba(110,200,110,.35);background:rgba(14,22,14,.65);color:#8fc88f;font-family:inherit;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;touch-action:none;-webkit-user-select:none;user-select:none;cursor:pointer;padding:4px}
+        .mobile-btn{width:60px;height:60px;border-radius:50%;border:2px solid rgba(110,200,110,.35);background:rgba(14,22,14,.65);color:#8fc88f;font-family:inherit;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;touch-action:none;-webkit-user-select:none;user-select:none;cursor:pointer;padding:4px;transition:opacity .15s,transform .15s}
         .mobile-btn:active,.mobile-btn.pressed{background:rgba(110,200,110,.25);border-color:#6ec86e;color:#d4ffd4}
         .mobile-btn.ctx-hidden{opacity:0;pointer-events:none;transform:scale(.8)}
         .mobile-btn-lg{width:66px;height:66px;font-size:.72rem;border-color:rgba(110,200,110,.45);background:rgba(110,200,110,.06)}
@@ -281,6 +281,7 @@
     <div class="scope-zoom-label" id="scope-zoom-label">4x SCOPE</div>
     <div class="gun-hud" id="gun-hud"><span class="gun-icon">🔫</span><span>SMG</span><span style="color:#aaa">| ∞</span></div>
     <div class="death-screen" id="death-screen"><div class="death-title" id="death-title">You Died</div><div class="death-sub" id="death-sub">The Wizard has struck you down!</div></div>
+    <div id="matrix-screen" style="position:fixed;inset:0;z-index:200;opacity:0;pointer-events:none;transition:opacity 1.5s;background:#000"><canvas id="matrix-canvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas><div id="matrix-text" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 3s;pointer-events:none;text-align:center;padding:20px"><div style="font-family:'Courier New',monospace;font-size:clamp(1.2rem,3vw,2.4rem);color:#00ff41;text-shadow:0 0 20px #00ff41,0 0 60px rgba(0,255,65,.4);line-height:1.8;max-width:700px">The wizard built the simulation,<br>and you killed him...</div><div style="font-family:'Courier New',monospace;font-size:clamp(.7rem,1.5vw,1rem);color:rgba(0,255,65,.5);margin-top:40px;letter-spacing:.2em">THERE IS NO GOING BACK</div><button id="matrix-return" style="margin-top:50px;padding:12px 32px;background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:'Courier New',monospace;font-size:1rem;cursor:pointer;opacity:0;transition:opacity 2s;letter-spacing:.1em" onmouseover="this.style.background='rgba(0,255,65,.15)'" onmouseout="this.style.background='transparent'">WAKE UP</button></div></div>
     <div class="hp-bar" id="hp-bar"><div class="hp-fill" id="hp-fill" style="width:100%"></div></div>
     <div class="muzzle-flash" id="muzzle-flash"></div>
     <div class="links"><a class="btn" href="index.html">← Classic Portfolio</a><button class="btn" id="mute-btn" type="button">Audio: ON</button></div>
@@ -524,6 +525,8 @@ const ACHIEVEMENTS=[
     {id:"died",title:"Oops",desc:"Die to the Wizard's fireball.",icon:"\u{1F480}"},
     {id:"phoenix",title:"Phoenix",desc:"Die and respawn 3 times.",icon:"\u{1F426}"},
     {id:"pacifist",title:"Pacifist",desc:"Complete all quests without destroying anything.",icon:"\u{262E}"},
+    {id:"dodge5",title:"Dodge Master",desc:"Dodge 5 of the Wizard's fireballs.",icon:"\u{1F4A8}"},
+    {id:"wizard_kill",title:"Simulation Breaker",desc:"Defeat the Wizard. What have you done?",icon:"\u{1F300}"},
     // ── Hidden / Fun ──
     {id:"orbhalf",title:"Halfway There",desc:"Collect half the orbs.",icon:"\u{2728}"},
     {id:"night",title:"Night Owl",desc:"Drive for 5 real minutes.",icon:"\u{1F319}"},
@@ -550,7 +553,7 @@ const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:
     // Gun & combat
     hasGun:false,gunEquipped:false,
     // Wizard protection
-    wizardWarnings:0,isDead:false,
+    wizardWarnings:0,isDead:false,wizardDead:false,fireballsDodged:0,
     // Swimming & jumping
     swimming:false,underwater:false,swimVelY:0,onShip:false,
     jumpVelY:0,isJumping:false,avatarY:0,swimTime:0,
@@ -2158,9 +2161,12 @@ function tickFireball(dt){
     const playerPos=state.mode==="walking"?avatar.position:car.position;
     const dist=_fireball.mesh.position.distanceTo(playerPos);
     if(dist<2||_fireball.life<=0){
-        // Hit!
         if(dist<3){
             killPlayer();
+        }else{
+            // Dodged! Fireball expired without hitting player
+            state.fireballsDodged++;
+            if(state.fireballsDodged>=5)unlock("dodge5");
         }
         scene.remove(_fireball.mesh);
         spawnDebris(_fireball.mesh.position,"#ff4400",8);
@@ -2517,12 +2523,12 @@ function destroyObject(dest){
     }
 }
 
-// Wizard protection
+// Wizard protection & boss fight
 function handleWizardShot(){
+    if(state.wizardDead)return;
     state.wizardWarnings++;
     unlock("wizard_warn");
     if(state.wizardWarnings===1){
-        // First warning
         speechBubble.textContent="Careful where you aim that, mortal...";
         speechBubble.classList.add("show");
         _jokeShow=4;
@@ -2532,16 +2538,150 @@ function handleWizardShot(){
         speechBubble.classList.add("show");
         _jokeShow=4;
         audio.chime(200,.15);
-    }else if(state.wizardWarnings>=3){
-        // Wizard attacks!
-        speechBubble.textContent="You've chosen poorly!";
+    }else if(state.wizardWarnings>=3&&state.wizardWarnings<10){
+        // Wizard attacks — escalating fury
+        const taunts=[
+            "You've chosen poorly!",
+            "FOOL! You cannot defeat me!",
+            "My power built this WORLD!",
+            "Every pixel answers to ME!",
+            "Is that all you've got?!",
+            "I will END your simulation!",
+            "You're NOTHING without my code!"
+        ];
+        speechBubble.textContent=taunts[Math.min(state.wizardWarnings-3,taunts.length-1)];
         speechBubble.classList.add("show");
         _jokeShow=3;
-        audio.chime(100,.2);
+        audio.chime(Math.max(60,200-(state.wizardWarnings-3)*20),.2);
+        // Fire back — more fireballs at higher hit counts
         const wizPos=npcGuide.position.clone();
         const pPos=avatar.position.clone();
         spawnFireball(wizPos,pPos);
+        // After 6 hits, wizard fires a second fireball with slight offset
+        if(state.wizardWarnings>=6){
+            setTimeout(()=>{
+                if(state.wizardDead||state.isDead)return;
+                const p2=avatar.position.clone();
+                p2.x+=(Math.random()-.5)*4;p2.z+=(Math.random()-.5)*4;
+                spawnFireball(npcGuide.position.clone(),p2);
+            },400);
+        }
+    }else if(state.wizardWarnings>=10){
+        // WIZARD DEFEATED!
+        killWizard();
     }
+}
+
+// ═══════ WIZARD DEATH — MATRIX RAIN SEQUENCE ═══════
+function killWizard(){
+    if(state.wizardDead)return;
+    state.wizardDead=true;
+    unlock("wizard_kill");
+    // Holster gun
+    state.gunEquipped=false;_shooting=false;unscopeGun();
+    gunPivot.visible=false;crosshairEl.classList.remove("show");gunHudEl.classList.remove("show");
+    hpBar.classList.remove("show");
+    if(document.pointerLockElement)document.exitPointerLock();
+    // Wizard death speech
+    speechBubble.textContent="No... NO! Without me... there is no simulation...";
+    speechBubble.classList.add("show");
+    audio.chime(80,.3);
+    // Wizard explosion — burst of debris
+    const wPos=npcGuide.position.clone();
+    spawnDebris(wPos,"#aa44ff",20);
+    spawnDebris(wPos,"#ff4400",15);
+    spawnDebris(wPos,"#00ff88",10);
+    _camShake=2.0;
+    // Wizard dissolves
+    let _wizFade=1;
+    const _wizFadeInt=setInterval(()=>{
+        _wizFade-=0.02;
+        npcGuide.traverse(ch=>{if(ch.isMesh){ch.material=ch.material.clone();ch.material.transparent=true;ch.material.opacity=Math.max(0,_wizFade);}});
+        if(_wizFade<=0){
+            clearInterval(_wizFadeInt);
+            npcGuide.visible=false;
+            speechBubble.classList.remove("show");
+        }
+    },30);
+    // Phase 1: World shakes and objects start falling (1.5s delay)
+    setTimeout(()=>{
+        _camShake=3.0;
+        audio.chime(40,.4);
+        // Make all visible objects slowly fall/sink
+        const _crumbleObjs=[];
+        scene.children.forEach(ch=>{
+            if(ch.isMesh||ch.isGroup){
+                if(ch===camera||ch===avatar||ch===gunPivot||ch===_tracerLine)return;
+                _crumbleObjs.push({obj:ch,vy:-(Math.random()*2+1),rot:new THREE.Vector3((Math.random()-.5)*.02,(Math.random()-.5)*.02,(Math.random()-.5)*.02)});
+            }
+        });
+        let _crumbleT=0;
+        const _crumbleInt=setInterval(()=>{
+            _crumbleT+=0.016;
+            _crumbleObjs.forEach(c=>{
+                c.obj.position.y+=c.vy*0.016*(_crumbleT*2);
+                c.obj.rotation.x+=c.rot.x;c.obj.rotation.z+=c.rot.z;
+            });
+            _camShake=Math.max(1,3-_crumbleT);
+            if(_crumbleT>3)clearInterval(_crumbleInt);
+        },16);
+    },1500);
+    // Phase 2: Matrix screen fades in (3s delay)
+    setTimeout(()=>{
+        const matScreen=document.getElementById("matrix-screen");
+        const matCanvas=document.getElementById("matrix-canvas");
+        const matText=document.getElementById("matrix-text");
+        const matReturn=document.getElementById("matrix-return");
+        matScreen.style.opacity="1";matScreen.style.pointerEvents="auto";
+        // Matrix rain canvas
+        const ctx=matCanvas.getContext("2d");
+        matCanvas.width=window.innerWidth;matCanvas.height=window.innerHeight;
+        const fontSize=14;
+        const cols=Math.floor(matCanvas.width/fontSize);
+        const drops=new Array(cols).fill(1);
+        const chars="アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF{}[]<>=/\\|;:~`!@#$%^&*()_+";
+        function drawMatrix(){
+            ctx.fillStyle="rgba(0,0,0,0.05)";
+            ctx.fillRect(0,0,matCanvas.width,matCanvas.height);
+            ctx.fillStyle="#00ff41";
+            ctx.font=fontSize+"px 'Courier New',monospace";
+            for(let i=0;i<drops.length;i++){
+                const ch=chars[Math.floor(Math.random()*chars.length)];
+                // Vary brightness
+                const bright=Math.random();
+                if(bright>.9)ctx.fillStyle="#aaffaa";
+                else if(bright>.6)ctx.fillStyle="#00ff41";
+                else ctx.fillStyle="#008f22";
+                ctx.fillText(ch,i*fontSize,drops[i]*fontSize);
+                if(drops[i]*fontSize>matCanvas.height&&Math.random()>.975)drops[i]=0;
+                drops[i]++;
+            }
+        }
+        const _matInt=setInterval(drawMatrix,33);
+        // Resize handler
+        const _matResize=()=>{matCanvas.width=window.innerWidth;matCanvas.height=window.innerHeight;drops.length=Math.floor(matCanvas.width/fontSize);for(let i=0;i<drops.length;i++)if(drops[i]===undefined)drops[i]=Math.floor(Math.random()*matCanvas.height/fontSize);};
+        window.addEventListener("resize",_matResize);
+        // Phase 3: Text fades in (5s after matrix starts)
+        setTimeout(()=>{
+            matText.style.opacity="1";
+            audio.chime(200,.15);setTimeout(()=>audio.chime(150,.12),400);setTimeout(()=>audio.chime(100,.1),800);
+        },4000);
+        // Phase 4: Return button appears (8s after matrix starts)
+        setTimeout(()=>{
+            matReturn.style.opacity="1";
+            matReturn.onclick=()=>{
+                // Fade out matrix screen
+                matScreen.style.opacity="0";
+                setTimeout(()=>{
+                    matScreen.style.pointerEvents="none";
+                    clearInterval(_matInt);
+                    window.removeEventListener("resize",_matResize);
+                    // Reset the world — reload
+                    location.reload();
+                },1800);
+            };
+        },8000);
+    },3000);
 }
 
 // Equip/holster gun
@@ -2979,7 +3119,7 @@ window.addEventListener("keydown",e=>{
         }else if(state.mode==="walking"){
             // Check NPC proximity first, then billboard, then water entry
             const _ePos=avatar.position;
-            if(_ePos.distanceTo(npcGuide.position)<4){
+            if(_ePos.distanceTo(npcGuide.position)<4&&!state.wizardDead){
                 showDialog(npcGuide);
             }else if(state.canInteract){
                 openBB(); // open billboard on foot
@@ -3832,11 +3972,8 @@ function tick(){
                 }
             }
 
-            // Walking bob
-            if(moving&&!state.isJumping){
-                ud.walkTime=(ud.walkTime||0)+dt*8;
-                ap.y+=Math.abs(Math.sin((ud.walkTime||0)*2))*.03;
-            }
+            // Walking bob (disabled)
+
         }
     // Proximity checks — NPC, billboards, car
     state._nearWaterEdge=false;
@@ -3845,7 +3982,7 @@ function tick(){
     let _walkBB=null,_walkBBd=Infinity;
     billboards.forEach(b=>{const d2=ap.distanceTo(b.group.position);if(d2<_walkBBd){_walkBBd=d2;_walkBB=b;}});
     const nearBBOnFoot=_walkBBd<5&&_walkBB;
-    if(npcDist<4){
+    if(npcDist<4&&!state.wizardDead){
         promptEl.innerHTML=`<strong>${npcGuide.userData.name}</strong> — ${IS_MOBILE?"Tap <b>TALK</b>":"Press <b>E</b> to talk"}`;
         promptEl.classList.add("show");
         state.nearNPC=true;
@@ -4121,6 +4258,8 @@ function tick(){
     }
     // NPC wander AI — patrol waypoints, idle pauses, face player when near
     const npcD=npcGuide.userData;
+    if(state.wizardDead){/* wizard is dead — skip all AI */}
+    else{
     if(npcD.mixer)npcD.mixer.update(dt);
     // Determine player position for proximity
     const _playerPos=state.mode==="walking"?avatar.position:car.position;
@@ -4172,62 +4311,77 @@ function tick(){
             }else{
                 let nx=dx/dist, nz=dz/dist;
                 const spd=npcD.wanderSpeed*dt;
-                const nextX=npcGuide.position.x+nx*spd;
-                const nextZ=npcGuide.position.z+nz*spd;
-                // Avoid roads — if next step is on a road, steer perpendicular
-                if(roadDist(nextX,nextZ)<3){
-                    const px=-nz, pz=nx;
-                    if(roadDist(npcGuide.position.x+px*spd*3,npcGuide.position.z+pz*spd*3)>3){
-                        nx=px;nz=pz;
-                    }else{nx=-px;nz=-pz;}
+                const _wizPx=npcGuide.position.x, _wizPz=npcGuide.position.z;
+                // ── 1) Proactive building avoidance (highest priority) ──
+                // Fixed look-ahead distance (not frame-rate dependent)
+                let _bldgSteer=0; // track if building avoidance is active
+                const _LA=4.0; // look-ahead units
+                const _avoidR=NPC_R+1.2;
+                for(const box of staticCol){
+                    const cx=(box.min.x+box.max.x)*.5, cz=(box.min.z+box.max.z)*.5;
+                    const hw=(box.max.x-box.min.x)*.5+_LA+NPC_R, hd=(box.max.z-box.min.z)*.5+_LA+NPC_R;
+                    if(Math.abs(_wizPx-cx)>hw||Math.abs(_wizPz-cz)>hd)continue;
+                    // Check TWO look-ahead distances: near and far
+                    for(const la of[_LA*0.5,_LA]){
+                        const futX=_wizPx+nx*la, futZ=_wizPz+nz*la;
+                        const clX=Math.max(box.min.x,Math.min(futX,box.max.x));
+                        const clZ=Math.max(box.min.z,Math.min(futZ,box.max.z));
+                        const aDx=futX-clX, aDz=futZ-clZ;
+                        const aDist=Math.sqrt(aDx*aDx+aDz*aDz);
+                        if(aDist<_avoidR&&aDist>0.01){
+                            const str=Math.max(0,(_avoidR-aDist)/_avoidR)*2.0;
+                            nx+=aDx/aDist*str; nz+=aDz/aDist*str;
+                            _bldgSteer+=str;
+                        }else if(aDist<0.01){
+                            // Future pos inside box — push along shortest exit
+                            const pXL=futX-box.min.x, pXR=box.max.x-futX;
+                            const pZN=futZ-box.min.z, pZF=box.max.z-futZ;
+                            const minP=Math.min(pXL,pXR,pZN,pZF);
+                            if(minP===pXL)nx-=2;else if(minP===pXR)nx+=2;
+                            else if(minP===pZN)nz-=2;else nz+=2;
+                            _bldgSteer+=2;
+                        }
+                    }
+                    // Also check current position proximity (immediate danger)
+                    const clNx=Math.max(box.min.x,Math.min(_wizPx,box.max.x));
+                    const clNz=Math.max(box.min.z,Math.min(_wizPz,box.max.z));
+                    const nDx=_wizPx-clNx, nDz=_wizPz-clNz;
+                    const nDist=Math.sqrt(nDx*nDx+nDz*nDz);
+                    if(nDist<NPC_R+0.5&&nDist>0.01){
+                        const str=Math.max(0,(NPC_R+0.5-nDist)/(NPC_R+0.5))*3.0;
+                        nx+=nDx/nDist*str; nz+=nDz/nDist*str;
+                        _bldgSteer+=str;
+                    }
                 }
-                // Avoid the car — steer away if too close
-                const carDx=npcGuide.position.x-car.position.x;
-                const carDz=npcGuide.position.z-car.position.z;
+                // Normalize after building avoidance
+                let _len=Math.sqrt(nx*nx+nz*nz);
+                if(_len>0){nx/=_len;nz/=_len;}
+                // ── 2) Road avoidance (skip if building avoidance is strongly active to prevent oscillation) ──
+                if(_bldgSteer<0.5){
+                    const nextX=_wizPx+nx*spd;
+                    const nextZ=_wizPz+nz*spd;
+                    if(roadDist(nextX,nextZ)<3){
+                        const px=-nz, pz=nx;
+                        if(roadDist(_wizPx+px*spd*3,_wizPz+pz*spd*3)>3){
+                            nx=px;nz=pz;
+                        }else{nx=-px;nz=-pz;}
+                    }
+                }
+                // ── 3) Car avoidance ──
+                const carDx=_wizPx-car.position.x;
+                const carDz=_wizPz-car.position.z;
                 const carD=Math.sqrt(carDx*carDx+carDz*carDz);
                 if(carD<8&&carD>0.1){
                     const pushStr=Math.max(0,(8-carD)/8)*.6;
-                    nx+=carDx/carD*pushStr;
-                    nz+=carDz/carD*pushStr;
-                    const len=Math.sqrt(nx*nx+nz*nz);
-                    if(len>0){nx/=len;nz/=len;}
+                    nx+=carDx/carD*pushStr; nz+=carDz/carD*pushStr;
+                    _len=Math.sqrt(nx*nx+nz*nz);
+                    if(_len>0){nx/=_len;nz/=_len;}
                 }
-                // Proactive building avoidance — steer away from nearby static colliders
-                const _wizLook=NPC_R+1.5; // look-ahead distance
-                const _wizPx=npcGuide.position.x, _wizPz=npcGuide.position.z;
-                for(const box of staticCol){
-                    // Only avoid buildings the wizard is near (broad check)
-                    const cx=(box.min.x+box.max.x)*.5, cz=(box.min.z+box.max.z)*.5;
-                    const hw=(box.max.x-box.min.x)*.5+_wizLook, hd=(box.max.z-box.min.z)*.5+_wizLook;
-                    if(Math.abs(_wizPx-cx)>hw||Math.abs(_wizPz-cz)>hd)continue;
-                    // Closest point on box to wizard's future position
-                    const futX=_wizPx+nx*spd*8, futZ=_wizPz+nz*spd*8;
-                    const clX=Math.max(box.min.x,Math.min(futX,box.max.x));
-                    const clZ=Math.max(box.min.z,Math.min(futZ,box.max.z));
-                    const aDx=futX-clX, aDz=futZ-clZ;
-                    const aDist=Math.sqrt(aDx*aDx+aDz*aDz);
-                    if(aDist<NPC_R+0.8&&aDist>0.01){
-                        // Steer away from this building
-                        const str=Math.max(0,(NPC_R+0.8-aDist)/(NPC_R+0.8))*1.2;
-                        nx+=aDx/aDist*str;
-                        nz+=aDz/aDist*str;
-                    }else if(aDist<0.01){
-                        // Future pos is inside the box — push along shortest exit axis
-                        const pXL=futX-box.min.x, pXR=box.max.x-futX;
-                        const pZN=futZ-box.min.z, pZF=box.max.z-futZ;
-                        const minPush=Math.min(pXL,pXR,pZN,pZF);
-                        if(minPush===pXL)nx-=1.2;else if(minPush===pXR)nx+=1.2;
-                        else if(minPush===pZN)nz-=1.2;else nz+=1.2;
-                    }
-                }
-                // Re-normalize direction
-                const _wizLen=Math.sqrt(nx*nx+nz*nz);
-                if(_wizLen>0){nx/=_wizLen;nz/=_wizLen;}
-                // Apply movement
+                // ── Apply movement ──
                 const prevX=npcGuide.position.x, prevZ=npcGuide.position.z;
                 npcGuide.position.x+=nx*spd;
                 npcGuide.position.z+=nz*spd;
-                // Reactive collision push-out against buildings (like avatar)
+                // ── Reactive collision push-out (hard constraint, like avatar) ──
                 const wp2=npcGuide.position;
                 for(const box of staticCol){
                     const cnx=Math.max(box.min.x,Math.min(wp2.x,box.max.x));
@@ -4238,7 +4392,6 @@ function tick(){
                         const push=(NPC_R-cd)/cd;
                         wp2.x+=cdx*push; wp2.z+=cdz*push;
                     }else if(cd<0.01&&wp2.x>=box.min.x&&wp2.x<=box.max.x&&wp2.z>=box.min.z&&wp2.z<=box.max.z){
-                        // Fully inside — push out shortest axis
                         const pXL=wp2.x-box.min.x, pXR=box.max.x-wp2.x;
                         const pZN=wp2.z-box.min.z, pZF=box.max.z-wp2.z;
                         const minP=Math.min(pXL,pXR,pZN,pZF);
@@ -4252,12 +4405,11 @@ function tick(){
                 npcD.baseY=Math.max(terrainHeight(npcGuide.position.x,npcGuide.position.z),ROAD_Y);
                 npcGuide.position.y=npcD.baseY+Math.sin(t*3)*.03;
                 npcGuide.rotation.y=Math.atan2(nx,-nz);
-                // Stuck detection — if wizard barely moved, accumulate stuck time
+                // ── Stuck detection — skip waypoint if no progress ──
                 const movedDist=Math.sqrt((npcGuide.position.x-prevX)**2+(npcGuide.position.z-prevZ)**2);
-                if(movedDist<spd*0.15){
+                if(movedDist<spd*0.1){
                     npcD.stuckTimer=(npcD.stuckTimer||0)+dt;
-                    if(npcD.stuckTimer>3){
-                        // Skip to next waypoint to escape stuck state
+                    if(npcD.stuckTimer>2){
                         npcD.wpIdx=(npcD.wpIdx+1)%_wizWaypoints.length;
                         npcD.stuckTimer=0;
                     }
@@ -4265,10 +4417,13 @@ function tick(){
             }
         }
     }
+    } // end wizardDead else
     // Quest icon pulse — large, no circle bg, bold text
-    const iconS=1.6+Math.sin(t*3)*.25;
-    npcD.iconGroup.children.forEach(sp=>{if(sp.visible)sp.scale.set(iconS,iconS,1);});
-    npcD.iconGroup.rotation.y=t*.5;
+    if(!state.wizardDead){
+        const iconS=1.6+Math.sin(t*3)*.25;
+        npcD.iconGroup.children.forEach(sp=>{if(sp.visible)sp.scale.set(iconS,iconS,1);});
+        npcD.iconGroup.rotation.y=t*.5;
+    }else{npcD.iconGroup.visible=false;}
     // NPC speech bubble
     updateSpeechBubble(t,dt);
     // Camera shake from crashes
@@ -4299,7 +4454,7 @@ function tick(){
     // GIF textures (5fps on mobile, 10fps on desktop)
     const gf=Math.floor(t*(IS_MOBILE?5:10));
     if(gf!==tick._lg){tick._lg=gf;
-        const parked2=state.mode==="driving"&&state.canInteract;
+        const parked2=state.canInteract; // play GIF in both driving and walking mode
         billboards.forEach(b=>{
             const gd=gifData[b.gifIdx];if(!gd.loaded||gd._failed)return;
             const d2=cpRef.distanceTo(b.group.position);
