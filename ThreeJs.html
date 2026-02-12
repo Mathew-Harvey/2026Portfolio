@@ -135,6 +135,24 @@
         .hp-bar.show{opacity:1}
         .hp-bar .hp-fill{height:100%;background:linear-gradient(90deg,#ff3344,#ffaa44);border-radius:3px;transition:width .15s}
         .muzzle-flash{position:fixed;top:50%;left:50%;width:40px;height:40px;margin:-20px 0 0 -20px;background:radial-gradient(circle,rgba(255,200,60,.9),rgba(255,100,20,.4),transparent);border-radius:50%;z-index:24;pointer-events:none;opacity:0;transition:none}
+        .scope-overlay{position:fixed;inset:0;z-index:23;pointer-events:none;opacity:0;transition:opacity .15s}
+        .scope-overlay.show{opacity:1}
+        .scope-vignette{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 28%,rgba(0,0,0,.85) 42%,#000 52%)}
+        .scope-reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px}
+        .scope-reticle::before,.scope-reticle::after{content:"";position:absolute;background:rgba(255,50,50,.7)}
+        .scope-reticle::before{width:1px;height:100%;left:50%;top:0}
+        .scope-reticle::after{width:100%;height:1px;top:50%;left:0}
+        .scope-reticle .scope-dot{width:6px;height:6px;border-radius:50%;background:#ff3344;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px rgba(255,50,50,.8)}
+        .scope-reticle .scope-ring{width:80px;height:80px;border:1px solid rgba(255,50,50,.4);border-radius:50%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+        .scope-reticle .scope-tick{position:absolute;background:rgba(255,50,50,.5)}
+        .scope-reticle .scope-tick.h{width:12px;height:1px;top:50%}
+        .scope-reticle .scope-tick.v{width:1px;height:12px;left:50%}
+        .scope-reticle .scope-tick.t1{left:calc(50% - 60px);margin-top:-0.5px}
+        .scope-reticle .scope-tick.t2{left:calc(50% + 48px);margin-top:-0.5px}
+        .scope-reticle .scope-tick.t3{top:calc(50% - 60px);margin-left:-0.5px}
+        .scope-reticle .scope-tick.t4{top:calc(50% + 48px);margin-left:-0.5px}
+        .scope-zoom-label{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);color:rgba(255,80,80,.6);font-size:.7rem;font-weight:600;letter-spacing:.1em;z-index:24;pointer-events:none;opacity:0;transition:opacity .15s}
+        .scope-zoom-label.show{opacity:1}
         @media(max-width:860px){.side-panel{top:auto;bottom:60px;right:14px;max-height:32vh}.hud{width:min(280px,calc(100vw - 28px))}}
     </style>
 </head>
@@ -186,6 +204,8 @@
     <div class="quest-fanfare" id="quest-fanfare"><div class="qf-bg"></div><div class="qf-particles" id="qf-particles"></div><div class="qf-title">Quest Complete!</div><div class="qf-sub" id="qf-sub">Portfolio Scout</div><div class="qf-reward" id="qf-reward">New car unlocked: Sport Car</div></div>
     <div class="obj-complete-banner" id="obj-complete-banner"><div class="ocb-icon">&#9733;</div><div class="ocb-title" id="ocb-title">Objectives Complete!</div><div class="ocb-sub" id="ocb-sub">Return to The Wizard to claim your reward</div><div class="ocb-hint">Walk to the quest giver and press E</div></div>
     <div class="crosshair" id="crosshair"><div class="dot"></div></div>
+    <div class="scope-overlay" id="scope-overlay"><div class="scope-vignette"></div><div class="scope-reticle"><div class="scope-dot"></div><div class="scope-ring"></div><div class="scope-tick h t1"></div><div class="scope-tick h t2"></div><div class="scope-tick v t3"></div><div class="scope-tick v t4"></div></div></div>
+    <div class="scope-zoom-label" id="scope-zoom-label">4x SCOPE</div>
     <div class="gun-hud" id="gun-hud"><span class="gun-icon">🔫</span><span>SMG</span><span style="color:#aaa">| ∞</span></div>
     <div class="death-screen" id="death-screen"><div class="death-title" id="death-title">You Died</div><div class="death-sub" id="death-sub">The Wizard has struck you down!</div></div>
     <div class="hp-bar" id="hp-bar"><div class="hp-fill" id="hp-fill" style="width:100%"></div></div>
@@ -1409,7 +1429,7 @@ document.addEventListener("visibilitychange",()=>{
     }
 });
 function updateModeBadge(){
-    if(state.mode==="walking"&&state.gunEquipped){modeBadge.textContent="COMBAT — LMB fire · 1 holster · WASD move";modeBadge.className="mode-badge show walk";}
+    if(state.mode==="walking"&&state.gunEquipped){modeBadge.textContent="COMBAT — LMB fire · RMB scope · 1 holster · WASD move";modeBadge.className="mode-badge show walk";}
     else if(state.mode==="walking"){modeBadge.textContent="On Foot — F enter car · G garage · Hold LMB to look · E talk"+(state.hasGun?" · 1 equip SMG":"");modeBadge.className="mode-badge show walk";}
     else if(state.mode==="dialog"){modeBadge.textContent="Talking";modeBadge.className="mode-badge show dialog";}
     else{modeBadge.className="mode-badge";}
@@ -1532,12 +1552,16 @@ function updateSpeechBubble(t,dt){
 /* ====== SMG GUN + COMBAT SYSTEM ====== */
 const crosshairEl=document.getElementById("crosshair"),
       gunHudEl=document.getElementById("gun-hud"),
+      scopeOverlay=document.getElementById("scope-overlay"),
+      scopeZoomLabel=document.getElementById("scope-zoom-label"),
       deathScreen=document.getElementById("death-screen"),
       deathTitle=document.getElementById("death-title"),
       deathSub=document.getElementById("death-sub"),
       hpBar=document.getElementById("hp-bar"),
       hpFill=document.getElementById("hp-fill"),
       muzzleFlashEl=document.getElementById("muzzle-flash");
+let _scoped=false;
+const SCOPE_FOV=18,NORMAL_FOV=55; // narrow FOV = zoom
 
 // Build SMG mesh — gun pivots for pitch aiming
 const gunPivot=new THREE.Group(); // this group rotates for pitch (aims up/down)
@@ -1797,6 +1821,7 @@ function killPlayer(){
     if(state.deathCount>=3)unlock("phoenix");
     state.gunEquipped=false;
     _shooting=false;
+    unscopeGun();
     gunPivot.visible=false;
     crosshairEl.classList.remove("show");
     gunHudEl.classList.remove("show");
@@ -2176,7 +2201,7 @@ function toggleGun(){
         _camPitch=0; // Level pitch for FPS
         // Request pointer lock for FPS aiming
         renderer.domElement.requestPointerLock();
-        showToast("SMG equipped — LMB to fire, 1 or ESC to holster");
+        showToast("SMG equipped — LMB fire · RMB scope · 1/ESC holster");
         updateModeBadge();
     }else{
         holsterGun();
@@ -2184,6 +2209,7 @@ function toggleGun(){
 }
 function holsterGun(){
     state.gunEquipped=false;
+    unscopeGun();
     gunPivot.visible=false;
     crosshairEl.classList.remove("show");
     gunHudEl.classList.remove("show");
@@ -2191,6 +2217,25 @@ function holsterGun(){
     _camPitch=.3; // Reset to normal walking pitch
     if(document.pointerLockElement)document.exitPointerLock();
     updateModeBadge();
+}
+function scopeGun(){
+    if(!state.gunEquipped||_scoped)return;
+    _scoped=true;
+    scopeOverlay.classList.add("show");
+    scopeZoomLabel.classList.add("show");
+    crosshairEl.classList.remove("show");
+    gunPivot.visible=false; // hide gun mesh in scope view
+}
+function unscopeGun(){
+    if(!_scoped)return;
+    _scoped=false;
+    scopeOverlay.classList.remove("show");
+    scopeZoomLabel.classList.remove("show");
+    if(state.gunEquipped){
+        crosshairEl.classList.add("show");
+        gunPivot.visible=true;
+    }
+    camera.fov=NORMAL_FOV;camera.updateProjectionMatrix();
 }
 
 // Pointer lock change handler
@@ -2525,16 +2570,26 @@ renderer.domElement.addEventListener("mousedown",e=>{
     if(state.gunEquipped&&document.pointerLockElement&&e.button===0){
         _shooting=true;shootGun();e.preventDefault();return;
     }
+    // RMB = scope in
+    if(state.gunEquipped&&document.pointerLockElement&&e.button===2){
+        scopeGun();e.preventDefault();return;
+    }
     if(state.mode==="walking"&&e.button===0&&!state.gunEquipped){_mouseDragging=true;e.preventDefault();}
 });
 window.addEventListener("mouseup",e=>{
     if(e.button===0){_mouseDragging=false;_shooting=false;}
+    if(e.button===2&&_scoped){unscopeGun();}
+});
+// Prevent context menu when gun is out (RMB is scope)
+renderer.domElement.addEventListener("contextmenu",e=>{
+    if(state.gunEquipped)e.preventDefault();
 });
 window.addEventListener("mousemove",e=>{
     // FPS aiming with pointer lock — full vertical range like any FPS
     if(document.pointerLockElement&&state.gunEquipped){
-        _camYaw-=e.movementX*.002;
-        _camPitch=THREE.MathUtils.clamp(_camPitch+e.movementY*.002,-1.4,1.4); // ~80° up/down
+        const sens=_scoped?.0006:.002; // much slower when scoped
+        _camYaw-=e.movementX*sens;
+        _camPitch=THREE.MathUtils.clamp(_camPitch+e.movementY*sens,-1.4,1.4);
         return;
     }
     if(!_mouseDragging||state.mode!=="walking")return;
@@ -3074,15 +3129,25 @@ function tick(){
         const aimY=-Math.sin(_camPitch);
         const aimZ=-Math.cos(_camYaw)*cosPitch;
         const aimRightX=Math.cos(_camYaw),aimRightZ=-Math.sin(_camYaw);
-        // Camera positioned behind right shoulder
-        const shoulderBack=3.0,shoulderRight=1.0,shoulderH=1.9;
+
+        // Scope zoom: smoothly interpolate FOV
+        const targetFOV=_scoped?SCOPE_FOV:NORMAL_FOV;
+        if(Math.abs(camera.fov-targetFOV)>.1){
+            camera.fov=THREE.MathUtils.lerp(camera.fov,targetFOV,1-Math.exp(-dt*12));
+            camera.updateProjectionMatrix();
+        }
+
+        // Camera position — tighter when scoped (closer to head, centered)
+        const shoulderBack=_scoped?1.2:3.0;
+        const shoulderRight=_scoped?0.15:1.0;
+        const shoulderH=_scoped?1.7:1.9;
         const camPos=new THREE.Vector3(
             ap.x-aimX*shoulderBack+aimRightX*shoulderRight,
-            ap.y+shoulderH+aimY*0.5,
+            ap.y+shoulderH+aimY*(_scoped?0.2:0.5),
             ap.z-aimZ*shoulderBack+aimRightZ*shoulderRight
         );
-        camera.position.lerp(camPos,1-Math.exp(-dt*14));
-        // Camera looks where the crosshair points
+        camera.position.lerp(camPos,1-Math.exp(-dt*(_scoped?18:14)));
+        // Camera looks where the crosshair/reticle points
         const lookTarget=new THREE.Vector3(
             camera.position.x+aimX*50,
             camera.position.y+aimY*50,
@@ -3091,15 +3156,16 @@ function tick(){
         camera.lookAt(lookTarget);
 
         // Position gun at avatar's right hand, raised and pointing at crosshair
-        const gunOffRight=0.5,gunOffForward=0.35,gunOffUp=1.2;
-        gunPivot.position.set(
-            ap.x+aimRightX*gunOffRight-Math.sin(_camYaw)*gunOffForward,
-            ap.y+gunOffUp,
-            ap.z+aimRightZ*gunOffRight-Math.cos(_camYaw)*gunOffForward
-        );
-        // Gun yaw matches camera yaw, pitch tracks the crosshair target
-        gunPivot.rotation.set(0,_camYaw,0);
-        gunGroup.rotation.set(-_camPitch,0,0); // negative pitch = gun tilts up when looking up
+        if(!_scoped){
+            const gunOffRight=0.5,gunOffForward=0.35,gunOffUp=1.2;
+            gunPivot.position.set(
+                ap.x+aimRightX*gunOffRight-Math.sin(_camYaw)*gunOffForward,
+                ap.y+gunOffUp,
+                ap.z+aimRightZ*gunOffRight-Math.cos(_camYaw)*gunOffForward
+            );
+            gunPivot.rotation.set(0,_camYaw,0);
+            gunGroup.rotation.set(-_camPitch,0,0);
+        }
 
         // Auto-fire when holding LMB
         if(_shooting){shootGun();}
