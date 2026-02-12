@@ -150,23 +150,86 @@
             align-items: center;
             gap: 8px;
             height: 40px;
-            padding: 0 14px;
+            padding: 0 18px;
             border-radius: 10px;
-            background: var(--accent);
+            background: linear-gradient(135deg, #6366f1, #2563eb, #0ea5e9);
+            background-size: 200% 200%;
+            animation: gameCta-gradient 4s ease infinite, gameCta-attention 3s ease-in-out 5s 3;
             color: #ffffff;
             font-size: 0.82rem;
             font-weight: 600;
             letter-spacing: 0.01em;
-            border: 1px solid var(--accent);
-            transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.22);
+            border: none;
+            transition: transform 280ms cubic-bezier(.34,1.56,.64,1), box-shadow 280ms ease, filter 280ms ease;
+            box-shadow: 0 4px 18px rgba(99, 102, 241, 0.28), 0 0 0 0 rgba(99, 102, 241, 0);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* Animated shimmer streak */
+        .game-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.25),
+                transparent
+            );
+            animation: gameCta-shimmer 4s ease-in-out infinite;
+            pointer-events: none;
         }
 
         .game-cta:hover {
-            background: var(--accent-hover);
             color: #ffffff;
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.26);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.38), 0 0 20px rgba(14, 165, 233, 0.18);
+            filter: brightness(1.1);
+        }
+
+        .game-cta:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .game-cta svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            transition: transform 280ms cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .game-cta:hover svg {
+            transform: rotate(-8deg) scale(1.15);
+        }
+
+        .game-cta-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes gameCta-gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes gameCta-shimmer {
+            0%, 100% { left: -100%; }
+            50% { left: 140%; }
+        }
+
+        /* Gentle nudge animation that plays a few times after page load */
+        @keyframes gameCta-attention {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-3px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(-2px); }
         }
 
         .nav-links a {
@@ -1202,8 +1265,9 @@
         <div class="container">
             <a href="#" class="nav-logo">Mat Harvey</a>
             <div class="nav-links">
-                <a class="game-cta" href="ThreeJs.html" aria-label="Launch interactive driving portfolio">
-                    Do you like to game?
+                <a class="game-cta" href="ThreeJs.html" aria-label="Launch interactive 3D driving game">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="4" y1="12" x2="8" y2="12"/><circle cx="16" cy="10" r="0.75" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="0.75" fill="currentColor" stroke="none"/></svg>
+                    <span class="game-cta-text">Play the Game</span>
                 </a>
                 <a href="https://github.com/Mathew-Harvey" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
