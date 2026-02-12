@@ -52,6 +52,24 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
+/* ====== PERFORMANCE PROFILE ====== */
+const PERF={
+    // Fixed settings across all devices for a consistent experience.
+    antialias:true,
+    pixelRatioCap:1.25,
+    postFx:true,
+    terrainSegs:165,
+    grassBlades:18000,
+    pineCount:180,
+    deciCount:140,
+    leafCount:120,
+    waterSegX:34,
+    waterSegY:16,
+    extraGltf:true,
+    traffic:true,
+    fpsCap:0,
+};
+
 /* ====== SHADERS ====== */
 const BOTW_VS=`
 #ifdef USE_INSTANCING_COLOR
@@ -212,11 +230,15 @@ function getDistrict(x,z){if(z<-28)return"Port District";if(z>30)return"Creative
 /* ====== SCENE ====== */
 const scene=new THREE.Scene();scene.background=new THREE.Color("#78b8e6");scene.fog=new THREE.Fog("#a8d4ec",70,240);
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,500);camera.position.set(0,10,18);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const renderer=new THREE.WebGLRenderer({antialias:PERF.antialias,powerPreference:"high-performance",precision:"highp"});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,PERF.pixelRatioCap));
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 document.getElementById("app").appendChild(renderer.domElement);
-const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
-composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.28,.6,.84));composer.addPass(new OutputPass());
+let composer=null;
+if(PERF.postFx){
+    composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.24,.55,.85));composer.addPass(new OutputPass());
+}
 const hemi=new THREE.HemisphereLight("#b4d8f0","#5a8040",.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight("#fff0c8",1.1);sun.position.set(60,90,40);scene.add(sun);
 const sunSphere=new THREE.Mesh(new THREE.SphereGeometry(5,16,16),new THREE.MeshBasicMaterial({color:"#ffe8a0"}));scene.add(sunSphere);
@@ -245,7 +267,7 @@ function terrainHeight(x,z){
     h*=Math.min(1,Math.max(.2,Math.hypot(x,z)/60));
     const rd=roadDist(x,z);if(rd<=0)h=ROAD_Y;else if(rd<8)h=ROAD_Y+(h-ROAD_Y)*ss(rd/8);
     if(z<-44){const p=Math.min(1,(-z-44)/22);h=h*(1-p*p)+(-1.2)*p*p;}return h;}
-const WORLD=400,SEGS=190;
+const WORLD=400,SEGS=PERF.terrainSegs;
 const tGeo=new THREE.PlaneGeometry(WORLD,WORLD,SEGS,SEGS);tGeo.rotateX(-Math.PI/2);
 const tPos=tGeo.attributes.position,tColors=new Float32Array(tPos.count*3);
 for(let i=0;i<tPos.count;i++)tPos.setY(i,terrainHeight(tPos.getX(i),tPos.getZ(i)));
@@ -261,46 +283,53 @@ addRoad(0,3.5,16,143);addRoad(0,0,176,16);addRoad(0,-40,110,12);addRoad(0,50,96,
 addRoad(-50,0,10,44);addRoad(50,0,10,44);addRoad(-38,5,8,90);addRoad(38,5,8,90);
 
 /* ====== GRASS — always visible, reacts to car + wind ====== */
-const GRASS_N=30000;
+const GRASS_N=PERF.grassBlades;
 const bVerts=new Float32Array([-.05,0,0,.05,0,0,-.035,.35,0,.035,.35,0,-.02,.7,0,.02,.7,0,0,1,0]);
 const bGeo2=new THREE.BufferGeometry();bGeo2.setAttribute("position",new THREE.BufferAttribute(bVerts,3));bGeo2.setIndex([0,1,2,2,1,3,2,3,4,4,3,5,4,5,6]);
 const grassGeo=new THREE.InstancedBufferGeometry();grassGeo.index=bGeo2.index;grassGeo.setAttribute("position",bGeo2.getAttribute("position"));
 const gO=new Float32Array(GRASS_N*3),gS=new Float32Array(GRASS_N),gA2=new Float32Array(GRASS_N);
 let gi=0;while(gi<GRASS_N){const x=(Math.random()-.5)*320,z=(Math.random()-.5)*300;if(roadDist(x,z)<2||z<-48)continue;const y=terrainHeight(x,z);if(y<-.4)continue;gO[gi*3]=x;gO[gi*3+1]=y;gO[gi*3+2]=z;gS[gi]=.3+Math.random()*1.0;gA2[gi]=Math.random()*Math.PI*2;gi++;}
 grassGeo.setAttribute("aO",new THREE.InstancedBufferAttribute(gO,3));grassGeo.setAttribute("aS",new THREE.InstancedBufferAttribute(gS,1));grassGeo.setAttribute("aA",new THREE.InstancedBufferAttribute(gA2,1));
+const GRASS_DIST=80; // render distance for grass (units from camera)
 const grassMat=new THREE.ShaderMaterial({uniforms:{
     uTime:{value:0},uCarPos:{value:new THREE.Vector3()},uCarSpeed:{value:0},
+    uCamPos:{value:new THREE.Vector3()},uRenderDist:{value:GRASS_DIST},
     uBase:{value:new THREE.Color("#3d8a2e")},uTip:{value:new THREE.Color("#a8d44e")},
-    fogColor:{value:scene.fog.color},fogNear:{value:90},fogFar:{value:280}},
+    fogColor:{value:scene.fog.color},fogNear:{value:60},fogFar:{value:GRASS_DIST*0.95}},
 vertexShader:`
 attribute vec3 aO; attribute float aS, aA;
-uniform float uTime, uCarSpeed;
-uniform vec3 uCarPos;
+uniform float uTime, uCarSpeed, uRenderDist;
+uniform vec3 uCarPos, uCamPos;
 varying float vH, vFD;
 void main(){
+    // --- Render distance cull: scale to zero beyond range ---
+    float dCam = distance(aO.xz, uCamPos.xz);
+    float fade = 1.0 - smoothstep(uRenderDist * 0.75, uRenderDist, dCam);
+    if(fade < 0.01){ gl_Position = vec4(0.0); return; } // GPU skips zero-area triangles
+
     vH = position.y;
     float c = cos(aA), s = sin(aA);
-    vec3 p = vec3(position.x*c - position.z*s, position.y*aS, position.x*s + position.z*c);
-    vec3 wPos = p + aO;
+    float scaledH = position.y * aS * fade; // fade shrinks blade height
+    vec3 p = vec3(position.x*c - position.z*s, scaledH, position.x*s + position.z*c);
     // --- Multi-layer wind ---
     float ph = uTime*1.8 + aO.x*.12 + aO.z*.1;
     float windMain = sin(ph) + 0.5*sin(ph*2.3 + 1.5) + 0.25*sin(ph*4.7 + 3.0);
     float windGust = 0.3*sin(uTime*0.4 + aO.x*0.03)*sin(uTime*0.7 + aO.z*0.05);
     float h2 = position.y * position.y;
-    p.x += h2 * 0.2 * (windMain + windGust);
-    p.z += h2 * 0.12 * cos(ph*0.7 + 1.3) + h2 * 0.08 * windGust;
+    p.x += h2 * 0.2 * (windMain + windGust) * fade;
+    p.z += (h2 * 0.12 * cos(ph*0.7 + 1.3) + h2 * 0.08 * windGust) * fade;
     // --- Car interaction: blades bend away from car ---
-    wPos = p + aO;
+    vec3 wPos = p + aO;
     vec2 toCar = wPos.xz - uCarPos.xz;
     float carDist = length(toCar);
     float pushR = 2.5 + abs(uCarSpeed) * 0.3;
     if(carDist < pushR && carDist > 0.01){
         float pushStr = (1.0 - carDist/pushR) * position.y * (0.8 + abs(uCarSpeed)*0.15);
-        pushStr = pushStr * pushStr; // quadratic falloff for snappy push
+        pushStr = pushStr * pushStr;
         vec2 pushDir = toCar / carDist;
         p.x += pushDir.x * pushStr;
         p.z += pushDir.y * pushStr;
-        p.y -= pushStr * 0.25; // flatten under car
+        p.y -= pushStr * 0.25;
     }
     vec4 mv = modelViewMatrix * vec4(p + aO, 1.0);
     vFD = -mv.z;
@@ -321,7 +350,7 @@ grassMesh.frustumCulled=false; // ALWAYS render grass — no popping
 scene.add(grassMesh);
 
 /* ====== TREES — pine + deciduous ====== */
-const PINE_N=250,DECI_N=200;const dm=new THREE.Object3D();
+const PINE_N=PERF.pineCount,DECI_N=PERF.deciCount;const dm=new THREE.Object3D();
 const trunkIM=new THREE.InstancedMesh(new THREE.CylinderGeometry(.14,.24,2.6,8),botw("#7d5a38","#3a2818"),PINE_N);
 const c1IM=new THREE.InstancedMesh(new THREE.ConeGeometry(1.6,2.6,7),botw("#3a8a3a","#1a4a1a"),PINE_N);
 const c2IM=new THREE.InstancedMesh(new THREE.ConeGeometry(1.2,2.2,7),botw("#48984a","#1a541a"),PINE_N);
@@ -347,7 +376,7 @@ let bi=0;while(bi<300){const x=(Math.random()-.5)*280,z=(Math.random()-.5)*260;i
 dm.rotation.set(0,0,0);[flowerIM,rockIM,bushIM].forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
 
 /* ====== WATER ====== */
-const water=new THREE.Mesh(new THREE.PlaneGeometry(260,80,50,25),waterMat);water.rotation.x=-Math.PI/2;water.position.set(0,-1,-78);scene.add(water);
+const water=new THREE.Mesh(new THREE.PlaneGeometry(260,80,PERF.waterSegX,PERF.waterSegY),waterMat);water.rotation.x=-Math.PI/2;water.position.set(0,-1,-78);scene.add(water);
 
 /* ====== COLLISION ====== */
 const staticCol=[];const dynCol=[];
@@ -492,23 +521,43 @@ for(let i=0;i<30;i++){const a=(i/30)*Math.PI*2,r=150+Math.random()*35;const mt=n
 
 /* ====== GIF BILLBOARDS + PARKING BAYS ====== */
 const interactables=[],billboards=[];
-// GIF host: keep images "visible" offscreen so browsers continue to decode animated frames
-const gifHost=document.createElement("div");gifHost.style.cssText="position:fixed;left:-5000px;top:0;width:800px;height:600px;opacity:0.01;pointer-events:none;z-index:-1;";document.body.appendChild(gifHost);
+// GIF host: images at 0,0 in viewport (behind canvas) so browsers keep animating them
+const gifHost=document.createElement("div");
+gifHost.style.cssText="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-100;pointer-events:none;opacity:0.01;overflow:hidden;";
+document.body.appendChild(gifHost);
 const pCv=document.createElement("canvas");pCv.width=64;pCv.height=64;const pCtx=pCv.getContext("2d");pCtx.fillStyle="#e8d060";pCtx.font="bold 48px sans-serif";pCtx.textAlign="center";pCtx.fillText("P",32,48);const pTex=new THREE.CanvasTexture(pCv);
 const bayMat=new THREE.MeshBasicMaterial({color:"#e8d060"});const frameMat=botw("#1a1a20","#0a0a10");
-const gifData=ALL_PROJECTS.map(pr=>{const img=new Image();img.crossOrigin="anonymous";img.src=`gifs/${pr.g}`;
-img.style.cssText="width:256px;height:128px;";gifHost.appendChild(img);
+const HAS_IMG_DEC='ImageDecoder' in window;
+const gifData=ALL_PROJECTS.map(pr=>{
 const cv=document.createElement("canvas");cv.width=512;cv.height=256;const ctx=cv.getContext("2d");
 // Draw initial static poster
 ctx.fillStyle="#0a0a14";ctx.fillRect(0,0,512,256);
 const di=DISTRICTS[pr.district]||{color:"#888",label:"Project"};
 ctx.fillStyle=di.color;ctx.font="bold 14px Segoe UI";ctx.fillText(di.label.toUpperCase(),20,30);
 ctx.fillStyle="#fff";ctx.font="bold 22px Segoe UI";ctx.fillText(pr.t,20,65);
-ctx.fillStyle="rgba(255,255,255,.4)";ctx.font="16px Segoe UI";ctx.fillText("Park here to preview",20,100);
+ctx.fillStyle="rgba(255,255,255,.4)";ctx.font="16px Segoe UI";ctx.fillText("\u25B6 Park to preview",20,100);
 ctx.strokeStyle=di.color;ctx.lineWidth=3;ctx.strokeRect(2,2,508,252);
 const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
-const d={img,cv,ctx,tex,title:pr.t,district:pr.district,loaded:false,playing:false};
-img.onload=()=>{d.loaded=true;};return d;});
+const url=`gifs/${pr.g}`;
+const d={cv,ctx,tex,title:pr.t,district:pr.district,url,
+    loaded:false,playing:false,_hasStatic:false,_failed:false,
+    img:null,_dec:null,_fCount:0,_fIdx:0,_busy:false};
+// 1) Fallback: <img> in viewport for browsers that animate visible GIFs
+const img=new Image();img.crossOrigin="anonymous";img.src=url;
+img.style.cssText="width:4px;height:2px;display:inline-block;";
+gifHost.appendChild(img);d.img=img;
+img.onload=()=>{if(!d.loaded){d.loaded=true;}};
+img.onerror=()=>{d._failed=true;d.loaded=true;};
+// 2) Primary: ImageDecoder API (Chrome/Edge) — decodes GIF frames reliably
+if(HAS_IMG_DEC){
+    fetch(url).then(r=>{if(!r.ok)throw new Error(r.status);
+        const dec=new ImageDecoder({data:r.body,type:'image/gif'});
+        d._dec=dec;return dec.completed;
+    }).then(()=>{
+        d._fCount=d._dec.tracks.selectedTrack.frameCount;
+        d.loaded=true;
+    }).catch(()=>{d._dec=null;});}
+return d;});
 
 ALL_PROJECTS.forEach((pr,idx)=>{
     const g=new THREE.Group();const y=Math.max(terrainHeight(pr.wx,pr.wz),ROAD_Y)+.1;
@@ -677,7 +726,7 @@ new GLTFLoader().load('models/mazda_rx-7_fd.glb',gltf=>{
 },undefined,e=>{console.warn('Mazda GLB load failed, using fallback:',e);});
 
 /* ====== PARTICLES ====== */
-const LEAF_N=200;const leafPos=new Float32Array(LEAF_N*3),leafSizes=new Float32Array(LEAF_N);
+const LEAF_N=PERF.leafCount;const leafPos=new Float32Array(LEAF_N*3),leafSizes=new Float32Array(LEAF_N);
 for(let i=0;i<LEAF_N;i++){leafPos[i*3]=(Math.random()-.5)*160;leafPos[i*3+1]=3+Math.random()*25;leafPos[i*3+2]=(Math.random()-.5)*160;leafSizes[i]=1.5+Math.random()*2.5;}
 const leafGeo=new THREE.BufferGeometry();leafGeo.setAttribute("position",new THREE.BufferAttribute(leafPos,3));leafGeo.setAttribute("aSize",new THREE.BufferAttribute(leafSizes,1));
 const leafMat=new THREE.ShaderMaterial({uniforms:{fogColor:{value:scene.fog.color},fogNear:{value:70},fogFar:{value:240}},vertexShader:`attribute float aSize;varying float vAlpha,vFD;void main(){vAlpha=.5+.3*sin(position.x+position.z);vec4 mv=modelViewMatrix*vec4(position,1.);vFD=-mv.z;gl_PointSize=aSize*(200./max(-mv.z,1.));gl_Position=projectionMatrix*mv;}`,fragmentShader:`uniform vec3 fogColor;uniform float fogNear,fogFar;varying float vAlpha,vFD;void main(){float d=length(gl_PointCoord-.5);if(d>.45)discard;float ff=smoothstep(fogNear,fogFar,vFD);vec3 col=mix(vec3(.85,.6,.28),fogColor,ff);gl_FragColor=vec4(col,vAlpha*(1.-d*2.2));}`,transparent:true,depthWrite:false});
@@ -743,7 +792,7 @@ function placeGLB(model,x,z,targetH,rotY){
     scene.add(m);return m;}
 
 // ---- BUILDINGS PACK ----
-glbLoader.load('models/buidlings/low_poly_public_buildings_pack.glb',gltf=>{
+if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pack.glb',gltf=>{
     const root=gltf.scene;root.updateMatrixWorld(true);
     const bldgs={};
     ['Pharmacy','Police','CityHall','Hospital','GasStation','School','Light','Bin'].forEach(n=>{
@@ -790,7 +839,7 @@ glbLoader.load('models/buidlings/low_poly_public_buildings_pack.glb',gltf=>{
 
 // ---- CARS PACK — NPC vehicles for city life ----
 const npcCars=[];
-glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
+if(PERF.traffic)glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
     const root=gltf.scene;root.updateMatrixWorld(true);
     const vehicles=[];
     for(let i=1;i<=7;i++){const c=extractChild(root,'Transport'+i);if(c){
@@ -838,7 +887,8 @@ glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
     ];
     parkSpots.forEach(([px,pz,pr],i)=>{
         const v=placeCar(vehicles[i%vehicles.length],px,pz,pr);
-        addStatic(v,.15); // parked cars are solid obstacles
+        // Physics-enabled: velocity, angular velocity, crash timer
+        v.userData._vel=new THREE.Vector3();v.userData._angVel=0;v.userData._crashed=0;
         npcCars.push(v);});
     // Driving cars follow actual road waypoint routes
     const routes=[
@@ -856,13 +906,37 @@ glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
         const v=placeCar(vehicles[(ri+3)%vehicles.length],route.pts[0][0],route.pts[0][1],0);
         v.userData.route=route;v.userData.wpIdx=0;
         v.userData.wpT=Math.random(); // start at random point along first segment
-        // Create a dynamic collision box for this driving car
-        v.userData.colBox=new THREE.Box3();
-        staticCol.push(v.userData.colBox); // add to static collision list (updated each tick)
+        // Physics-enabled
+        v.userData._vel=new THREE.Vector3();v.userData._angVel=0;v.userData._crashed=0;
         driveCars.push(v);npcCars.push(v);});
-    // NPC tick: waypoint-following with proper facing + update collision boxes
+    // NPC tick: waypoint-following + crash physics
     window._npcTick=function(t,dt){
         driveCars.forEach(c=>{
+            // If crashed, apply physics instead of route-following
+            if(c.userData._crashed>0){
+                c.userData._crashed-=dt;
+                // Apply crash velocity
+                const v=c.userData._vel;
+                if(v.lengthSq()>.01){
+                    c.position.addScaledVector(v,dt);
+                    v.y-=15*dt; // gravity
+                    const gy=Math.max(terrainHeight(c.position.x,c.position.z),ROAD_Y);
+                    if(c.position.y<gy){c.position.y=gy;v.y=Math.abs(v.y)*.2;v.x*=.88;v.z*=.88;}
+                    v.multiplyScalar(.94);
+                    c.rotation.y+=c.userData._angVel*dt;
+                    c.userData._angVel*=.94;
+                }
+                // Once crash timer expires, snap back onto nearest route point
+                if(c.userData._crashed<=0){
+                    c.userData._vel.set(0,0,0);c.userData._angVel=0;
+                    // Find nearest waypoint to resume
+                    const r=c.userData.route,pts=r.pts;
+                    let bestD=Infinity,bestI=0;
+                    pts.forEach(([px,pz],i)=>{const d=Math.hypot(c.position.x-px,c.position.z-pz);if(d<bestD){bestD=d;bestI=i;}});
+                    c.userData.wpIdx=bestI;c.userData.wpT=0;
+                }
+                return;
+            }
             const r=c.userData.route,pts=r.pts;
             c.userData.wpT+=dt*r.speed*.02;
             if(c.userData.wpT>=1){c.userData.wpT-=1;c.userData.wpIdx=(c.userData.wpIdx+1)%pts.length;}
@@ -875,16 +949,12 @@ glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
             const gy=Math.max(terrainHeight(x,z),ROAD_Y);
             c.position.set(x,gy,z);
             c.rotation.y=facing+MODEL_ROT;
-            // Update collision box around current position
-            if(c.userData.colBox){
-                c.userData.colBox.setFromCenterAndSize(
-                    new THREE.Vector3(x,gy+.7,z),new THREE.Vector3(2.2,1.6,4.2));}
         });};
     console.log(`Cars pack: ${vehicles.length} types, ${parkSpots.length} parked, ${driveCars.length} driving`);
 },undefined,e=>console.warn('Cars GLB failed:',e));
 
 // ---- TREES — realistic collection ----
-glbLoader.load('models/trees/realistic_trees_collection.glb',gltf=>{
+if(PERF.extraGltf)glbLoader.load('models/trees/realistic_trees_collection.glb',gltf=>{
     const root=gltf.scene;root.updateMatrixWorld(true);
     // Extract individual tree types
     const treeTypes=[];
@@ -893,7 +963,7 @@ glbLoader.load('models/trees/realistic_trees_collection.glb',gltf=>{
     treeNames.forEach(n=>{const c=extractChild(root,n);if(c)treeTypes.push(c);});
     if(!treeTypes.length){console.warn('No trees found in pack');return;}
     // Scatter realistic trees — replace some procedural ones
-    let placed=0;const maxTrees=80;
+    let placed=0;const maxTrees=52;
     while(placed<maxTrees){
         const x=(Math.random()-.5)*300,z=(Math.random()-.5)*280;
         if(roadDist(x,z)<5||z<-50)continue;
@@ -918,12 +988,21 @@ glbLoader.load('models/trees/realistic_trees_collection.glb',gltf=>{
 /* ====== GAME LOOP ====== */
 const clock=new THREE.Clock();
 setTimeout(()=>{const ld=document.getElementById("loading");ld.style.opacity="0";setTimeout(()=>ld.remove(),800);},800);
-const CAR_R=1.0; // Reduced from 1.8 — much less aggressive collisions
+const CAR_R=1.0;const NPC_R=1.4; // NPC car collision radius
+let _camShake=0; // camera shake intensity from crashes
+const frameBudget=PERF.fpsCap>0?1/PERF.fpsCap:0;
+let frameAccum=0;
 
 function tick(){
     requestAnimationFrame(tick);
     try{
-    const dt=Math.min(clock.getDelta(),.033),t=clock.getElapsedTime();
+    const rawDt=clock.getDelta(),t=clock.getElapsedTime();
+    if(frameBudget>0){
+        frameAccum+=rawDt;
+        if(frameAccum<frameBudget)return;
+    }
+    const dt=Math.min(frameBudget>0?frameAccum:rawDt,.033);
+    if(frameBudget>0)frameAccum=0;
     const wF=pressed.has("f"),wB=pressed.has("b"),wL=pressed.has("l"),wR=pressed.has("r"),bst=pressed.has("x");
     const accel=bst?34:24,brake=38,revRate=14,drag=7,mxF=bst?45:32,mxR=-14;
     if(wF){if(state.speed<0){state.speed+=brake*dt;if(state.speed>0)state.speed=0;}else state.speed+=accel*dt;}
@@ -951,12 +1030,76 @@ function tick(){
             state.speed*=.4;
         }
     }
-    // DYNAMIC COLLISIONS — objects fly away
+    // DYNAMIC COLLISIONS — small objects fly away
     for(const d of dynCol){const dp=d.mesh.position;const dx=dp.x-cp.x,dz=dp.z-cp.z;const dist=Math.sqrt(dx*dx+dz*dz);
         if(dist<CAR_R+.8&&Math.abs(state.speed)>.5){const imp=new THREE.Vector3(dx,.5,dz).normalize().multiplyScalar(Math.max(Math.abs(state.speed)*1.5,3));
         d.vel.add(imp);state.speed*=.92;state.crashes++;if(state.crashes>=10)unlock("crash");audio.chime(200,.08);}}
     for(const d of dynCol){if(d.vel.lengthSq()<.01)continue;d.mesh.position.addScaledVector(d.vel,dt);d.mesh.rotation.x+=d.vel.z*dt*2;d.mesh.rotation.z-=d.vel.x*dt*2;d.vel.y-=15*dt;d.vel.multiplyScalar(.96);
     const gy2=terrainHeight(d.mesh.position.x,d.mesh.position.z);if(d.mesh.position.y<gy2+.3){d.mesh.position.y=gy2+.3;d.vel.y=Math.abs(d.vel.y)*.3;d.vel.x*=.85;d.vel.z*=.85;}}
+
+    // NPC CAR COLLISIONS — proper physics: bounce, push, crash effects
+    const absSpd=Math.abs(state.speed);
+    for(const npc of npcCars){
+        const np=npc.position;
+        const dx=cp.x-np.x,dz=cp.z-np.z;
+        const dist=Math.sqrt(dx*dx+dz*dz);
+        const minDist=CAR_R+NPC_R;
+        if(dist>=minDist||dist<.01)continue;
+        // Collision normal (NPC → player)
+        const nx=dx/dist,nz=dz/dist;
+        // Separate cars (60% player, 40% NPC)
+        const overlap=minDist-dist;
+        cp.x+=nx*overlap*.6;cp.z+=nz*overlap*.6;
+        np.x-=nx*overlap*.4;np.z-=nz*overlap*.4;
+        // Player velocity component along collision normal
+        const playerVn=state.speed*(dir.x*nx+dir.z*nz);
+        // NPC velocity along normal (driving cars have route speed)
+        let npcVn=0;
+        if(npc.userData.route&&npc.userData._crashed<=0){
+            const r=npc.userData.route,pts=r.pts;
+            const i0=npc.userData.wpIdx,i1=(i0+1)%pts.length;
+            const rdx=pts[i1][0]-pts[i0][0],rdz=pts[i1][1]-pts[i0][1];
+            const rLen=Math.hypot(rdx,rdz);
+            if(rLen>.01){npcVn=r.speed*((-rdx/rLen)*nx+(-rdz/rLen)*nz);}
+        }
+        // Elastic collision with restitution
+        const e=0.55; // coefficient of restitution (0=inelastic, 1=perfectly elastic)
+        const relVn=playerVn-npcVn;
+        if(relVn>0)continue; // already separating
+        const impulse=-(1+e)*relVn*0.5; // equal mass assumption
+        // Apply impulse to player car
+        const impactForce=Math.abs(impulse);
+        state.speed+=impulse*(dir.x*nx+dir.z*nz)*.8;
+        // Clamp player speed to prevent super-bounces
+        state.speed=THREE.MathUtils.clamp(state.speed,-mxF*.6,mxF*.6);
+        // Apply impulse to NPC car (push it away + spin)
+        const npcImpulse=Math.max(impactForce*1.2,absSpd*.4);
+        npc.userData._vel.x-=nx*npcImpulse*.7;
+        npc.userData._vel.z-=nz*npcImpulse*.7;
+        npc.userData._vel.y=Math.min(npcImpulse*.08,2); // slight lift
+        npc.userData._angVel=(Math.random()-.5)*npcImpulse*.5; // spin on impact
+        // Crash timer: NPC is disrupted for a duration proportional to impact
+        npc.userData._crashed=Math.max(npc.userData._crashed,1.5+impactForce*.15);
+        // Crash effects
+        _camShake=Math.max(_camShake,Math.min(impactForce*.25,2.0));
+        state.crashes++;if(state.crashes>=10)unlock("crash");
+        // Crash audio — low thud
+        audio.chime(80+impactForce*5,Math.min(impactForce*.04,.3));
+    }
+    // Update parked NPC car physics (pushed cars slide and settle)
+    for(const npc of npcCars){
+        const v=npc.userData._vel;
+        if(!v||v.lengthSq()<.005)continue;
+        if(npc.userData.route&&npc.userData._crashed<=0)continue; // driving cars handled by npcTick
+        npc.position.addScaledVector(v,dt);
+        v.y-=15*dt; // gravity
+        const gy2=Math.max(terrainHeight(npc.position.x,npc.position.z),ROAD_Y);
+        if(npc.position.y<gy2){npc.position.y=gy2;v.y=Math.abs(v.y)*.15;v.x*=.88;v.z*=.88;}
+        v.multiplyScalar(.94); // drag
+        if(npc.userData._angVel){npc.rotation.y+=npc.userData._angVel*dt;npc.userData._angVel*=.93;}
+        // Settle: zero out tiny velocities
+        if(v.lengthSq()<.005){v.set(0,0,0);npc.userData._angVel=0;}
+    }
 
     // Ground following — car sits directly on terrain, reacts to bumps/gutters
     const gy=terrainHeight(cp.x,cp.z);
@@ -999,43 +1142,72 @@ function tick(){
         const dc=cp.clone().add(new THREE.Vector3(-dir.x*baseDist,baseH,-dir.z*baseDist));
         camera.position.lerp(dc,1-Math.exp(-dt*4.5));camera.lookAt(cp.x,cp.y+1.2,cp.z);
     }
+    // Camera shake from crashes — decays over time
+    if(_camShake>.01){
+        camera.position.x+=(Math.random()-.5)*_camShake*.35;
+        camera.position.y+=(Math.random()-.5)*_camShake*.2;
+        camera.position.z+=(Math.random()-.5)*_camShake*.35;
+        _camShake*=.85; // rapid decay
+    }
     const so=t*.04;sun.position.set(Math.cos(so)*100,80+Math.sin(so*.6)*20,Math.sin(so)*60);sunSphere.position.copy(sun.position.clone().setLength(170));
     waterMat.uniforms.uTime.value=t;bladeGroup.rotation.z+=dt*.5;
     if(window._npcTick)window._npcTick(t,dt);
     for(let i=0;i<LEAF_N;i++){const i3=i*3;leafPos[i3]+=(Math.sin(t*.7+i*2.3)*.2+.03)*dt*12;leafPos[i3+1]-=(.6+Math.sin(t+i)*.15)*dt*2;leafPos[i3+2]+=Math.cos(t*.5+i*1.7)*.15*dt*12;if(leafPos[i3+1]<0){leafPos[i3+1]=22+Math.random()*12;leafPos[i3]=cp.x+(Math.random()-.5)*100;leafPos[i3+2]=cp.z+(Math.random()-.5)*100;}}leafGeo.attributes.position.needsUpdate=true;
-    // GIF textures — play at full speed when parked, static poster otherwise
-    const gf=Math.floor(t*20); // ~20fps for smooth GIF playback
+    // GIF textures — ImageDecoder (Chrome/Edge) or <img> fallback
+    const gf=Math.floor(t*10); // ~10fps for GIF frame advance
     if(gf!==tick._lg){tick._lg=gf;
         billboards.forEach(b=>{
-            const gd=gifData[b.gifIdx];if(!gd.loaded)return;
+            const gd=gifData[b.gifIdx];if(!gd.loaded||gd._failed)return;
             const d2=cp.distanceTo(b.group.position);
             const isParkedHere=parked&&nearBB===b;
-            // When parked at this billboard: play GIF at full quality
+            // --- PARKED: play animated GIF ---
             if(isParkedHere){
-                const c=gd.ctx;
-                c.drawImage(gd.img,0,0,512,256);
-                // Playing indicator — subtle "LIVE" badge
-                c.fillStyle="rgba(0,0,0,.6)";c.fillRect(430,8,72,24);
-                c.fillStyle="#ff3344";c.beginPath();c.arc(442,20,5,0,Math.PI*2);c.fill();
-                c.fillStyle="#fff";c.font="bold 13px Segoe UI";c.fillText("LIVE",454,25);
-                // Bottom info bar
-                const gr=c.createLinearGradient(0,200,0,256);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
-                c.fillStyle=gr;c.fillRect(0,200,512,56);
-                const di=DISTRICTS[b.project.district];
-                c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
-                c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
-                c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText("PRESS E TO OPEN",400,245);
-                gd.tex.needsUpdate=true;gd.playing=true;
+                // Method A: ImageDecoder (frame-perfect, Chrome/Edge)
+                if(gd._dec&&gd._fCount>0&&!gd._busy){
+                    gd._busy=true;
+                    gd._dec.decode({frameIndex:gd._fIdx}).then(result=>{
+                        const c=gd.ctx;
+                        c.drawImage(result.image,0,0,512,256);
+                        result.image.close();
+                        // HUD overlays
+                        c.fillStyle="rgba(0,0,0,.55)";c.fillRect(424,6,80,26);
+                        c.fillStyle="#ff3344";c.beginPath();c.arc(438,19,5,0,Math.PI*2);c.fill();
+                        c.fillStyle="#fff";c.font="bold 12px Segoe UI";c.fillText("LIVE",450,24);
+                        const gr=c.createLinearGradient(0,200,0,256);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
+                        c.fillStyle=gr;c.fillRect(0,200,512,56);
+                        const di=DISTRICTS[b.project.district];
+                        c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
+                        c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
+                        c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText("PRESS E TO OPEN",390,245);
+                        gd.tex.needsUpdate=true;gd.playing=true;
+                        gd._fIdx=(gd._fIdx+1)%gd._fCount;
+                        gd._busy=false;
+                    }).catch(()=>{gd._busy=false;gd._fIdx=0;});
+                }
+                // Method B: <img> fallback (Firefox/Safari — relies on browser GIF animation)
+                else if(!gd._dec&&gd.img){
+                    const c=gd.ctx;
+                    c.drawImage(gd.img,0,0,512,256);
+                    c.fillStyle="rgba(0,0,0,.55)";c.fillRect(424,6,80,26);
+                    c.fillStyle="#ff3344";c.beginPath();c.arc(438,19,5,0,Math.PI*2);c.fill();
+                    c.fillStyle="#fff";c.font="bold 12px Segoe UI";c.fillText("LIVE",450,24);
+                    const gr=c.createLinearGradient(0,200,0,256);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(.4,"rgba(0,0,0,.75)");gr.addColorStop(1,"rgba(0,0,0,.9)");
+                    c.fillStyle=gr;c.fillRect(0,200,512,56);
+                    const di=DISTRICTS[b.project.district];
+                    c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
+                    c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
+                    c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText("PRESS E TO OPEN",390,245);
+                    gd.tex.needsUpdate=true;gd.playing=true;
+                }
             }
-            // Nearby but not parked: show static poster with first frame preview
+            // --- NEARBY: show static poster ---
             else if(d2<55){
                 if(gd.playing||!gd._hasStatic){
                     const c=gd.ctx;
-                    // Draw one frame as static thumbnail
-                    c.drawImage(gd.img,0,0,512,256);
-                    // Darken overlay
-                    c.fillStyle="rgba(0,0,10,.55)";c.fillRect(0,0,512,256);
-                    // Project info
+                    // Draw one frame as static background
+                    if(gd.img&&gd.img.complete&&gd.img.naturalWidth>0)c.drawImage(gd.img,0,0,512,256);
+                    else{c.fillStyle="#0a0a14";c.fillRect(0,0,512,256);}
+                    c.fillStyle="rgba(0,0,10,.5)";c.fillRect(0,0,512,256);
                     const di=DISTRICTS[b.project.district];
                     c.fillStyle=di.color;c.font="bold 14px Segoe UI";c.fillText(di.label.toUpperCase(),20,30);
                     c.fillStyle="#fff";c.font="bold 22px Segoe UI";c.fillText(gd.title,20,65);
@@ -1048,11 +1220,12 @@ function tick(){
     grassMat.uniforms.uTime.value=t;
     grassMat.uniforms.uCarPos.value.copy(cp);
     grassMat.uniforms.uCarSpeed.value=state.speed;
-    composer.render();
+    grassMat.uniforms.uCamPos.value.copy(camera.position);
+    if(composer)composer.render();else renderer.render(scene,camera);
     }catch(e){console.error("Loop:",e);}
 }
 tick();
-window.addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));composer.setSize(innerWidth,innerHeight);});
+window.addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,PERF.pixelRatioCap));if(composer)composer.setSize(innerWidth,innerHeight);});
 </script>
 </body>
 </html>
