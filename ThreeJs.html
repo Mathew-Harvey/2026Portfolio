@@ -15,7 +15,25 @@
         .hud-row{display:flex;justify-content:space-between;gap:12px;font-size:.86rem}.hud-row .v{color:var(--a2);font-weight:600;text-align:right}.hint{color:var(--s);font-size:.76rem;line-height:1.4}
         .side-panel{top:14px;right:14px;width:min(300px,calc(100vw - 28px));padding:12px;display:grid;gap:7px;max-height:50vh;overflow-y:auto}
         .section-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--s)}
-        .badge{font-size:.76rem;border:1px solid rgba(110,200,110,.18);border-radius:8px;color:var(--s);background:rgba(255,255,255,.02);padding:6px 9px;transition:all 180ms}.badge.on{color:#d4ffd4;border-color:rgba(110,200,110,.4);background:rgba(110,200,110,.08)}
+        .badge{display:flex;align-items:center;gap:8px;font-size:.74rem;border:1px solid rgba(110,200,110,.12);border-radius:10px;color:var(--s);background:rgba(255,255,255,.02);padding:7px 10px;transition:all .25s;opacity:.45}
+        .badge.on{color:#d4ffd4;border-color:rgba(110,200,110,.4);background:rgba(110,200,110,.08);opacity:1}
+        .badge .badge-icon{font-size:1.3rem;flex-shrink:0;filter:grayscale(1);transition:filter .3s}
+        .badge.on .badge-icon{filter:grayscale(0)}
+        .badge .badge-info{display:flex;flex-direction:column;gap:1px}
+        .badge .badge-title{font-weight:600;font-size:.76rem}
+        .badge .badge-desc{font-size:.64rem;color:var(--s);opacity:.7}
+        .badge.on .badge-desc{opacity:1}
+        /* Steam-style achievement popup */
+        .ach-popup{position:fixed;bottom:24px;right:24px;display:flex;align-items:center;gap:14px;padding:14px 20px 14px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(20,30,18,.97),rgba(12,20,10,.98));border:1.5px solid rgba(110,200,110,.35);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 20px rgba(110,200,110,.08);z-index:58;transform:translateX(120%);transition:transform .45s cubic-bezier(.22,1,.36,1);max-width:340px}
+        .ach-popup.show{transform:translateX(0)}
+        .ach-popup .ach-icon{font-size:2.2rem;flex-shrink:0;animation:achBounce .5s ease-out}
+        .ach-popup .ach-body{display:flex;flex-direction:column;gap:3px}
+        .ach-popup .ach-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--a);font-weight:600}
+        .ach-popup .ach-name{font-size:.95rem;font-weight:700;color:#e0f0dc}
+        .ach-popup .ach-desc{font-size:.72rem;color:var(--s)}
+        .ach-popup .ach-bar{height:3px;border-radius:2px;background:rgba(110,200,110,.15);margin-top:6px;overflow:hidden}
+        .ach-popup .ach-bar-fill{height:100%;width:0;background:var(--a);border-radius:2px;transition:width 3.5s linear}
+        @keyframes achBounce{0%{transform:scale(0) rotate(-20deg)}50%{transform:scale(1.25) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
         .prompt{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);min-width:min(440px,calc(100vw - 32px));text-align:center;padding:10px 14px;font-size:.86rem;border:1px solid rgba(110,200,110,.4);background:rgba(14,22,14,.88);border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s}.prompt.show{opacity:1}
         .toast{position:absolute;left:50%;top:78px;transform:translateX(-50%) translateY(-16px);border:1px solid rgba(110,200,110,.4);background:rgba(10,24,16,.92);color:#b8ffd0;border-radius:12px;padding:9px 14px;font-size:.82rem;opacity:0;pointer-events:none;transition:all .2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
         .links{position:absolute;left:14px;bottom:14px;display:flex;gap:8px}
@@ -100,6 +118,23 @@
         .speech-bubble{position:absolute;pointer-events:none;max-width:280px;padding:12px 16px;border-radius:14px 14px 14px 4px;background:rgba(255,255,245,.94);color:#3a2a10;font-family:Georgia,serif;font-size:.95rem;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.3);border:1.5px solid rgba(139,105,20,.3);opacity:0;transition:opacity .4s;z-index:15;transform:translateX(-50%)}
         .speech-bubble.show{opacity:1}
         .speech-bubble::after{content:"";position:absolute;bottom:-8px;left:16px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid rgba(255,255,245,.92)}
+        .crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;pointer-events:none;opacity:0;transition:opacity .2s}
+        .crosshair.show{opacity:1}
+        .crosshair::before,.crosshair::after{content:"";position:absolute;background:#fff;box-shadow:0 0 4px rgba(0,255,136,.6)}
+        .crosshair::before{width:2px;height:20px;left:50%;top:50%;transform:translate(-50%,-50%)}
+        .crosshair::after{width:20px;height:2px;left:50%;top:50%;transform:translate(-50%,-50%)}
+        .crosshair .dot{width:4px;height:4px;background:#ff3344;border-radius:50%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+        .gun-hud{position:absolute;bottom:14px;left:14px;padding:10px 16px;border-radius:8px;background:rgba(10,10,10,.8);border:1px solid rgba(255,60,60,.4);color:#ff6644;font-size:.85rem;font-weight:600;letter-spacing:.05em;opacity:0;pointer-events:none;transition:opacity .3s;z-index:20;display:flex;align-items:center;gap:10px}
+        .gun-hud.show{opacity:1}
+        .gun-hud .gun-icon{font-size:1.2rem}
+        .death-screen{position:fixed;inset:0;background:rgba(180,0,0,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:70;opacity:0;pointer-events:none;transition:opacity .5s}
+        .death-screen.show{opacity:1;pointer-events:auto}
+        .death-screen .death-title{font-family:Georgia,serif;font-size:2.4rem;color:#fff;text-shadow:0 0 30px rgba(255,0,0,.6)}
+        .death-screen .death-sub{font-size:1rem;color:#ffaa88;margin-top:12px}
+        .hp-bar{position:fixed;top:55%;left:50%;transform:translate(-50%,20px);width:120px;height:6px;background:rgba(0,0,0,.6);border-radius:3px;z-index:25;opacity:0;pointer-events:none;transition:opacity .2s}
+        .hp-bar.show{opacity:1}
+        .hp-bar .hp-fill{height:100%;background:linear-gradient(90deg,#ff3344,#ffaa44);border-radius:3px;transition:width .15s}
+        .muzzle-flash{position:fixed;top:50%;left:50%;width:40px;height:40px;margin:-20px 0 0 -20px;background:radial-gradient(circle,rgba(255,200,60,.9),rgba(255,100,20,.4),transparent);border-radius:50%;z-index:24;pointer-events:none;opacity:0;transition:none}
         @media(max-width:860px){.side-panel{top:auto;bottom:60px;right:14px;max-height:32vh}.hud{width:min(280px,calc(100vw - 28px))}}
     </style>
 </head>
@@ -113,9 +148,10 @@
         <div class="hud-row"><span>Discovered</span><span class="v" id="visited">0 / 45</span></div>
         <div class="hud-row"><span>Season</span><span class="v" id="season">Spring</span></div>
         <div class="hint">Driving: W/S forward/brake · A/D steer · Shift boost · E interact · F exit car · G garage · M mute</div>
-        <div class="hint">Walking: W/S move · A/D strafe · Hold LMB to look · E talk · F enter car · G garage · Scroll: zoom</div>
+        <div class="hint">Walking: W/S move · A/D strafe · Hold LMB look · E talk · F car · G garage · 1 equip SMG · Scroll zoom</div>
     </div>
-    <div class="panel side-panel"><div class="section-label">Achievements</div><div id="badges"></div></div>
+    <div class="panel side-panel"><div class="section-label">Achievements <span id="ach-count" style="float:right;color:var(--a);font-weight:600"></span></div><div id="badges"></div></div>
+    <div class="ach-popup" id="ach-popup"><div class="ach-icon" id="ach-popup-icon"></div><div class="ach-body"><div class="ach-label">Achievement Unlocked</div><div class="ach-name" id="ach-popup-name"></div><div class="ach-desc" id="ach-popup-desc"></div><div class="ach-bar"><div class="ach-bar-fill" id="ach-popup-bar"></div></div></div></div>
     <div class="prompt" id="prompt"></div><div class="toast" id="toast"></div>
     <div class="dialog-overlay" id="dialog"><div class="dialog-box"><div class="dialog-npc" id="dialog-npc">Wizard</div><div class="dialog-title" id="dialog-title"></div><div class="dialog-text" id="dialog-text"></div><div class="dialog-progress" id="dialog-progress"></div><div class="dialog-btns" id="dialog-btns"></div></div></div>
     <div class="garage-overlay" id="garage-overlay">
@@ -149,6 +185,11 @@
     <div class="speech-bubble" id="speech-bubble"></div>
     <div class="quest-fanfare" id="quest-fanfare"><div class="qf-bg"></div><div class="qf-particles" id="qf-particles"></div><div class="qf-title">Quest Complete!</div><div class="qf-sub" id="qf-sub">Portfolio Scout</div><div class="qf-reward" id="qf-reward">New car unlocked: Sport Car</div></div>
     <div class="obj-complete-banner" id="obj-complete-banner"><div class="ocb-icon">&#9733;</div><div class="ocb-title" id="ocb-title">Objectives Complete!</div><div class="ocb-sub" id="ocb-sub">Return to The Wizard to claim your reward</div><div class="ocb-hint">Walk to the quest giver and press E</div></div>
+    <div class="crosshair" id="crosshair"><div class="dot"></div></div>
+    <div class="gun-hud" id="gun-hud"><span class="gun-icon">🔫</span><span>SMG</span><span style="color:#aaa">| ∞</span></div>
+    <div class="death-screen" id="death-screen"><div class="death-title" id="death-title">You Died</div><div class="death-sub" id="death-sub">The Wizard has struck you down!</div></div>
+    <div class="hp-bar" id="hp-bar"><div class="hp-fill" id="hp-fill" style="width:100%"></div></div>
+    <div class="muzzle-flash" id="muzzle-flash"></div>
     <div class="links"><a class="btn" href="index.html">← Classic Portfolio</a><button class="btn" id="mute-btn" type="button">Audio: ON</button></div>
 </div>
 <script type="importmap">
@@ -318,20 +359,32 @@ function bbRot(p){
 }
 
 const ACHIEVEMENTS=[
-    {id:"ignite",title:"Ignition",desc:"Start the engine."},{id:"first",title:"Explorer",desc:"Visit your first project."},
-    {id:"port",title:"Harbor Master",desc:"All maritime projects."},{id:"science",title:"Scientist",desc:"All simulation projects."},
-    {id:"all",title:"Portfolio Complete",desc:"Visit every project."},{id:"speed",title:"JDM Spirit",desc:"Hit 120 km/h."},
-    {id:"collector",title:"Treasure Hunter",desc:"Collect all orbs."},{id:"crash",title:"Demolition Derby",desc:"Send 10 objects flying."},
+    {id:"ignite",title:"Ignition",desc:"Start the engine.",icon:"\u{1F525}"},
+    {id:"first",title:"Explorer",desc:"Visit your first project.",icon:"\u{1F9ED}"},
+    {id:"port",title:"Harbor Master",desc:"All maritime projects.",icon:"\u{2693}"},
+    {id:"science",title:"Scientist",desc:"All simulation projects.",icon:"\u{1F52C}"},
+    {id:"all",title:"Portfolio Complete",desc:"Visit every project.",icon:"\u{1F3C6}"},
+    {id:"speed",title:"JDM Spirit",desc:"Hit 120 km/h.",icon:"\u{1F3CE}"},
+    {id:"collector",title:"Treasure Hunter",desc:"Collect all orbs.",icon:"\u{1F48E}"},
+    {id:"crash",title:"Demolition Derby",desc:"Send 10 objects flying.",icon:"\u{1F4A5}"},
 ];
 
 /* ====== STATE ====== */
 // Load persisted garage data from localStorage
 const _savedGarage=JSON.parse(localStorage.getItem("portfolioGarage")||"null");
-const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:new Set(),collectibles:new Set(),muted:false,seasonIndex:0,crashes:0,
+// Load persisted achievements from localStorage
+const _savedAch=JSON.parse(localStorage.getItem("portfolioAchievements")||"[]");
+const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:new Set(_savedAch),collectibles:new Set(),muted:false,seasonIndex:0,crashes:0,
     mode:"driving",questLog:[],
     unlockedCars:_savedGarage?.unlockedCars||["mazda"],
     activeCar:_savedGarage?.activeCar||"mazda",
-    carParkedAt:null,nearNPC:false,avatarAngle:0};
+    carParkedAt:null,nearNPC:false,avatarAngle:0,
+    // Hot Lap quest
+    gatesHit:0,totalGates:12,hotlapActive:false,
+    // Gun & combat
+    hasGun:false,gunEquipped:false,
+    // Wizard protection
+    wizardWarnings:0,isDead:false};
 function _saveGarage(){localStorage.setItem("portfolioGarage",JSON.stringify({unlockedCars:state.unlockedCars,activeCar:state.activeCar}));}
 const QUESTS=[{
     id:"scout",title:"Portfolio Scout",giver:"guide",
@@ -341,11 +394,60 @@ const QUESTS=[{
     rewardText:"A new ride! The Pixelated Sport Car is now available in your garage!",
     reward:()=>{if(!state.unlockedCars.includes("sport")){state.unlockedCars.push("sport");_saveGarage();}},
     status:state.unlockedCars.includes("sport")?"done":"available"
+},{
+    id:"hotlap",title:"City Circuit",giver:"guide",
+    desc:"Think you can handle speed? Complete a hot lap of the city — drive through every checkpoint gate in order!\nYour reward will be... powerful.",
+    objectiveText:"Drive through all 12 gates",
+    objective:()=>state.gatesHit>=state.totalGates,
+    rewardText:"The Wizard grants you an SMG! Press 1 while on foot to equip it.",
+    reward:()=>{state.hasGun=true;},
+    status:"locked", // unlocked when scout is done
+    prerequisite:"scout"
 }];
 const districtEl=document.getElementById("district"),speedEl=document.getElementById("speed"),visitedEl=document.getElementById("visited"),seasonEl=document.getElementById("season"),badgesEl=document.getElementById("badges"),promptEl=document.getElementById("prompt"),toastEl=document.getElementById("toast"),muteBtn=document.getElementById("mute-btn");
 function showToast(t){toastEl.textContent=t;toastEl.classList.add("show");clearTimeout(showToast._t);showToast._t=setTimeout(()=>toastEl.classList.remove("show"),2200);}
-function renderBadges(){badgesEl.innerHTML="";ACHIEVEMENTS.forEach(a=>{const e=document.createElement("div");e.className="badge"+(state.achievements.has(a.id)?" on":"");e.textContent=`${a.title} — ${a.desc}`;badgesEl.appendChild(e);});}
-function unlock(id){if(state.achievements.has(id))return;state.achievements.add(id);renderBadges();const a=ACHIEVEMENTS.find(x=>x.id===id);if(a)showToast(`Achievement: ${a.title}`);}
+const achCountEl=document.getElementById("ach-count"),
+      achPopup=document.getElementById("ach-popup"),
+      achPopupIcon=document.getElementById("ach-popup-icon"),
+      achPopupName=document.getElementById("ach-popup-name"),
+      achPopupDesc=document.getElementById("ach-popup-desc"),
+      achPopupBar=document.getElementById("ach-popup-bar");
+function _saveAchievements(){localStorage.setItem("portfolioAchievements",JSON.stringify([...state.achievements]));}
+function renderBadges(){
+    badgesEl.innerHTML="";
+    const earned=state.achievements.size;
+    achCountEl.textContent=`${earned} / ${ACHIEVEMENTS.length}`;
+    ACHIEVEMENTS.forEach(a=>{
+        const on=state.achievements.has(a.id);
+        const e=document.createElement("div");e.className="badge"+(on?" on":"");
+        e.innerHTML=`<span class="badge-icon">${a.icon}</span><div class="badge-info"><span class="badge-title">${a.title}</span><span class="badge-desc">${on?a.desc:"???"}</span></div>`;
+        badgesEl.appendChild(e);
+    });
+}
+let _achPopupTimer=null;
+function _showAchPopup(a){
+    achPopupIcon.textContent=a.icon;
+    achPopupName.textContent=a.title;
+    achPopupDesc.textContent=a.desc;
+    achPopupBar.style.transition="none";achPopupBar.style.width="0";
+    achPopup.classList.add("show");
+    // Audio fanfare — ascending chime
+    audio.chime(523,.1);setTimeout(()=>audio.chime(659,.1),120);
+    setTimeout(()=>audio.chime(784,.12),240);setTimeout(()=>audio.chime(1047,.15),400);
+    // Animate progress bar across the popup lifetime
+    requestAnimationFrame(()=>{achPopupBar.style.transition="width 3.5s linear";achPopupBar.style.width="100%";});
+    // Auto-dismiss
+    clearTimeout(_achPopupTimer);
+    _achPopupTimer=setTimeout(()=>{achPopup.classList.remove("show");},4500);
+}
+function unlock(id){
+    if(state.achievements.has(id))return;
+    state.achievements.add(id);
+    _saveAchievements();
+    renderBadges();
+    const a=ACHIEVEMENTS.find(x=>x.id===id);
+    if(a)_showAchPopup(a);
+}
 renderBadges();
 function getDistrict(x,z){if(z<-28)return"Port District";if(z>30)return"Creative Village";if(x>28)return"Science Park";if(x<-28)return"Tech Hub";return"Town Center";}
 
@@ -502,8 +604,94 @@ const water=new THREE.Mesh(new THREE.PlaneGeometry(260,80,PERF.waterSegX,PERF.wa
 
 /* ====== COLLISION ====== */
 const staticCol=[];const dynCol=[];
-function addStatic(mesh,pad){const b=new THREE.Box3().setFromObject(mesh);b.expandByScalar(pad||.2);staticCol.push(b);}
+function addStatic(mesh,pad){const b=new THREE.Box3().setFromObject(mesh);b.expandByScalar(pad||.2);staticCol.push(b);return staticCol.length-1;}
 function addDynamic(mesh){dynCol.push({mesh,vel:new THREE.Vector3()});}
+
+/* ====== DESTROYABLE REGISTRY ====== */
+const destroyables=[];
+function registerDestroyable(mesh,health,type){
+    const idx=destroyables.length;
+    mesh.traverse(ch=>{if(ch.isMesh)ch.userData._destroyIdx=idx;});
+    mesh.userData._destroyIdx=idx;
+    destroyables.push({mesh,health,maxHealth:health,type,alive:true});
+    return idx;
+}
+
+/* ====== HOT LAP GATE SYSTEM ====== */
+const GATE_POSITIONS=[
+    {x:4,z:-15,rotY:0},          // 1: South on main road
+    {x:4,z:-36,rotY:0},          // 2: Approaching port
+    {x:25,z:-40,rotY:Math.PI/2}, // 3: East on port road
+    {x:50,z:-36,rotY:0},         // 4: Port meets science
+    {x:50,z:-10,rotY:0},         // 5: Science entry heading north
+    {x:50,z:12,rotY:0},          // 6: Through science
+    {x:38,z:35,rotY:0},          // 7: East connector north
+    {x:20,z:50,rotY:Math.PI/2},  // 8: Creative road east
+    {x:-20,z:50,rotY:Math.PI/2}, // 9: Creative road west
+    {x:-38,z:30,rotY:0},         // 10: West connector south
+    {x:-50,z:0,rotY:0},          // 11: Tech hub
+    {x:-15,z:0,rotY:Math.PI/2},  // 12: E-W road finish
+];
+const hotlapGates=[];
+function spawnGates(){
+    // Remove existing gates
+    hotlapGates.forEach(g=>scene.remove(g.group));
+    hotlapGates.length=0;
+    state.gatesHit=0;
+    GATE_POSITIONS.forEach((gp,i)=>{
+        const group=new THREE.Group();
+        // Gate arch — torus ring
+        const torus=new THREE.Mesh(
+            new THREE.TorusGeometry(4,0.3,8,24),
+            new THREE.MeshBasicMaterial({color:i===0?"#00ff88":"#334444",transparent:true,opacity:i===0?0.9:0.35})
+        );
+        torus.rotation.y=gp.rotY;
+        group.add(torus);
+        // Left pillar
+        const pillarGeo=new THREE.CylinderGeometry(0.25,0.25,8,8);
+        const pillarMat=new THREE.MeshStandardMaterial({color:i===0?"#00ff88":"#445555",emissive:i===0?"#00ff88":"#112222",emissiveIntensity:i===0?0.5:0.1});
+        const lp=new THREE.Mesh(pillarGeo,pillarMat);
+        const rp=new THREE.Mesh(pillarGeo,pillarMat.clone());
+        // Position pillars based on gate rotation
+        const offX=Math.cos(gp.rotY)*4, offZ=Math.sin(gp.rotY)*4;
+        lp.position.set(-offX,4,offZ);
+        rp.position.set(offX,4,-offZ);
+        group.add(lp,rp);
+        // Number label
+        const cv=document.createElement("canvas");cv.width=64;cv.height=64;
+        const ctx=cv.getContext("2d");
+        ctx.fillStyle=i===0?"#00ff88":"#445555";ctx.font="bold 48px sans-serif";
+        ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(""+(i+1),32,32);
+        const numTex=new THREE.CanvasTexture(cv);
+        const numSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:numTex,transparent:true,depthTest:false}));
+        numSprite.scale.set(2,2,1);numSprite.position.y=8.5;
+        group.add(numSprite);
+        const gy=Math.max(terrainHeight(gp.x,gp.z),ROAD_Y);
+        group.position.set(gp.x,gy,gp.z);
+        scene.add(group);
+        hotlapGates.push({group,pos:new THREE.Vector3(gp.x,gy,gp.z),hit:false,idx:i,torus,lPillar:lp,rPillar:rp,numSprite});
+    });
+}
+function updateGateVisuals(){
+    hotlapGates.forEach((g,i)=>{
+        if(g.hit){g.group.visible=false;return;}
+        g.group.visible=true;
+        const isNext=i===state.gatesHit;
+        const color=isNext?0x00ff88:0x334444;
+        g.torus.material.color.setHex(color);
+        g.torus.material.opacity=isNext?0.9:0.35;
+        g.lPillar.material.color.setHex(color);
+        g.lPillar.material.emissive.setHex(isNext?0x00ff88:0x112222);
+        g.lPillar.material.emissiveIntensity=isNext?0.5:0.1;
+        g.rPillar.material.color.setHex(color);
+        g.rPillar.material.emissive.setHex(isNext?0x00ff88:0x112222);
+        g.rPillar.material.emissiveIntensity=isNext?0.5:0.1;
+    });
+}
+function removeGates(){
+    hotlapGates.forEach(g=>scene.remove(g.group));
+    hotlapGates.length=0;state.hotlapActive=false;
+}
 
 /* ====== TOWN CENTER — Times Square ====== */
 function mkTSBuilding(x,z,w,h,d,rotY,screenText,screenColor){
@@ -527,7 +715,7 @@ function mkTSBuilding(x,z,w,h,d,rotY,screenText,screenColor){
     g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(sw+.3,.15,.15),nm);m.position.set(0,sy-sh/2-.1,d/2+.08);return m;})());
     g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.15,sh+.3,.15),nm);m.position.set(-sw/2-.1,sy,d/2+.08);return m;})());
     g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.15,sh+.3,.15),nm);m.position.set(sw/2+.1,sy,d/2+.08);return m;})());
-    g.position.set(x,terrainHeight(x,z),z);g.rotation.y=rotY||0;scene.add(g);addStatic(g,.3);return g;
+    g.position.set(x,terrainHeight(x,z),z);g.rotation.y=rotY||0;scene.add(g);addStatic(g,.3);registerDestroyable(g,100,"building");return g;
 }
 mkTSBuilding(-16,-16, 8,16,7, Math.PI/6,"M A T  H A R V E Y","#00ff88");
 mkTSBuilding(16,-16, 7,18,6, -Math.PI/6,"4 5  P R O J E C T S","#ff6688");
@@ -567,7 +755,7 @@ const crateMat=botw("#8a7048","#4a3820"),barrelMat=botw("#6a5838","#3a2818");
 [[-40,-52],[-37,-53],[-34,-51],[52,-48],[55,-49],[57,-47],[-42,-48],[-30,-50],[45,-52],[50,-46]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),crateMat);cr.position.set(x,.3+Math.max(terrainHeight(x,z),ROAD_Y),z);cr.rotation.y=Math.random()*.5;scene.add(cr);addDynamic(cr);});
 [[-38,-54],[54,-50],[58,-48],[-32,-52],[48,-47]].forEach(([x,z])=>{const br=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,1.1,10),barrelMat);br.position.set(x,.35+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(br);addDynamic(br);});
 // Crane
-const crane=new THREE.Group();crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.8,16,.8),botw("#d08030","#704010"));m.position.y=8;return m;})());crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(12,.6,.6),botw("#d08030","#704010"));m.position.set(4,15.5,0);return m;})());crane.position.set(62,terrainHeight(62,-55),-55);scene.add(crane);addStatic(crane,.3);
+const crane=new THREE.Group();crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.8,16,.8),botw("#d08030","#704010"));m.position.y=8;return m;})());crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(12,.6,.6),botw("#d08030","#704010"));m.position.set(4,15.5,0);return m;})());crane.position.set(62,terrainHeight(62,-55),-55);scene.add(crane);addStatic(crane,.3);registerDestroyable(crane,60,"building");
 
 // Kotor-class frigate docked at port (GLB model)
 new GLTFLoader().load('models/ship/kotor-class_frigate.glb',gltf=>{
@@ -594,6 +782,7 @@ new GLTFLoader().load('models/ship/kotor-class_frigate.glb',gltf=>{
     shipGroup.rotation.y=Math.PI/2+0.08;
     scene.add(shipGroup);
     addStatic(shipGroup,1);
+    registerDestroyable(shipGroup,200,"ship");
     console.log('Ship loaded: length='+(b2.max.x-b2.min.x).toFixed(1)+' scaled='+sc.toFixed(3));
 },undefined,e=>{
     console.warn('Ship GLB failed, placing fallback:',e);
@@ -610,13 +799,13 @@ new GLTFLoader().load('models/ship/kotor-class_frigate.glb',gltf=>{
 function mkModern(x,z,h,w,d,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),botw(color));m.position.y=h/2;return m;})());
 const wm=new THREE.MeshBasicMaterial({color:"#88b8dd",transparent:true,opacity:.6});
 for(let fy=2;fy<h-1;fy+=2.2)for(let fx=-(w/2-.8);fx<w/2;fx+=1.6){g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.9,1.3),wm);m.position.set(fx,fy,d/2+.01);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.9,1.3),wm);m.position.set(fx,fy,-d/2-.01);m.rotation.y=Math.PI;return m;})());}
-g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.3);return g;}
+g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.3);registerDestroyable(g,80,"building");return g;}
 mkModern(62,20,10,5,4,"#9098b0");mkModern(68,-18,8,4,4,"#8090a8");mkModern(74,18,12,5,4,"#a0a8c0");mkModern(66,-20,7,4,3,"#8898b0");
 
 /* ====== TECH HUB ====== */
 function mkWarehouse(x,z,w,d,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,d),botw(color));m.position.y=2.5;return m;})());
 g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w*.35,3,.1),new THREE.MeshBasicMaterial({color:"#88aacc",transparent:true,opacity:.5}));m.position.set(0,2.5,d/2+.05);return m;})());
-g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.3);return g;}
+g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.3);registerDestroyable(g,60,"building");return g;}
 mkWarehouse(-64,18,8,6,"#a09888");mkWarehouse(-75,-14,6,5,"#90a090");mkWarehouse(-72,16,7,5,"#a0a898");mkWarehouse(-62,-16,7,5,"#988880");
 
 /* ====== CREATIVE VILLAGE ====== */
@@ -626,14 +815,14 @@ g.add((()=>{const m=new THREE.Mesh(new THREE.ConeGeometry(3.2*s,2*s,4),botw("#8a
 g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.7*s,1.3*s,.1),botw("#5a3a20","#2a1a08"));m.position.set(0,.65*s,1.61*s);return m;})());
 g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.4*s,1.2*s,.4*s),botw("#707078","#383840"));m.position.set(.8*s,4.6*s,-.5*s);return m;})());
 for(const wx of[-.8,.8])for(const wy of[1.5,2.3])g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.4*s,.45*s),new THREE.MeshBasicMaterial({color:"#d8e0ff"}));m.position.set(wx*s,wy*s,1.61*s);return m;})());
-g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.2);return g;}
+g.position.set(x,terrainHeight(x,z),z);scene.add(g);addStatic(g,.2);registerDestroyable(g,40,"building");return g;}
 const hCols=["#e8d8c0","#f0e8e0","#d0e0d0","#e0d0c0","#e8e0d8","#d8e0d8","#e0e0d0","#d8d0c0"];
 // Houses placed clear of all roads: N-S(x=-8..8), W-conn(x=-42..-34), E-conn(x=34..42), Creative(z=44..56)
 [[-52,34],[-28,34],[-16,34],[14,34],[26,34],[50,34],[-48,66],[-30,66],[-16,66],[16,66],[30,66],[48,66]].forEach(([x,z],i)=>mkHouse(x,z,hCols[i%hCols.length],.85+Math.random()*.3));
 // Windmill
 const windmill=new THREE.Group();windmill.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.3,8,10),botw("#d8d0c0","#8a8070"));m.position.y=4;return m;})());windmill.add((()=>{const m=new THREE.Mesh(new THREE.ConeGeometry(1.3,2.2,10),botw("#8a5030","#4a2818"));m.position.y=9.1;return m;})());
 const bladeGroup=new THREE.Group();for(let i=0;i<4;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.3,3.5,.05),botw("#d0c8b0","#706850"));bl.position.set(0,1.75,0);const pv=new THREE.Group();pv.add(bl);pv.rotation.z=i*Math.PI/2;bladeGroup.add(pv);}
-bladeGroup.position.set(0,8,1.2);windmill.add(bladeGroup);windmill.position.set(42,terrainHeight(42,72),72);scene.add(windmill);addStatic(windmill,.5);
+bladeGroup.position.set(0,8,1.2);windmill.add(bladeGroup);windmill.position.set(42,terrainHeight(42,72),72);scene.add(windmill);addStatic(windmill,.5);registerDestroyable(windmill,50,"building");
 // Garden props clear of roads
 [[-24,36],[16,36],[28,36],[-18,66],[18,66],[44,66]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),botw("#7a6040","#3a2818"));cr.position.set(x,.2+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(cr);addDynamic(cr);});
 
@@ -715,6 +904,7 @@ ALL_PROJECTS.forEach((pr,idx)=>{
     bayLocal.applyAxisAngle(new THREE.Vector3(0,1,0),g.rotation.y);
     const bayPos=g.position.clone().add(bayLocal);
     billboards.push({group:g,project:pr,boardMat:bm,bayPos,gifIdx:idx});
+    registerDestroyable(g,20,"billboard");
 });
 
 /* ====== ARCADE INTERACTION FRAME ====== */
@@ -1040,6 +1230,12 @@ const dialogEl=document.getElementById("dialog"),dialogNpc=document.getElementBy
 let _lastChecklistSize=0;
 
 function showDialog(npc){
+    if(state.gunEquipped)holsterGun();
+    // Unlock prerequisite quests
+    QUESTS.forEach(q=>{if(q.prerequisite&&q.status==="locked"){
+        const pre=QUESTS.find(p=>p.id===q.prerequisite);
+        if(pre&&pre.status==="done")q.status="available";
+    }});
     const q=QUESTS.find(q=>q.giver===npc.userData.id&&(q.status==="available"||q.status==="active"||q.status==="complete"));
     state.mode="dialog";
     dialogNpc.textContent=npc.userData.name;
@@ -1055,12 +1251,21 @@ function showDialog(npc){
         dialogBtns.innerHTML=`<button class="dialog-btn primary" onclick="window._acceptQuest('${q.id}')">Accept Quest</button><button class="dialog-btn" onclick="window._closeDialog()">Not yet</button>`;
     }else if(q.status==="active"){
         dialogTitle.textContent=q.title;
-        dialogText.textContent="Your task remains unfinished. Continue exploring the city and visit the project billboards!";
-        dialogProgress.textContent=`Progress: ${Math.min(state.visited.size,5)} / 5 billboards visited`;
+        if(q.id==="hotlap"){
+            dialogText.textContent="The checkpoint gates await! Get in your car and drive through them in order.";
+            dialogProgress.textContent=`Progress: ${state.gatesHit} / ${state.totalGates} gates`;
+        }else{
+            dialogText.textContent="Your task remains unfinished. Continue exploring the city and visit the project billboards!";
+            dialogProgress.textContent=`Progress: ${Math.min(state.visited.size,5)} / 5 billboards visited`;
+        }
         dialogBtns.innerHTML=`<button class="dialog-btn" onclick="window._closeDialog()">I shall continue</button>`;
     }else if(q.status==="complete"){
         dialogTitle.textContent="Quest Complete!";
-        dialogText.textContent="Excellent work, traveller! You've proven your dedication by exploring the city. Accept this reward — a fine vehicle awaits you!";
+        if(q.id==="hotlap"){
+            dialogText.textContent="Incredible driving! You've mastered every corner of this city. As promised, here's something... powerful. Use it wisely, mortal.";
+        }else{
+            dialogText.textContent="Excellent work, traveller! You've proven your dedication by exploring the city. Accept this reward — a fine vehicle awaits you!";
+        }
         dialogProgress.textContent="";
         dialogBtns.innerHTML=`<button class="dialog-btn primary" onclick="window._completeQuest('${q.id}')">Claim Reward</button>`;
     }
@@ -1075,7 +1280,11 @@ window._closeDialog=function(){
 };
 window._acceptQuest=function(id){
     const q=QUESTS.find(q=>q.id===id);
-    if(q){q.status="active";showToast("Quest accepted: "+q.title);_lastChecklistSize=state.visited.size;}
+    if(q){
+        q.status="active";showToast("Quest accepted: "+q.title);
+        if(id==="scout")_lastChecklistSize=state.visited.size;
+        if(id==="hotlap"){spawnGates();state.hotlapActive=true;showToast("Drive through the gates in order! Get in your car.");}
+    }
     dialogEl.classList.remove("show");
     state.mode="walking";
     updateModeBadge();updateQuestTracker();updateNPCIcon();
@@ -1088,14 +1297,17 @@ window._completeQuest=function(id){
     updateModeBadge();updateQuestTracker();updateNPCIcon();
     // Fanfare animation!
     showQuestFanfare(q);
-    // Prompt player about the garage after fanfare
-    if(state.unlockedCars.length>1){
+    if(id==="hotlap"){
+        removeGates();
+        qfReward.textContent="SMG unlocked! Press 1 while on foot to equip it.";
+        setTimeout(()=>showToast("SMG unlocked! Press 1 while on foot to equip."),5000);
+    }else if(state.unlockedCars.length>1){
         setTimeout(()=>showToast("New car added to your garage! Press G to open it."),5000);
     }
 };
 function showQuestFanfare(q){
     qfSub.textContent=q?q.title:"Quest Complete";
-    qfReward.textContent="New car added to your Garage! Press G to view it.";
+    qfReward.textContent=q?q.rewardText:"Reward claimed!";
     // Spawn particles
     qfParticles.innerHTML="";
     const colors=["#ffd700","#ff6b35","#ff3366","#33ccff","#6eff6e","#cc66ff"];
@@ -1140,7 +1352,8 @@ document.addEventListener("visibilitychange",()=>{
     }
 });
 function updateModeBadge(){
-    if(state.mode==="walking"){modeBadge.textContent="On Foot — F enter car · G garage · Hold LMB to look · E talk";modeBadge.className="mode-badge show walk";}
+    if(state.mode==="walking"&&state.gunEquipped){modeBadge.textContent="COMBAT — LMB fire · 1 holster · WASD move";modeBadge.className="mode-badge show walk";}
+    else if(state.mode==="walking"){modeBadge.textContent="On Foot — F enter car · G garage · Hold LMB to look · E talk"+(state.hasGun?" · 1 equip SMG":"");modeBadge.className="mode-badge show walk";}
     else if(state.mode==="dialog"){modeBadge.textContent="Talking";modeBadge.className="mode-badge show dialog";}
     else{modeBadge.className="mode-badge";}
 }
@@ -1149,29 +1362,45 @@ function updateQuestTracker(){
     if(!q){questTracker.classList.remove("show");return;}
     qtTitle.textContent=q.title;
     qtObj.textContent=q.objectiveText;
-    // Build checklist — show 5 slots, tick off visited ones
-    const visited=Array.from(state.visited);
-    const needed=5;
     qtChecklist.innerHTML="";
-    for(let i=0;i<needed;i++){
-        const done=i<visited.length;
-        const item=document.createElement("div");
-        item.className="check-item"+(done?" done":"");
-        const name=done?visited[i]:"Billboard "+(i+1);
-        item.innerHTML=`<span class="ck">${done?"✓":""}</span><span>${name}</span>`;
-        qtChecklist.appendChild(item);
+    if(q.id==="hotlap"){
+        // Gate checklist for hot lap
+        for(let i=0;i<state.totalGates;i++){
+            const done=i<state.gatesHit;
+            const item=document.createElement("div");
+            item.className="check-item"+(done?" done":"");
+            item.innerHTML=`<span class="ck">${done?"✓":""}</span><span>Gate ${i+1}</span>`;
+            qtChecklist.appendChild(item);
+        }
+    }else{
+        // Billboard checklist for scout
+        const visited=Array.from(state.visited);
+        const needed=5;
+        for(let i=0;i<needed;i++){
+            const done=i<visited.length;
+            const item=document.createElement("div");
+            item.className="check-item"+(done?" done":"");
+            const name=done?visited[i]:"Billboard "+(i+1);
+            item.innerHTML=`<span class="ck">${done?"✓":""}</span><span>${name}</span>`;
+            qtChecklist.appendChild(item);
+        }
+        // Check if new billboard visited — show feedback toast
+        if(state.visited.size>_lastChecklistSize&&_lastChecklistSize>0){
+            const ct=Math.min(state.visited.size,5);
+            showToast(`✓ Billboard visited! (${ct}/5)`);
+            audio.chime(700,.06);
+            _lastChecklistSize=state.visited.size;
+        }
     }
     questTracker.classList.add("show");
-    // Check if new billboard visited — show feedback toast
-    if(state.visited.size>_lastChecklistSize&&_lastChecklistSize>0){
-        const ct=Math.min(state.visited.size,5);
-        showToast(`✓ Billboard visited! (${ct}/5)`);
-        audio.chime(700,.06);
-        _lastChecklistSize=state.visited.size;
-    }
 }
 function updateNPCIcon(){
-    const q=QUESTS.find(q=>q.giver==="guide"&&q.status!=="done");
+    // Unlock prerequisite quests
+    QUESTS.forEach(q=>{if(q.prerequisite&&q.status==="locked"){
+        const pre=QUESTS.find(p=>p.id===q.prerequisite);
+        if(pre&&pre.status==="done")q.status="available";
+    }});
+    const q=QUESTS.find(q=>q.giver==="guide"&&(q.status==="available"||q.status==="active"||q.status==="complete"));
     const d=npcGuide.userData;
     d.iconExclaim.visible=false;d.iconQReady.visible=false;d.iconQActive.visible=false;
     if(!q)return;
@@ -1242,6 +1471,330 @@ function updateSpeechBubble(t,dt){
         if(_jokeShow<=0)speechBubble.classList.remove("show");
     }
 }
+
+/* ====== SMG GUN + COMBAT SYSTEM ====== */
+const crosshairEl=document.getElementById("crosshair"),
+      gunHudEl=document.getElementById("gun-hud"),
+      deathScreen=document.getElementById("death-screen"),
+      deathTitle=document.getElementById("death-title"),
+      deathSub=document.getElementById("death-sub"),
+      hpBar=document.getElementById("hp-bar"),
+      hpFill=document.getElementById("hp-fill"),
+      muzzleFlashEl=document.getElementById("muzzle-flash");
+
+// Build SMG mesh — gun pivots for pitch aiming
+const gunPivot=new THREE.Group(); // this group rotates for pitch (aims up/down)
+const gunGroup=new THREE.Group(); // inner group holds the gun mesh
+const _gunMats={body:new THREE.MeshStandardMaterial({color:"#2a2a30",roughness:.6,metalness:.7}),
+    barrel:new THREE.MeshStandardMaterial({color:"#1a1a20",roughness:.4,metalness:.9}),
+    mag:new THREE.MeshStandardMaterial({color:"#3a3020",roughness:.7,metalness:.4}),
+    accent:new THREE.MeshStandardMaterial({color:"#884422",roughness:.5,metalness:.3})};
+// Receiver body
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.08,.11,.5),_gunMats.body);return m;})());
+// Barrel
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.02,.025,.4,8),_gunMats.barrel);m.rotation.x=Math.PI/2;m.position.set(0,.02,.44);return m;})());
+// Barrel shroud
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.2),_gunMats.body);m.position.set(0,.01,.3);return m;})());
+// Front sight
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.015,.04,.015),_gunMats.barrel);m.position.set(0,.06,.55);return m;})());
+// Rear sight
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.04,.03,.015),_gunMats.barrel);m.position.set(0,.07,.1);return m;})());
+// Stock
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.05,.09,.25),_gunMats.body);m.position.set(0,-.01,-.3);return m;})());
+// Stock pad
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.1,.03),_gunMats.accent);m.position.set(0,-.01,-.43);return m;})());
+// Magazine
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.04,.2,.07),_gunMats.mag);m.position.set(0,-.16,.02);return m;})());
+// Grip
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.04,.13,.06),_gunMats.accent);m.position.set(0,-.11,-.1);m.rotation.x=.2;return m;})());
+// Trigger guard
+gunGroup.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.025,.02,.08),_gunMats.barrel);m.position.set(0,-.07,-.04);return m;})());
+// Muzzle tip (for flash positioning)
+const _gunMuzzleTip=new THREE.Object3D();_gunMuzzleTip.position.set(0,.02,.65);
+gunGroup.add(_gunMuzzleTip);
+
+gunPivot.add(gunGroup);
+gunPivot.visible=false;
+gunPivot.scale.setScalar(2.0);
+scene.add(gunPivot);
+
+// Muzzle flash light
+const _muzzleLight=new THREE.PointLight(0xff8833,0,8);scene.add(_muzzleLight);
+
+// Bullet tracer line
+const _tracerGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+const _tracerLine=new THREE.Line(_tracerGeo,new THREE.LineBasicMaterial({color:0xffdd44,transparent:true,opacity:0.8}));
+_tracerLine.visible=false;scene.add(_tracerLine);
+let _tracerTimer=0;
+
+// Destruction particle system (simple instanced spheres)
+const _debrisPool=[];
+function spawnDebris(pos,color,count){
+    for(let i=0;i<count;i++){
+        const size=.15+Math.random()*.35;
+        const geo=Math.random()>.5?new THREE.BoxGeometry(size,size,size):new THREE.TetrahedronGeometry(size);
+        const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:color||"#888888"}));
+        m.position.copy(pos);
+        m.position.x+=(Math.random()-.5)*2;m.position.y+=Math.random()*3;m.position.z+=(Math.random()-.5)*2;
+        const vel=new THREE.Vector3((Math.random()-.5)*8,3+Math.random()*6,(Math.random()-.5)*8);
+        scene.add(m);
+        _debrisPool.push({mesh:m,vel,life:2+Math.random()});
+    }
+}
+function tickDebris(dt){
+    for(let i=_debrisPool.length-1;i>=0;i--){
+        const d=_debrisPool[i];
+        d.vel.y-=15*dt;
+        d.mesh.position.addScaledVector(d.vel,dt);
+        d.mesh.rotation.x+=dt*3;d.mesh.rotation.z+=dt*2;
+        d.life-=dt;
+        const gy=Math.max(terrainHeight(d.mesh.position.x,d.mesh.position.z),ROAD_Y);
+        if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.vel.y*=-.3;d.vel.x*=.8;d.vel.z*=.8;}
+        if(d.life<=0){scene.remove(d.mesh);_debrisPool.splice(i,1);}
+    }
+}
+
+// Fireball system (wizard's attack)
+let _fireball=null;
+function spawnFireball(from,to){
+    const geo=new THREE.SphereGeometry(.5,12,12);
+    const mat=new THREE.MeshBasicMaterial({color:"#ff4400"});
+    const fb=new THREE.Mesh(geo,mat);
+    fb.position.copy(from);fb.position.y+=2;
+    // Glow
+    const glow=new THREE.PointLight(0xff4400,3,12);
+    fb.add(glow);
+    scene.add(fb);
+    const dir=new THREE.Vector3().subVectors(to,fb.position).normalize();
+    _fireball={mesh:fb,vel:dir.multiplyScalar(25),target:to,life:5};
+}
+function tickFireball(dt){
+    if(!_fireball)return;
+    _fireball.mesh.position.addScaledVector(_fireball.vel,dt);
+    _fireball.life-=dt;
+    // Check if reached target (player)
+    const playerPos=state.mode==="walking"?avatar.position:car.position;
+    const dist=_fireball.mesh.position.distanceTo(playerPos);
+    if(dist<2||_fireball.life<=0){
+        // Hit!
+        if(dist<3){
+            killPlayer();
+        }
+        scene.remove(_fireball.mesh);
+        spawnDebris(_fireball.mesh.position,"#ff4400",8);
+        _fireball=null;
+    }
+}
+
+// Player death
+function killPlayer(){
+    if(state.isDead)return;
+    state.isDead=true;
+    state.gunEquipped=false;
+    _shooting=false;
+    gunPivot.visible=false;
+    crosshairEl.classList.remove("show");
+    gunHudEl.classList.remove("show");
+    hpBar.classList.remove("show");
+    if(document.pointerLockElement)document.exitPointerLock();
+    deathScreen.classList.add("show");
+    audio.chime(150,.3);
+    setTimeout(()=>{
+        deathScreen.classList.remove("show");
+        state.isDead=false;
+        state.wizardWarnings=0;
+        // Respawn at town center
+        if(state.mode==="walking"){
+            avatar.position.set(0,ROAD_Y+.1,5);
+            state.avatarAngle=0;avatar.rotation.y=0;
+            _camYaw=0;_camPitch=.3;
+        }else{
+            car.position.set(0,ROAD_Y+.1,5);car.rotation.y=0;state.speed=0;
+        }
+    },3000);
+}
+
+// Shooting raycaster
+const _shootRay=new THREE.Raycaster();
+let _shootCooldown=0;
+let _shooting=false;
+const FIRE_RATE=0.12; // seconds between shots
+const BULLET_DAMAGE=10;
+
+function findDestroyableAncestor(obj){
+    let cur=obj;
+    while(cur){
+        if(cur.userData._destroyIdx!==undefined)return destroyables[cur.userData._destroyIdx];
+        cur=cur.parent;
+    }
+    return null;
+}
+
+function isWizardHit(obj){
+    let cur=obj;
+    while(cur){
+        if(cur===npcGuide)return true;
+        cur=cur.parent;
+    }
+    return false;
+}
+
+function shootGun(){
+    if(_shootCooldown>0||state.isDead||state.mode==="dialog")return;
+    _shootCooldown=FIRE_RATE;
+    // Muzzle flash
+    muzzleFlashEl.style.opacity="1";
+    setTimeout(()=>{muzzleFlashEl.style.opacity="0";},50);
+    // Sound
+    audio.chime(120+Math.random()*40,.06);
+    setTimeout(()=>audio.chime(80,.03),30);
+    // Raycast from camera center
+    _shootRay.setFromCamera(new THREE.Vector2(0,0),camera);
+    // Get gun muzzle tip world position for tracer
+    const gunTip=new THREE.Vector3();
+    _gunMuzzleTip.getWorldPosition(gunTip);
+    _muzzleLight.position.copy(gunTip);
+    _muzzleLight.intensity=4;
+    // Intersect everything in scene
+    const hits=_shootRay.intersectObjects(scene.children,true);
+    let hitPoint=null;
+    for(const hit of hits){
+        // Skip gun, avatar, armed avatar, gates, tracer
+        if(hit.object===_tracerLine)continue;
+        let skip=false;
+        let cur=hit.object;
+        while(cur){
+            if(cur===gunPivot||cur===gunGroup||cur===avatar||cur===_tracerLine){skip=true;break;}
+            // Skip gate meshes
+            if(hotlapGates.some(g=>g.group===cur)){skip=true;break;}
+            cur=cur.parent;
+        }
+        if(skip)continue;
+        hitPoint=hit.point.clone();
+        // Check wizard
+        if(isWizardHit(hit.object)){
+            handleWizardShot();
+            break;
+        }
+        // Check destroyable
+        const dest=findDestroyableAncestor(hit.object);
+        if(dest&&dest.alive){
+            dest.health-=BULLET_DAMAGE;
+            // Show HP bar
+            hpBar.classList.add("show");
+            hpFill.style.width=Math.max(0,(dest.health/dest.maxHealth)*100)+"%";
+            clearTimeout(shootGun._hpT);
+            shootGun._hpT=setTimeout(()=>hpBar.classList.remove("show"),1500);
+            if(dest.health<=0){
+                destroyObject(dest);
+                hpBar.classList.remove("show");
+            }
+            // Hit particles
+            spawnDebris(hit.point,"#aaaaaa",3);
+            _camShake=Math.max(_camShake,.15);
+            break;
+        }
+        // Hit terrain/road/other — spark
+        spawnDebris(hit.point,"#666666",2);
+        break;
+    }
+    // Tracer line
+    const endPoint=hitPoint||_shootRay.ray.at(80,new THREE.Vector3());
+    const positions=_tracerLine.geometry.attributes.position;
+    positions.setXYZ(0,gunTip.x,gunTip.y,gunTip.z);
+    positions.setXYZ(1,endPoint.x,endPoint.y,endPoint.z);
+    positions.needsUpdate=true;
+    _tracerLine.visible=true;_tracerTimer=0.06;
+}
+
+function destroyObject(dest){
+    if(!dest.alive)return;
+    dest.alive=false;
+    const pos=new THREE.Vector3();
+    dest.mesh.getWorldPosition(pos);
+    // Compute bounding box BEFORE hiding
+    const meshBox=new THREE.Box3().setFromObject(dest.mesh);
+    // Determine debris color from type
+    const colors={building:"#8a8a80",car:"#556677",billboard:"#3a3a40",ship:"#2a3a4a"};
+    const debrisCount={building:15,car:10,billboard:8,ship:25};
+    spawnDebris(pos,colors[dest.type]||"#888",debrisCount[dest.type]||10);
+    // Camera shake
+    _camShake=Math.max(_camShake,dest.type==="ship"?1.5:dest.type==="building"?.8:.4);
+    // Audio
+    audio.chime(60,.15);setTimeout(()=>audio.chime(40,.1),100);
+    // Hide mesh
+    dest.mesh.visible=false;
+    // Remove from staticCol — find matching box
+    for(let i=staticCol.length-1;i>=0;i--){
+        const b=staticCol[i];
+        if(b.intersectsBox(meshBox)||b.containsPoint(pos)){
+            staticCol.splice(i,1);break;
+        }
+    }
+}
+
+// Wizard protection
+function handleWizardShot(){
+    state.wizardWarnings++;
+    if(state.wizardWarnings===1){
+        // First warning
+        speechBubble.textContent="Careful where you aim that, mortal...";
+        speechBubble.classList.add("show");
+        _jokeShow=4;
+        audio.chime(300,.1);
+    }else if(state.wizardWarnings===2){
+        speechBubble.textContent="I'm WARNING you. Stop. Now.";
+        speechBubble.classList.add("show");
+        _jokeShow=4;
+        audio.chime(200,.15);
+    }else if(state.wizardWarnings>=3){
+        // Wizard attacks!
+        speechBubble.textContent="You've chosen poorly!";
+        speechBubble.classList.add("show");
+        _jokeShow=3;
+        audio.chime(100,.2);
+        const wizPos=npcGuide.position.clone();
+        const pPos=avatar.position.clone();
+        spawnFireball(wizPos,pPos);
+    }
+}
+
+// Equip/holster gun
+function toggleGun(){
+    if(!state.hasGun||state.mode!=="walking"||state.isDead)return;
+    state.gunEquipped=!state.gunEquipped;
+    if(state.gunEquipped){
+        // Avatar stays visible — gun appears at their side
+        gunPivot.visible=true;
+        crosshairEl.classList.add("show");
+        gunHudEl.classList.add("show");
+        _camPitch=0; // Level pitch for FPS
+        // Request pointer lock for FPS aiming
+        renderer.domElement.requestPointerLock();
+        showToast("SMG equipped — LMB to fire, 1 or ESC to holster");
+        updateModeBadge();
+    }else{
+        holsterGun();
+    }
+}
+function holsterGun(){
+    state.gunEquipped=false;
+    gunPivot.visible=false;
+    crosshairEl.classList.remove("show");
+    gunHudEl.classList.remove("show");
+    hpBar.classList.remove("show");
+    _camPitch=.3; // Reset to normal walking pitch
+    if(document.pointerLockElement)document.exitPointerLock();
+    updateModeBadge();
+}
+
+// Pointer lock change handler
+document.addEventListener("pointerlockchange",()=>{
+    if(!document.pointerLockElement&&state.gunEquipped){
+        // Lost pointer lock — holster
+        holsterGun();
+    }
+});
 
 /* ====== GARAGE RENDERER ====== */
 // Mini renderer for garage preview
@@ -1451,6 +2004,7 @@ function selectCar(key){
     });
 }
 function enterCarMode(){
+    if(state.gunEquipped)holsterGun();
     state.mode="driving";
     avatar.visible=false;
     state.speed=0;
@@ -1508,7 +2062,8 @@ window.addEventListener("keydown",e=>{
             updateModeBadge();
         }else if(state.mode==="walking"){
             // Check near car — enter directly or open garage
-            if(state.carParkedAt&&avatar.position.distanceTo(state.carParkedAt)<4){
+            const _fPos=avatar.position;
+            if(state.carParkedAt&&_fPos.distanceTo(state.carParkedAt)<4){
                 if(state.unlockedCars.length>1){openGarage();return;}
                 enterCarMode();
                 audio.chime(800,.08);
@@ -1524,19 +2079,29 @@ window.addEventListener("keydown",e=>{
         if(state.mode==="driving"){
             openBB(); // existing billboard interaction
         }else if(state.mode==="walking"){
-            // Check NPC proximity
-            if(avatar.position.distanceTo(npcGuide.position)<4){
+            // Check NPC proximity first, then billboard
+            const _ePos=avatar.position;
+            if(_ePos.distanceTo(npcGuide.position)<4){
                 showDialog(npcGuide);
+            }else if(state.canInteract){
+                openBB(); // open billboard on foot
             }
         }else if(state.mode==="dialog"){
             window._closeDialog();
         }
     }
-    // Escape: close dialogs / garage
+    // 1 key: toggle gun
+    if(e.code==="Digit1"){
+        toggleGun();
+    }
+    // Escape: close dialogs / garage / holster gun
     if(e.code==="Escape"){
+        if(state.gunEquipped){holsterGun();return;}
         if(state.mode==="dialog")window._closeDialog();
         if(garageOverlay.classList.contains("show")){window._garageClose();}
     }
+    // F key also holsters gun first
+    if(e.code==="KeyF"&&state.gunEquipped){holsterGun();return;}
 },{passive:false});
 window.addEventListener("keyup",e=>{const k=KM[e.code];if(k){pressed.delete(k);e.preventDefault();}},{passive:false});
 window.addEventListener("pointerdown",()=>{if(!audio.initialized)audio.init();});
@@ -1550,12 +2115,21 @@ renderer.domElement.addEventListener("wheel",e=>{zoomFactor+=e.deltaY*.0008;zoom
 let _camYaw=0,_camPitch=.3; // radians — yaw orbits around avatar, pitch is elevation
 let _mouseDragging=false;
 renderer.domElement.addEventListener("mousedown",e=>{
-    if(state.mode==="walking"&&e.button===0){_mouseDragging=true;e.preventDefault();}
+    if(state.gunEquipped&&document.pointerLockElement&&e.button===0){
+        _shooting=true;shootGun();e.preventDefault();return;
+    }
+    if(state.mode==="walking"&&e.button===0&&!state.gunEquipped){_mouseDragging=true;e.preventDefault();}
 });
 window.addEventListener("mouseup",e=>{
-    if(e.button===0)_mouseDragging=false;
+    if(e.button===0){_mouseDragging=false;_shooting=false;}
 });
 window.addEventListener("mousemove",e=>{
+    // FPS aiming with pointer lock — full vertical range like any FPS
+    if(document.pointerLockElement&&state.gunEquipped){
+        _camYaw-=e.movementX*.002;
+        _camPitch=THREE.MathUtils.clamp(_camPitch+e.movementY*.002,-1.4,1.4); // ~80° up/down
+        return;
+    }
     if(!_mouseDragging||state.mode!=="walking")return;
     _camYaw-=e.movementX*.004;
     _camPitch=THREE.MathUtils.clamp(_camPitch-e.movementY*.003,.05,1.2);
@@ -1598,6 +2172,8 @@ function placeGLB(model,x,z,targetH,rotY){
     const b2=realBounds(m);m.position.y-=(b2.min.y-m.position.y);
     if(rotY!==undefined)m.rotation.y=rotY;
     scene.add(m);return m;}
+function placeGLBDestroy(model,x,z,targetH,rotY,hp,type){
+    const m=placeGLB(model,x,z,targetH,rotY);addStatic(m,.2);registerDestroyable(m,hp||80,type||"building");return m;}
 
 // ---- BUILDINGS PACK ----
 if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pack.glb',gltf=>{
@@ -1606,17 +2182,17 @@ if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pac
     ['Pharmacy','Police','CityHall','Hospital','GasStation','School','Light','Bin'].forEach(n=>{
         const c=extractChild(root,'PublicBuilding_'+n);if(c)bldgs[n]=c;});
     // Town Center — CityHall + Police
-    if(bldgs.CityHall)placeGLB(bldgs.CityHall,-18,-18,12,0);
-    if(bldgs.Police)placeGLB(bldgs.Police,18,-18,10,Math.PI);
+    if(bldgs.CityHall)placeGLBDestroy(bldgs.CityHall,-18,-18,12,0,80);
+    if(bldgs.Police)placeGLBDestroy(bldgs.Police,18,-18,10,Math.PI,80);
     // Science Park — Hospital
-    if(bldgs.Hospital){placeGLB(bldgs.Hospital,64,22,11,Math.PI/2);placeGLB(bldgs.Hospital,70,-20,9,-Math.PI/2);}
+    if(bldgs.Hospital){placeGLBDestroy(bldgs.Hospital,64,22,11,Math.PI/2,80);placeGLBDestroy(bldgs.Hospital,70,-20,9,-Math.PI/2,80);}
     // Tech Hub — GasStation
-    if(bldgs.GasStation){placeGLB(bldgs.GasStation,-66,20,7,0);placeGLB(bldgs.GasStation,-74,-16,7,Math.PI);}
+    if(bldgs.GasStation){placeGLBDestroy(bldgs.GasStation,-66,20,7,0,60);placeGLBDestroy(bldgs.GasStation,-74,-16,7,Math.PI,60);}
     // Creative Village — School + Pharmacy
-    if(bldgs.School)placeGLB(bldgs.School,-50,68,9,0);
-    if(bldgs.Pharmacy){placeGLB(bldgs.Pharmacy,50,68,8,Math.PI);placeGLB(bldgs.Pharmacy,-18,18,8,Math.PI/2);}
+    if(bldgs.School)placeGLBDestroy(bldgs.School,-50,68,9,0,80);
+    if(bldgs.Pharmacy){placeGLBDestroy(bldgs.Pharmacy,50,68,8,Math.PI,60);placeGLBDestroy(bldgs.Pharmacy,-18,18,8,Math.PI/2,60);}
     // Port — extra buildings
-    if(bldgs.CityHall)placeGLB(bldgs.CityHall,18,18,10,Math.PI);
+    if(bldgs.CityHall)placeGLBDestroy(bldgs.CityHall,18,18,10,Math.PI,80);
     // Street Lights — lined along road EDGES, never in the middle of roads
     // Road bands: N-S x=-8..8, E-W z=-8..8, Port z=-46..-34, Creative z=44..56,
     //   Connectors x=-42..-34 & x=34..42, Science x=45..55, Tech x=-55..-45
@@ -1697,6 +2273,7 @@ if(PERF.traffic)glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
         const v=placeCar(vehicles[i%vehicles.length],px,pz,pr);
         // Physics-enabled: velocity, angular velocity, crash timer
         v.userData._vel=new THREE.Vector3();v.userData._angVel=0;v.userData._crashed=0;
+        registerDestroyable(v,30,"car");
         npcCars.push(v);});
     // Driving cars follow actual road waypoint routes
     const routes=[
@@ -1716,10 +2293,13 @@ if(PERF.traffic)glbLoader.load('models/cars/low_poly_cars_pack.glb',gltf=>{
         v.userData.wpT=Math.random(); // start at random point along first segment
         // Physics-enabled
         v.userData._vel=new THREE.Vector3();v.userData._angVel=0;v.userData._crashed=0;
+        registerDestroyable(v,30,"car");
         driveCars.push(v);npcCars.push(v);});
     // NPC tick: waypoint-following + crash physics
     window._npcTick=function(t,dt){
         driveCars.forEach(c=>{
+            // Skip destroyed cars
+            if(!c.visible)return;
             // If crashed, apply physics instead of route-following
             if(c.userData._crashed>0){
                 c.userData._crashed-=dt;
@@ -1810,6 +2390,14 @@ function tick(){
     if(frameBudget>0)frameAccum=0;
     const wF=pressed.has("f"),wB=pressed.has("b"),wL=pressed.has("l"),wR=pressed.has("r"),bst=pressed.has("x");
 
+    // Dead state — freeze and tick only combat visuals
+    if(state.isDead){
+        tickDebris(dt);tickFireball(dt);
+        if(_muzzleLight.intensity>0)_muzzleLight.intensity=Math.max(0,_muzzleLight.intensity-dt*40);
+        if(composer)composer.render();else renderer.render(scene,camera);
+        return;
+    }
+
     // ====== MODE: DRIVING ======
     if(state.mode==="driving"){
     const accel=bst?34:24,brake=38,revRate=14,drag=7,mxF=bst?45:32,mxR=-14;
@@ -1893,6 +2481,23 @@ function tick(){
         if(npc.userData._angVel){npc.rotation.y+=npc.userData._angVel*dt;npc.userData._angVel*=.93;}
         if(v.lengthSq()<.005){v.set(0,0,0);npc.userData._angVel=0;}
     }
+    // HOT LAP: Gate collision detection
+    if(state.hotlapActive&&hotlapGates.length>0&&state.gatesHit<state.totalGates){
+        const nextGate=hotlapGates[state.gatesHit];
+        if(nextGate&&!nextGate.hit){
+            const gd=cp.distanceTo(nextGate.pos);
+            if(gd<5){
+                nextGate.hit=true;
+                state.gatesHit++;
+                audio.chime(880,.1);setTimeout(()=>audio.chime(1100,.08),100);
+                showToast(`Gate ${state.gatesHit} / ${state.totalGates}`);
+                updateGateVisuals();
+                updateQuestTracker();
+                // Animate gate disappear
+                nextGate.group.visible=false;
+            }
+        }
+    }
     // Ground following
     const gy=terrainHeight(cp.x,cp.z);
     cp.y=THREE.MathUtils.lerp(cp.y,gy,.6);
@@ -1935,6 +2540,8 @@ function tick(){
     // ====== MODE: WALKING ======
     else if(state.mode==="walking"){
     const WALK_SPEED=bst?8:5;
+    // Always use the normal avatar — gun is attached separately
+    const activeAvatar=avatar;
     const ap=avatar.position;
     // Camera yaw defines the "forward" direction for movement
     const fwdX=-Math.sin(_camYaw),fwdZ=-Math.cos(_camYaw);
@@ -1949,14 +2556,22 @@ function tick(){
     if(moving){
         moveDir.normalize();
         ap.addScaledVector(moveDir,WALK_SPEED*dt);
-        // Target angle: avatar always faces direction of travel
-        const targetAngle=Math.atan2(-moveDir.x,-moveDir.z);
-        // Smooth rotation — lerp via shortest arc
-        let diff=targetAngle-state.avatarAngle;
-        while(diff>Math.PI)diff-=Math.PI*2;
-        while(diff<-Math.PI)diff+=Math.PI*2;
-        state.avatarAngle+=diff*Math.min(dt*12,1); // fast but smooth turn
-        avatar.rotation.y=state.avatarAngle;
+        if(state.gunEquipped){
+            // In gun mode: avatar faces camera direction
+            state.avatarAngle=_camYaw;
+            activeAvatar.rotation.y=_camYaw;
+        }else{
+            // Target angle: avatar always faces direction of travel
+            const targetAngle=Math.atan2(-moveDir.x,-moveDir.z);
+            let diff=targetAngle-state.avatarAngle;
+            while(diff>Math.PI)diff-=Math.PI*2;
+            while(diff<-Math.PI)diff+=Math.PI*2;
+            state.avatarAngle+=diff*Math.min(dt*12,1);
+            activeAvatar.rotation.y=state.avatarAngle;
+        }
+    }else if(state.gunEquipped){
+        state.avatarAngle=_camYaw;
+        activeAvatar.rotation.y=_camYaw;
     }
     // Clamp world bounds
     ap.x=THREE.MathUtils.clamp(ap.x,-160,160);ap.z=THREE.MathUtils.clamp(ap.z,-68,160);
@@ -1969,74 +2584,145 @@ function tick(){
         const dx=ap.x-nx2,dz=ap.z-nz2,dist=Math.sqrt(dx*dx+dz*dz);
         if(dist<AVATAR_R&&dist>.01){const push=(AVATAR_R-dist)/dist;ap.x+=dx*push;ap.z+=dz*push;}
     }
-    // Walking animation — use mixer if GLB loaded, else fallback
-    const ud=avatar.userData;
-    if(ud.mixer){
-        ud.mixer.update(dt);
-        if(ud.walkAction){
-            if(moving){
-                // Unpause / play walk animation
-                if(ud.walkAction.paused){ud.walkAction.paused=false;}
-                if(!ud.walkAction.isRunning()){
-                    if(ud.idleAction)ud.idleAction.fadeOut(.2);
-                    ud.walkAction.reset().fadeIn(.2).play();
-                }
-            }else{
-                // Pause walk animation (stays on current frame as idle pose)
-                if(ud.idleAction&&ud.walkAction.isRunning()){
-                    ud.walkAction.fadeOut(.2);
-                    ud.idleAction.reset().fadeIn(.2).play();
-                }else if(!ud.idleAction){
-                    ud.walkAction.paused=true;
+    // Walking animation — always runs on the normal avatar
+    {
+        const ud=avatar.userData;
+        if(ud.mixer){
+            ud.mixer.update(dt);
+            if(ud.walkAction){
+                if(moving){
+                    if(ud.walkAction.paused){ud.walkAction.paused=false;}
+                    if(!ud.walkAction.isRunning()){
+                        if(ud.idleAction)ud.idleAction.fadeOut(.2);
+                        ud.walkAction.reset().fadeIn(.2).play();
+                    }
+                }else{
+                    if(ud.idleAction&&ud.walkAction.isRunning()){
+                        ud.walkAction.fadeOut(.2);
+                        ud.idleAction.reset().fadeIn(.2).play();
+                    }else if(!ud.idleAction){
+                        ud.walkAction.paused=true;
+                    }
                 }
             }
+        }else if(ud._fallback){
+            if(moving){
+                ud.walkTime+=dt*8;
+                const sw=Math.sin(ud.walkTime)*.4;
+                if(ud.lLeg){ud.lLeg.rotation.x=sw;ud.rLeg.rotation.x=-sw;}
+            }else{
+                ud.walkTime=0;
+                if(ud.lLeg){ud.lLeg.rotation.x=0;ud.rLeg.rotation.x=0;}
+            }
         }
-    }else if(ud._fallback){
-        // Procedural fallback animation
-        if(moving){
-            ud.walkTime+=dt*8;
-            const sw=Math.sin(ud.walkTime)*.4;
-            if(ud.lLeg){ud.lLeg.rotation.x=sw;ud.rLeg.rotation.x=-sw;}
-        }else{
-            ud.walkTime=0;
-            if(ud.lLeg){ud.lLeg.rotation.x=0;ud.rLeg.rotation.x=0;}
-        }
+        // Subtle bob when walking
+        if(moving){avatar.userData.walkTime=(avatar.userData.walkTime||0)+dt*8;ap.y+=Math.abs(Math.sin((avatar.userData.walkTime||0)*2))*.03;}
     }
-    // Subtle bob when walking
-    if(moving){ud.walkTime=(ud.walkTime||0)+dt*8;ap.y+=Math.abs(Math.sin((ud.walkTime||0)*2))*.03;}
-    // NPC proximity check — show prompt
+    // Proximity checks — NPC, billboards, car
     const npcDist=ap.distanceTo(npcGuide.position);
+    // Check billboards on foot — use billboard board position (not bay)
+    let _walkBB=null,_walkBBd=Infinity;
+    billboards.forEach(b=>{const d2=ap.distanceTo(b.group.position);if(d2<_walkBBd){_walkBBd=d2;_walkBB=b;}});
+    const nearBBOnFoot=_walkBBd<5&&_walkBB;
     if(npcDist<4){
         promptEl.innerHTML=`<strong>${npcGuide.userData.name}</strong> — Press <b>E</b> to talk`;
         promptEl.classList.add("show");
         state.nearNPC=true;
+        state.canInteract=null;
+    }else if(nearBBOnFoot){
+        state.nearNPC=false;
+        state.canInteract=_walkBB.project;
+        const di=DISTRICTS[_walkBB.project.district];
+        promptEl.innerHTML=`<strong>${_walkBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br><span style="font-size:.7rem;color:var(--s)">E to open project</span>`;
+        promptEl.classList.add("show");
+        renderer.domElement.style.cursor="pointer";
     }else{
         state.nearNPC=false;
+        state.canInteract=null;
         // Car proximity — show re-enter prompt
         if(state.carParkedAt&&ap.distanceTo(state.carParkedAt)<4){
             promptEl.innerHTML=`Press <b>F</b> to enter car`;
             promptEl.classList.add("show");
         }else{
             promptEl.classList.remove("show");
+            renderer.domElement.style.cursor="default";
         }
     }
+    // Activate arcade glow frame around billboard when on foot
+    updateArcade(t,dt,nearBBOnFoot,_walkBB);
     districtEl.textContent=getDistrict(ap.x,ap.z);
     speedEl.textContent="On Foot";
     audio.update(0,0);
-    // Walking camera — orbits around avatar based on mouse yaw/pitch
-    const camDist=6*zoomFactor;
-    const camOX=Math.sin(_camYaw)*Math.cos(_camPitch)*camDist;
-    const camOZ=Math.cos(_camYaw)*Math.cos(_camPitch)*camDist;
-    const camOY=Math.sin(_camPitch)*camDist+1.2;
-    const targetCam=new THREE.Vector3(ap.x+camOX,ap.y+camOY,ap.z+camOZ);
-    camera.position.lerp(targetCam,1-Math.exp(-dt*8));
-    camera.lookAt(ap.x,ap.y+1.2,ap.z);
+    // Walking camera
+    if(state.gunEquipped){
+        // TRUE FPS Over-The-Shoulder camera
+        const cosPitch=Math.cos(_camPitch);
+        const aimX=-Math.sin(_camYaw)*cosPitch;
+        const aimY=-Math.sin(_camPitch);
+        const aimZ=-Math.cos(_camYaw)*cosPitch;
+        const aimRightX=Math.cos(_camYaw),aimRightZ=-Math.sin(_camYaw);
+        // Camera positioned behind right shoulder
+        const shoulderBack=3.0,shoulderRight=1.0,shoulderH=1.9;
+        const camPos=new THREE.Vector3(
+            ap.x-aimX*shoulderBack+aimRightX*shoulderRight,
+            ap.y+shoulderH+aimY*0.5,
+            ap.z-aimZ*shoulderBack+aimRightZ*shoulderRight
+        );
+        camera.position.lerp(camPos,1-Math.exp(-dt*14));
+        // Camera looks where the crosshair points
+        const lookTarget=new THREE.Vector3(
+            camera.position.x+aimX*50,
+            camera.position.y+aimY*50,
+            camera.position.z+aimZ*50
+        );
+        camera.lookAt(lookTarget);
+
+        // Position gun at avatar's right hand, raised and pointing at crosshair
+        const gunOffRight=0.5,gunOffForward=0.35,gunOffUp=1.2;
+        gunPivot.position.set(
+            ap.x+aimRightX*gunOffRight-Math.sin(_camYaw)*gunOffForward,
+            ap.y+gunOffUp,
+            ap.z+aimRightZ*gunOffRight-Math.cos(_camYaw)*gunOffForward
+        );
+        // Gun yaw matches camera yaw, pitch tracks the crosshair target
+        gunPivot.rotation.set(0,_camYaw,0);
+        gunGroup.rotation.set(-_camPitch,0,0); // negative pitch = gun tilts up when looking up
+
+        // Auto-fire when holding LMB
+        if(_shooting){shootGun();}
+    }else{
+        // Normal walking camera — orbits around avatar based on mouse yaw/pitch
+        const camDist=6*zoomFactor;
+        const camOX=Math.sin(_camYaw)*Math.cos(_camPitch)*camDist;
+        const camOZ=Math.cos(_camYaw)*Math.cos(_camPitch)*camDist;
+        const camOY=Math.sin(_camPitch)*camDist+1.2;
+        const targetCam=new THREE.Vector3(ap.x+camOX,ap.y+camOY,ap.z+camOZ);
+        camera.position.lerp(targetCam,1-Math.exp(-dt*8));
+        camera.lookAt(ap.x,ap.y+1.2,ap.z);
+    }
     } // end walking mode
 
     // ====== MODE: DIALOG ======
     // (No movement, camera stays put)
 
     // ====== SHARED: always runs ======
+    // Combat systems tick
+    if(_shootCooldown>0)_shootCooldown-=dt;
+    if(_tracerTimer>0){_tracerTimer-=dt;if(_tracerTimer<=0)_tracerLine.visible=false;}
+    if(_muzzleLight.intensity>0)_muzzleLight.intensity=Math.max(0,_muzzleLight.intensity-dt*40);
+    tickDebris(dt);
+    tickFireball(dt);
+    // Gate pulse animation
+    if(state.hotlapActive&&hotlapGates.length>0){
+        const nextIdx=state.gatesHit;
+        if(nextIdx<hotlapGates.length){
+            const g=hotlapGates[nextIdx];
+            if(g&&!g.hit&&g.group.visible){
+                g.torus.material.opacity=0.6+Math.sin(t*4)*0.3;
+                g.torus.rotation.x=Math.sin(t*2)*.1;
+            }
+        }
+    }
     // Quest objective tracking
     const activeQ=QUESTS.find(q=>q.status==="active");
     if(activeQ&&activeQ.objective()&&activeQ.status==="active"){
