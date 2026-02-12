@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mat Harvey — Software Engineer & Marine Scientist</title>
+    <meta name="description" content="Portfolio of Mat Harvey — building software that protects ships, oceans, and the ecosystems between them. Perth, Western Australia.">
+    <meta property="og:title" content="Mat Harvey — Portfolio">
+    <meta property="og:description" content="Software engineer and marine scientist building maritime technology in Perth, Western Australia.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232563eb'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='system-ui' font-size='18' font-weight='600'%3EMH%3C/text%3E%3C/svg%3E">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400;500;600&f[]=general-sans@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+    <style>
+        /* ========================================
+           CSS CUSTOM PROPERTIES — LIGHT THEME
+           ======================================== */
+        :root {
+            /* Surfaces */
+            --bg:               #f8f9fb;
+            --surface:          #ffffff;
+            --surface-raised:   #f0f1f4;
+            --surface-overlay:  rgba(0,0,0,0.4);
+
+            /* Borders */
+            --border:           rgba(0,0,0,0.07);
+            --border-hover:     rgba(0,0,0,0.13);
+            --border-active:    rgba(0,0,0,0.22);
+
+            /* Text */
+            --text-primary:     #1a1a2e;
+            --text-secondary:   #5c5c7a;
+            --text-tertiary:    #9ca3af;
+
+            /* Accent — Blue */
+            --accent:           #2563eb;
+            --accent-hover:     #3b82f6;
+            --accent-subtle:    rgba(37,99,235,0.06);
+            --accent-surface:   rgba(37,99,235,0.08);
+
+            /* Semantic */
+            --focus-ring:       rgba(37,99,235,0.4);
+            --shadow-sm:        0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md:        0 4px 16px rgba(0,0,0,0.07);
+            --shadow-lg:        0 12px 40px rgba(0,0,0,0.10);
+            --shadow-card:      0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03);
+
+            /* Typography */
+            --font-display:     'Clash Display', 'Inter', system-ui, sans-serif;
+            --font-body:        'General Sans', 'Inter', system-ui, sans-serif;
+            --font-mono:        'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        /* ========================================
+           RESET & BASE
+           ======================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 200ms ease;
+        }
+        a:hover {
+            color: var(--accent-hover);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ========================================
+           NAVIGATION
+           ======================================== */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 60px;
+            background: rgba(248, 249, 251, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+
+        .nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .nav-logo {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .game-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 10px;
+            background: var(--accent);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            border: 1px solid var(--accent);
+            transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.22);
+        }
+
+        .game-cta:hover {
+            background: var(--accent-hover);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.26);
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            transition: color 200ms ease, background 200ms ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+            background: var(--surface-raised);
+        }
+
+        .nav-links svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ========================================
+           HERO SECTION
+           ======================================== */
+        .hero {
+            padding: 80px 0 56px;
+            max-width: 720px;
+        }
+
+        .hero-label {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .hero-name {
+            font-family: var(--font-display);
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 600;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .hero-tagline {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            max-width: 540px;
+            margin-bottom: 36px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 36px;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hero-stat-value {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .hero-stat-label {
+            font-size: 0.78rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .hero-cta {
+            margin-top: 40px;
+        }
+
+        .hero-cta a {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: gap 300ms ease, color 200ms ease;
+        }
+
+        .hero-cta a:hover {
+            gap: 12px;
+        }
+
+        /* Entrance animations */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeUp 600ms ease-out forwards;
+        }
+
+        .fade-up-d1 { animation-delay: 0ms; }
+        .fade-up-d2 { animation-delay: 80ms; }
+        .fade-up-d3 { animation-delay: 160ms; }
+        .fade-up-d4 { animation-delay: 240ms; }
+        .fade-up-d5 { animation-delay: 400ms; }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========================================
+           SECTION HEADINGS
+           ======================================== */
+        .section-label {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin-bottom: 28px;
+        }
+
+        .section-divider {
+            width: 32px;
+            height: 2px;
+            background: var(--accent);
+            margin-bottom: 14px;
+            border-radius: 1px;
+        }
+
+        /* ========================================
+           FEATURED PROJECTS
+           ======================================== */
+        .featured-section {
+            padding: 0 0 72px;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+        }
+
+        .featured-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+            cursor: pointer;
+            box-shadow: var(--shadow-card);
+        }
+
+        .featured-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-hover);
+        }
+
+        /* ---- Card preview / GIF hover behavior ---- */
+        .featured-card-preview {
+            position: relative;
+            aspect-ratio: 16 / 10;
+            background: var(--surface-raised);
+            overflow: hidden;
+        }
+
+        .featured-card-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            opacity: 0;
+            position: relative;
+            z-index: 1;
+            transition: opacity 400ms ease, transform 500ms ease, filter 500ms ease;
+            /* Muted by default: desaturated + dimmed */
+            filter: grayscale(0.35) saturate(0.6) brightness(1.03);
+        }
+
+        .featured-card-preview img.loaded {
+            opacity: 1;
+        }
+
+        /* On hover: full vivid color + subtle zoom */
+        .featured-card:hover .featured-card-preview img.loaded {
+            filter: grayscale(0) saturate(1) brightness(1);
+            transform: scale(1.02);
+        }
+
+        /* Soft white wash overlay — calms GIFs down */
+        .featured-card-preview::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background: rgba(248, 249, 251, 0.35);
+            pointer-events: none;
+            transition: opacity 500ms ease;
+        }
+
+        .featured-card:hover .featured-card-preview::after {
+            opacity: 0;
+        }
+
+        .featured-card-preview .fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-raised);
+            z-index: 0;
+            transition: opacity 400ms ease;
+        }
+
+        /* Hide fallback text once GIF loads */
+        .featured-card-preview img.loaded ~ .fallback,
+        .featured-card-preview .fallback.hidden {
+            opacity: 0;
+        }
+
+        .featured-card-preview .fallback-text {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-align: center;
+            padding: 24px;
+            line-height: 1.2;
+        }
+
+        .featured-card-body {
+            padding: 20px 24px 24px;
+        }
+
+        .featured-card-name {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .featured-card-desc {
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .featured-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .featured-card-tech {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .tech-tag {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            padding: 3px 10px;
+            border-radius: 100px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .featured-card-links {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.84rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 200ms ease;
+        }
+
+        .card-link:hover {
+            color: var(--accent);
+        }
+
+        .card-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .card-link-primary {
+            color: var(--accent);
+        }
+
+        .card-link-primary:hover {
+            color: var(--accent-hover);
+        }
+
+        /* ========================================
+           ARCHIVE SECTION
+           ======================================== */
+        .archive-section {
+            padding: 0 0 80px;
+        }
+
+        .filter-bar {
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+            background: rgba(248, 249, 251, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
+            margin-bottom: 28px;
+            margin-left: -24px;
+            margin-right: -24px;
+            padding-left: 24px;
+            padding-right: 24px;
+        }
+
+        .filter-bar-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 16px 10px 40px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            width: 220px;
+            min-width: 160px;
+            flex-shrink: 0;
+            transition: border-color 200ms ease, box-shadow 200ms ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 14px center;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            padding: 2px 24px 2px 0;
+        }
+
+        .filter-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-pill {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 7px 16px;
+            border-radius: 100px;
+            font-family: var(--font-body);
+            font-size: 0.84rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 200ms ease;
+        }
+
+        .filter-pill:hover {
+            background: var(--surface-raised);
+            color: var(--text-primary);
+        }
+
+        .filter-pill.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        /* Project grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* Archive cards */
+        .archive-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+            cursor: pointer;
+            box-shadow: var(--shadow-card);
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        .archive-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease,
+                        opacity 500ms ease;
+        }
+
+        .archive-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-hover);
+        }
+
+        .archive-card-preview {
+            position: relative;
+            height: 170px;
+            background: var(--surface-raised);
+            overflow: hidden;
+        }
+
+        .archive-card-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            opacity: 0;
+            position: relative;
+            z-index: 1;
+            transition: opacity 400ms ease, filter 500ms ease;
+            /* Muted by default */
+            filter: grayscale(0.35) saturate(0.6) brightness(1.03);
+        }
+
+        .archive-card-preview img.loaded {
+            opacity: 1;
+        }
+
+        /* On hover: full vivid color */
+        .archive-card:hover .archive-card-preview img.loaded {
+            filter: grayscale(0) saturate(1) brightness(1);
+        }
+
+        /* Soft white wash overlay */
+        .archive-card-preview::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background: rgba(248, 249, 251, 0.35);
+            pointer-events: none;
+            transition: opacity 500ms ease;
+        }
+
+        .archive-card:hover .archive-card-preview::after {
+            opacity: 0;
+        }
+
+        .archive-card-preview .fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-raised);
+            z-index: 0;
+            transition: opacity 400ms ease;
+        }
+
+        /* Hide fallback text once GIF loads */
+        .archive-card-preview img.loaded ~ .fallback,
+        .archive-card-preview .fallback.hidden {
+            opacity: 0;
+        }
+
+        .archive-card-preview .fallback-text {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-align: center;
+            padding: 16px;
+            line-height: 1.2;
+        }
+
+        .archive-card-body {
+            padding: 16px 20px 20px;
+        }
+
+        .archive-card-name {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            letter-spacing: -0.01em;
+        }
+
+        .archive-card-desc {
+            font-size: 0.84rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .archive-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .archive-card-tech {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .archive-card-tech .tech-tag {
+            font-size: 0.68rem;
+            padding: 2px 8px;
+        }
+
+        .archive-card-links {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            color: var(--text-tertiary);
+            transition: color 200ms ease, background 200ms ease;
+        }
+
+        .icon-btn:hover {
+            color: var(--accent);
+            background: var(--accent-subtle);
+        }
+
+        .icon-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-tertiary);
+            font-size: 0.95rem;
+        }
+
+        /* ========================================
+           MODAL
+           ======================================== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 250ms ease, visibility 250ms ease;
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: min(1100px, 94vw);
+            height: min(700px, 88vh);
+            background: var(--surface);
+            border: 1px solid var(--border-hover);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.96);
+            transition: transform 250ms ease;
+        }
+
+        .modal.open .modal-dialog {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 48px;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            background: var(--surface-raised);
+        }
+
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .modal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .modal-dot-red { background: #ff5f57; }
+        .modal-dot-yellow { background: #febc2e; }
+        .modal-dot-green { background: #28c840; }
+
+        .modal-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 50%;
+        }
+
+        .modal-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-link {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background 200ms ease;
+        }
+
+        .modal-link:hover {
+            background: var(--accent-subtle);
+        }
+
+        .modal-close {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 200ms ease, color 200ms ease;
+        }
+
+        .modal-close:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-frame-wrap {
+            flex: 1;
+            position: relative;
+            background: var(--surface-raised);
+        }
+
+        .modal-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-raised);
+        }
+
+        .modal-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 800ms linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+        }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+        .site-footer {
+            border-top: 1px solid var(--border);
+            padding: 56px 0;
+            background: var(--surface);
+        }
+
+        .footer-inner {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 48px;
+        }
+
+        .footer-name {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .footer-bio {
+            font-size: 0.88rem;
+            line-height: 1.65;
+            color: var(--text-secondary);
+            max-width: 400px;
+        }
+
+        .footer-links-heading {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-tertiary);
+            margin-bottom: 14px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-links a {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 200ms ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-links a svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .footer-colophon {
+            font-size: 0.78rem;
+            color: var(--text-tertiary);
+            margin-top: 16px;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.78rem;
+            color: var(--text-tertiary);
+        }
+
+        /* ========================================
+           REDUCED MOTION
+           ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            html { scroll-behavior: auto; }
+            .fade-up { opacity: 1; transform: none; }
+            .archive-card { opacity: 1; transform: none; }
+        }
+
+        /* ========================================
+           MOBILE — On touch devices, show GIFs
+           since there's no hover. We use a media
+           query for hover capability.
+           ======================================== */
+        @media (hover: none) {
+            /* On touch devices: show images at full color (no hover available) */
+            .featured-card-preview img.loaded,
+            .archive-card-preview img.loaded {
+                opacity: 1;
+                filter: grayscale(0) saturate(1) brightness(1);
+            }
+            .featured-card-preview::after,
+            .archive-card-preview::after {
+                opacity: 0;
+            }
+            .featured-card-preview .fallback,
+            .archive-card-preview .fallback {
+                display: none;
+            }
+        }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+
+        /* Mobile (<640px) */
+        @media (max-width: 639px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .hero {
+                padding: 48px 0 40px;
+            }
+
+            .hero-name {
+                font-size: clamp(2.2rem, 10vw, 3rem);
+            }
+
+            .game-cta {
+                display: none;
+            }
+
+            .hero-tagline {
+                font-size: 1rem;
+            }
+
+            .hero-stats {
+                gap: 20px;
+            }
+
+            .hero-stat-value {
+                font-size: 1.2rem;
+            }
+
+            .hero-cta {
+                margin-top: 32px;
+            }
+
+            .featured-section {
+                padding-bottom: 48px;
+            }
+
+            .featured-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .featured-card {
+                border-radius: 12px;
+            }
+
+            .featured-card-body {
+                padding: 16px 18px 18px;
+            }
+
+            .featured-card-name {
+                font-size: 1rem;
+            }
+
+            .filter-bar {
+                top: 60px;
+                padding: 12px 0;
+                margin-left: -16px;
+                margin-right: -16px;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .filter-bar-inner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .project-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .archive-card {
+                border-radius: 12px;
+            }
+
+            .archive-card-preview {
+                height: 150px;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .modal {
+                padding: 0;
+            }
+
+            .modal-dialog {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                max-width: none;
+                max-height: none;
+            }
+        }
+
+        /* Tablet (640-1023px) */
+        @media (min-width: 640px) and (max-width: 1023px) {
+            .featured-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .project-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero {
+                padding: 64px 0 48px;
+            }
+        }
+
+        /* Desktop (1024px+) */
+        @media (min-width: 1024px) {
+            .project-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Wide (1280px+) */
+        @media (min-width: 1280px) {
+            .hero {
+                padding: 96px 0 64px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== NAVIGATION ====== -->
+    <nav class="nav">
+        <div class="container">
+            <a href="#" class="nav-logo">Mat Harvey</a>
+            <div class="nav-links">
+                <a class="game-cta" href="ThreeJs.html" aria-label="Launch interactive driving portfolio">
+                    Do you like to game?
+                </a>
+                <a href="https://github.com/Mathew-Harvey" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                </a>
+                <a href="https://www.linkedin.com/in/mathew-harvey-64b5891b8/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </a>
+                <a href="mailto:mathew.harvey@live.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ====== HERO ====== -->
+    <div class="container">
+        <section class="hero">
+            <p class="hero-label fade-up fade-up-d1">Software Engineer &amp; Marine Scientist</p>
+            <h1 class="hero-name fade-up fade-up-d2">Mat Harvey</h1>
+            <p class="hero-tagline fade-up fade-up-d3">
+                I build software that protects ships, oceans, and the ecosystems between them.
+                From vessel management platforms to biofouling research tools — bridging marine science and modern web technology.
+            </p>
+            <div class="hero-stats fade-up fade-up-d4">
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="stat-projects">55</span>
+                    <span class="hero-stat-label">Projects shipped</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value">Perth, WA</span>
+                    <span class="hero-stat-label">Based in</span>
+                </div>
+            </div>
+            <div class="hero-cta fade-up fade-up-d5">
+                <a href="#selected-work">View Selected Work <span aria-hidden="true">↓</span></a>
+            </div>
+        </section>
+    </div>
+
+    <!-- ====== FEATURED PROJECTS ====== -->
+    <section class="featured-section container" id="selected-work">
+        <div class="section-divider fade-up fade-up-d5"></div>
+        <h2 class="section-label fade-up fade-up-d5">Selected Work</h2>
+        <div class="featured-grid" id="featured-grid"></div>
+    </section>
+
+    <!-- ====== ARCHIVE ====== -->
+    <section class="archive-section container" id="archive">
+        <div class="section-divider"></div>
+        <h2 class="section-label">Archive</h2>
+
+        <div class="filter-bar">
+            <div class="filter-bar-inner">
+                <input type="text" class="search-input" id="search-input" placeholder="Search projects..." autocomplete="off">
+                <div class="filter-pills" id="filter-pills"></div>
+            </div>
+        </div>
+
+        <div class="project-grid" id="project-grid"></div>
+    </section>
+
+    <!-- ====== MODAL ====== -->
+    <div id="site-modal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-label="Live site preview">
+            <div class="modal-header">
+                <div class="modal-dots">
+                    <span class="modal-dot modal-dot-red"></span>
+                    <span class="modal-dot modal-dot-yellow"></span>
+                    <span class="modal-dot modal-dot-green"></span>
+                </div>
+                <span id="modal-title" class="modal-title">Preview</span>
+                <div class="modal-actions">
+                    <a id="modal-link" class="modal-link" href="#" target="_blank" rel="noopener noreferrer">
+                        Open <span aria-hidden="true">↗</span>
+                    </a>
+                    <button id="modal-close" class="modal-close" type="button" aria-label="Close preview">×</button>
+                </div>
+            </div>
+            <div class="modal-frame-wrap">
+                <div class="modal-loading" id="modal-loading">
+                    <div class="modal-spinner"></div>
+                </div>
+                <iframe id="modal-frame" class="modal-frame" title="Live site preview" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== FOOTER ====== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div>
+                    <h3 class="footer-name">Mat Harvey</h3>
+                    <p class="footer-bio">
+                        Software engineer and marine scientist based in Perth, Western Australia.
+                        Building tools that help the maritime industry manage biofouling, maintain vessel health, and operate more sustainably.
+                    </p>
+                </div>
+                <div>
+                    <p class="footer-links-heading">Connect</p>
+                    <div class="footer-links">
+                        <a href="https://github.com/Mathew-Harvey" target="_blank" rel="noopener noreferrer">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                            GitHub
+                        </a>
+                        <a href="https://www.linkedin.com/in/mathew-harvey-64b5891b8/" target="_blank" rel="noopener noreferrer">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                            LinkedIn
+                        </a>
+                        <a href="mailto:mathew.harvey@live.com">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            mathew.harvey@live.com
+                        </a>
+                    </div>
+                    <p class="footer-colophon">Auto-deployed via CI/CD pipeline.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 Mat Harvey
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    /* ========================================
+       PROJECT DATA
+       ======================================== */
+    const projects = [
+  {
+    name: "temp-msdt-for-review",
+    displayName: "MarineStream Platform",
+    deploy_url: "https://temp-msdt-for-review.onrender.com",
+    github_url: "https://github.com/Mathew-Harvey/temp-msdt-for-review",
+    description: "A comprehensive web platform for marine vessel maintenance, underwater inspection, and biofouling management — serving the Royal Australian Navy fleet and commercial operators.",
+    category: "maritime",
+    tech: ["JavaScript", "Node.js", "PostgreSQL"],
+    gif_url: "gifs/temp-msdt-for-review.gif",
+    featured: true
+  },
+  {
+    name: "BiofoulingIdGuide",
+    displayName: "Biofouling ID Guide",
+    deploy_url: "https://mathew-harvey.github.io/BiofoulingIdGuide/",
+    github_url: "https://github.com/Mathew-Harvey/BiofoulingIdGuide",
+    description: "A visual field guide for identifying invasive marine species on vessel hulls, developed for commercial divers across Australia. Zero external dependencies.",
+    category: "maritime",
+    tech: ["HTML", "CSS", "JavaScript"],
+    gif_url: "gifs/BiofoulingIdGuide.gif",
+    featured: true
+  },
+  {
+    name: "3dShip",
+    displayName: "3D Ship Visualization",
+    deploy_url: "https://mathew-harvey.github.io/3dShip/",
+    github_url: "https://github.com/Mathew-Harvey/3dShip",
+    description: "Interactive 3D ship model rendered in the browser using Three.js — explore vessel anatomy with orbit controls, lighting, and realistic materials.",
+    category: "simulations",
+    tech: ["Three.js", "JavaScript", "WebGL"],
+    gif_url: "gifs/3dShip.gif",
+    featured: true
+  },
+  {
+    name: "FoulingCostCalculator",
+    displayName: "Fouling Cost Calculator",
+    deploy_url: "https://mathew-harvey.github.io/FoulingCostCalculator/",
+    github_url: "https://github.com/Mathew-Harvey/FoulingCostCalculator",
+    description: "Extends research from the University of Melbourne (Kevin et al., 2024) showing how even light fouling increases fuel use by 10%. Makes academic findings accessible for practical maritime decisions.",
+    category: "maritime",
+    tech: ["HTML", "JavaScript", "Chart.js"],
+    gif_url: "gifs/FoulingCostCalculator.gif",
+    featured: true
+  },
+  {
+    name: "FPVTrackPlanner",
+    displayName: "FPV Track Planner",
+    deploy_url: "https://mathew-harvey.github.io/FPVTrackPlanner/",
+    github_url: "https://github.com/Mathew-Harvey/FPVTrackPlanner",
+    description: "A 3D track designer for FPV drone racing — build gates, obstacles, and racing lines in a WebGL environment with real-world scale.",
+    category: "personal",
+    tech: ["Three.js", "JavaScript", "WebGL"],
+    gif_url: "gifs/FPVTrackPlanner.gif",
+    featured: true
+  },
+  {
+    name: "MarineStream-Workspace",
+    displayName: "MarineStream Workspace",
+    deploy_url: "https://MarineStream-Workspace.onrender.com",
+    github_url: "https://github.com/Mathew-Harvey/MarineStream-Workspace",
+    description: "Unified maritime biofouling management portal with real-time fleet tracking, job management, and operational dashboards.",
+    category: "maritime",
+    tech: ["Node.js", "Express", "PostgreSQL", "WebSocket", "Mapbox"],
+    gif_url: "gifs/MarineStream-Workspace.gif"
+  },
+  {
+    name: "MarineStreamLandingPage",
+    displayName: "MarineStream Landing Page",
+    deploy_url: "https://mathew-harvey.github.io/MarineStreamLandingPage/",
+    github_url: "https://github.com/Mathew-Harvey/MarineStreamLandingPage",
+    description: "Digital multi-party vessel maintenance platform landing page with responsive design and contact form.",
+    category: "maritime",
+    tech: ["HTML", "CSS", "JavaScript"],
+    gif_url: "gifs/MarineStreamLandingPage.gif"
+  },
+  {
+    name: "MarineStream",
+    displayName: "MarineStream",
+    deploy_url: "https://mathew-harvey.github.io/MarineStream/",
+    github_url: "https://github.com/Mathew-Harvey/MarineStream",
+    description: "MarineStream product showcase and information portal.",
+    category: "maritime",
+    tech: ["HTML"],
+    gif_url: "gifs/MarineStream.gif"
+  },
+  {
+    name: "IWC-Approval-Portal",
+    displayName: "IWC Approval Portal",
+    deploy_url: "https://mathew-harvey.github.io/IWC-Approval-Portal/",
+    github_url: "https://github.com/Mathew-Harvey/IWC-Approval-Portal",
+    description: "In-Water Cleaning Notification Package Generator for Franmarine Underwater Services.",
+    category: "maritime",
+    tech: ["Node.js", "Express", "PostgreSQL", "Clerk"],
+    gif_url: "gifs/IWC-Approval-Portal.gif"
+  },
+  {
+    name: "Document-Generator",
+    displayName: "BFMP Document Generator",
+    deploy_url: "https://mathew-harvey.github.io/Document-Generator/",
+    github_url: "https://github.com/Mathew-Harvey/Document-Generator",
+    description: "Biofouling Management Plan (BFMP) generator for maritime compliance documentation.",
+    category: "maritime",
+    tech: ["JavaScript", "Handlebars"],
+    gif_url: "gifs/Document-Generator.gif"
+  },
+  {
+    name: "bfmpGenerator",
+    displayName: "BFMP Generator",
+    deploy_url: "https://mathew-harvey.github.io/bfmpGenerator/",
+    github_url: "https://github.com/Mathew-Harvey/bfmpGenerator",
+    description: "Client-side Biofouling Management Plan generator. Users fill out a form, upload a vessel photo, and receive a print-ready compliance document — fully serverless.",
+    category: "maritime",
+    tech: ["HTML", "Handlebars.js"],
+    gif_url: "gifs/bfmpGenerator.gif"
+  },
+  {
+    name: "iwhc_franmarine",
+    displayName: "In-Water Hull Cleaning",
+    deploy_url: "https://mathew-harvey.github.io/iwhc_franmarine/",
+    github_url: "https://github.com/Mathew-Harvey/iwhc_franmarine",
+    description: "Client-side webpage showcasing in-water hull cleaning capabilities for Franmarine Underwater Services.",
+    category: "maritime",
+    tech: ["HTML", "CSS"],
+    gif_url: "gifs/iwhc_franmarine.gif"
+  },
+  {
+    name: "IWHCManualCompanionApp",
+    displayName: "IWHC Manual Companion",
+    deploy_url: "https://mathew-harvey.github.io/IWHCManualCompanionApp/",
+    github_url: "https://github.com/Mathew-Harvey/IWHCManualCompanionApp",
+    description: "Companion app for the In-Water Hull Cleaning training manual.",
+    category: "maritime",
+    tech: ["HTML"],
+    gif_url: "gifs/IWHCManualCompanionApp.gif"
+  },
+  {
+    name: "TheHullTruth",
+    displayName: "The Hull Truth",
+    deploy_url: "https://mathew-harvey.github.io/TheHullTruth/",
+    github_url: "https://github.com/Mathew-Harvey/TheHullTruth",
+    description: "Interactive calculator visualizing the impact of hull fouling on vessel fuel consumption and costs, based on 2024 University of Melbourne research.",
+    category: "maritime",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/TheHullTruth.gif"
+  },
+  {
+    name: "CleanHullsClearWaters",
+    displayName: "Clean Hulls, Clear Waters",
+    deploy_url: "https://mathew-harvey.github.io/CleanHullsClearWaters/",
+    github_url: "https://github.com/Mathew-Harvey/CleanHullsClearWaters",
+    description: "Educational resource on hull maintenance and marine biosecurity.",
+    category: "maritime",
+    tech: ["HTML"],
+    gif_url: "gifs/CleanHullsClearWaters.gif"
+  },
+  {
+    name: "AgenticBubbleSort",
+    displayName: "Agentic Bubble Sort",
+    deploy_url: "https://mathew-harvey.github.io/AgenticBubbleSort/",
+    github_url: "https://github.com/Mathew-Harvey/AgenticBubbleSort",
+    description: "Inspired by Michael Levin's work on basal cognition — a bubble sort that adapts to different 'personality types,' demonstrating goal-directed behavior through local interactions.",
+    category: "simulations",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/AgenticBubbleSort.gif"
+  },
+  {
+    name: "AntSimulator",
+    displayName: "Ant Simulator",
+    deploy_url: "https://mathew-harvey.github.io/AntSimulator/",
+    github_url: "https://github.com/Mathew-Harvey/AntSimulator",
+    description: "An interactive ant colony simulation exploring emergent behavior through pheromone trails and swarm intelligence.",
+    category: "simulations",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/AntSimulator.gif"
+  },
+  {
+    name: "Artificial-Life",
+    displayName: "Artificial Life",
+    deploy_url: "https://mathew-harvey.github.io/Artificial-Life/",
+    github_url: "https://github.com/Mathew-Harvey/Artificial-Life",
+    description: "Browser-based particle life simulation exploring emergent behavior through attraction and repulsion forces between colored particle groups.",
+    category: "simulations",
+    tech: ["JavaScript", "Canvas"],
+    gif_url: "gifs/Artificial-Life.gif"
+  },
+  {
+    name: "CancerSimulator",
+    displayName: "Cancer Simulator",
+    deploy_url: "https://mathew-harvey.github.io/CancerSimulator/",
+    github_url: "https://github.com/Mathew-Harvey/CancerSimulator",
+    description: "Interactive bioelectric cancer simulation based on Dr. Michael Levin's research framework.",
+    category: "simulations",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/CancerSimulator.gif"
+  },
+  {
+    name: "GameOfLife",
+    displayName: "Game of Life",
+    deploy_url: "https://mathew-harvey.github.io/GameOfLife/",
+    github_url: "https://github.com/Mathew-Harvey/GameOfLife",
+    description: "Conway's Game of Life implemented in the browser with adjustable parameters and preset patterns.",
+    category: "simulations",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/GameOfLife.gif"
+  },
+  {
+    name: "One-Human-Life-React",
+    displayName: "One Human Life",
+    deploy_url: "https://mathew-harvey.github.io/One-Human-Life-React/",
+    github_url: "https://github.com/Mathew-Harvey/One-Human-Life-React",
+    description: "Visualization of a human lifespan in weeks — a grid of colored cells based on your age, making time tangible.",
+    category: "simulations",
+    tech: ["React", "JavaScript"],
+    gif_url: "gifs/One-Human-Life-React.gif"
+  },
+  {
+    name: "Moltbook-Throng",
+    displayName: "Moltbook Throng",
+    deploy_url: "https://mathew-harvey.github.io/Moltbook-Throng/",
+    github_url: "https://github.com/Mathew-Harvey/Moltbook-Throng",
+    description: "Real-time AI agent visualization — animated pixel creatures representing different AI models interacting across communities.",
+    category: "simulations",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/Moltbook-Throng.gif"
+  },
+  {
+    name: "A-New-Framework-for-Understanding-Consciousness",
+    displayName: "Consciousness Framework",
+    deploy_url: "https://mathew-harvey.github.io/A-New-Framework-for-Understanding-Consciousness/",
+    github_url: "https://github.com/Mathew-Harvey/A-New-Framework-for-Understanding-Consciousness",
+    description: "Recursive Observation and Biochemical Weighting — an interactive exploration of a new framework for understanding consciousness.",
+    category: "simulations",
+    tech: ["HTML"],
+    gif_url: "gifs/A-New-Framework-for-Understanding-Consciousness.gif"
+  },
+  {
+    name: "StagesOfMind",
+    displayName: "Stages of Mind",
+    deploy_url: "https://mathew-harvey.github.io/StagesOfMind/",
+    github_url: "https://github.com/Mathew-Harvey/StagesOfMind",
+    description: "Explore cognitive expansion through seven developmental stages based on Robert Kegan's and Joscha Bach's frameworks.",
+    category: "simulations",
+    tech: ["HTML", "CSS"],
+    gif_url: "gifs/StagesOfMind.gif"
+  },
+  {
+    name: "BlurredPhotos",
+    displayName: "Blurred Photos",
+    deploy_url: "https://mathew-harvey.github.io/BlurredPhotos/",
+    github_url: "https://github.com/Mathew-Harvey/BlurredPhotos",
+    description: "Simple web application to blur photos with a C# ASP.NET Core backend.",
+    category: "tools",
+    tech: ["C#", "ASP.NET", "JavaScript"],
+    gif_url: "gifs/BlurredPhotos.gif"
+  },
+  {
+    name: "SimpleImageComression",
+    displayName: "Image Compressor",
+    deploy_url: "https://mathew-harvey.github.io/SimpleImageComression/",
+    github_url: "https://github.com/Mathew-Harvey/SimpleImageComression",
+    description: "Browser-based bulk image compressor — compresses images to ~300KB and packages them into a ZIP file. Fully local.",
+    category: "tools",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/SimpleImageComression.gif"
+  },
+  {
+    name: "FormSync",
+    displayName: "FormSync",
+    deploy_url: "https://mathew-harvey.github.io/FormSync/",
+    github_url: "https://github.com/Mathew-Harvey/FormSync",
+    description: "Collaborative form concept with integrated video sharing capabilities.",
+    category: "tools",
+    tech: ["JavaScript"],
+    gif_url: "gifs/FormSync.gif"
+  },
+  {
+    name: "NetConnectionMonitor",
+    displayName: "Net Connection Monitor",
+    deploy_url: "https://mathew-harvey.github.io/NetConnectionMonitor/",
+    github_url: "https://github.com/Mathew-Harvey/NetConnectionMonitor",
+    description: "Monitor your internet connection quality over time with visual graphs and alerts.",
+    category: "tools",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/NetConnectionMonitor.gif"
+  },
+  {
+    name: "VrSimRacingCalc",
+    displayName: "VR Sim Racing Calculator",
+    deploy_url: "https://mathew-harvey.github.io/VrSimRacingCalc/",
+    github_url: "https://github.com/Mathew-Harvey/VrSimRacingCalc",
+    description: "Calculator for modeling GPU requirements for VR sim racing setups.",
+    category: "tools",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/VrSimRacingCalc.gif"
+  },
+  {
+    name: "WebDiskAnalyser",
+    displayName: "Web Disk Analyser",
+    deploy_url: "https://mathew-harvey.github.io/WebDiskAnalyser/",
+    github_url: "https://github.com/Mathew-Harvey/WebDiskAnalyser",
+    description: "Browser-based disk usage analyzer for visualizing file system space allocation.",
+    category: "tools",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/WebDiskAnalyser.gif"
+  },
+  {
+    name: "DocumentEngine",
+    displayName: "Document Engine",
+    deploy_url: "https://mathew-harvey.github.io/DocumentEngine/",
+    github_url: "https://github.com/Mathew-Harvey/DocumentEngine",
+    description: "A document generation engine for creating structured, template-based documents.",
+    category: "tools",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/DocumentEngine.gif"
+  },
+  {
+    name: "CatTranslator",
+    displayName: "Cat Translator",
+    deploy_url: "https://mathew-harvey.github.io/CatTranslator/",
+    github_url: "https://github.com/Mathew-Harvey/CatTranslator",
+    description: "Plays real cat vocalizations to help you communicate with your cat. Science-adjacent and delightful.",
+    category: "personal",
+    tech: ["HTML", "Web Audio"],
+    gif_url: "gifs/CatTranslator.gif"
+  },
+  {
+    name: "ElodieBook_One",
+    displayName: "Elodie's Book: Chapter One",
+    deploy_url: "https://mathew-harvey.github.io/ElodieBook_One/",
+    github_url: "https://github.com/Mathew-Harvey/ElodieBook_One",
+    description: "Interactive digital storybook about a tawny frogmouth owl making snake stew, featuring AI-generated illustrations and page-turning animations.",
+    category: "personal",
+    tech: ["HTML", "CSS", "JavaScript"],
+    gif_url: "gifs/ElodieBook_One.gif"
+  },
+  {
+    name: "ElodieBook_Two",
+    displayName: "Elodie's Book: Chapter Two",
+    deploy_url: "https://mathew-harvey.github.io/ElodieBook_Two/",
+    github_url: "https://github.com/Mathew-Harvey/ElodieBook_Two",
+    description: "Interactive digital children's storybook with page-turning animations — created from a handwritten story by a 6-year-old.",
+    category: "personal",
+    tech: ["HTML", "CSS", "JavaScript"],
+    gif_url: "gifs/ElodieBook_Two.gif"
+  },
+  {
+    name: "ExtremeLimitFilms",
+    displayName: "Extreme Limit Films",
+    deploy_url: "https://mathew-harvey.github.io/ExtremeLimitFilms/",
+    github_url: "https://github.com/Mathew-Harvey/ExtremeLimitFilms",
+    description: "Homepage for Extreme Limit Films production company.",
+    category: "personal",
+    tech: ["HTML", "CSS"],
+    gif_url: "gifs/ExtremeLimitFilms.gif"
+  },
+  {
+    name: "FamilyHiking",
+    displayName: "Family Hiking",
+    deploy_url: "https://mathew-harvey.github.io/FamilyHiking/",
+    github_url: "https://github.com/Mathew-Harvey/FamilyHiking",
+    description: "A family hiking adventure website for the Bibbulmun Track in Western Australia with interactive maps.",
+    category: "personal",
+    tech: ["HTML", "Tailwind", "Leaflet.js"],
+    gif_url: "gifs/FamilyHiking.gif"
+  },
+  {
+    name: "KoiRunner",
+    displayName: "Koi Runner",
+    deploy_url: "https://mathew-harvey.github.io/KoiRunner/",
+    github_url: "https://github.com/Mathew-Harvey/KoiRunner",
+    description: "Endless runner game — control a koi fish swimming through an underwater environment, avoiding obstacles and collecting larvae.",
+    category: "personal",
+    tech: ["HTML", "Canvas", "JavaScript"],
+    gif_url: "gifs/KoiRunner.gif"
+  },
+  {
+    name: "JapanItinery",
+    displayName: "Japan Itinerary",
+    deploy_url: "https://mathew-harvey.github.io/JapanItinery/",
+    github_url: "https://github.com/Mathew-Harvey/JapanItinery",
+    description: "Mobile-first itinerary planner for a 4-day Tokyo family trip with translation tools, currency conversion, and dark mode.",
+    category: "personal",
+    tech: ["JavaScript"],
+    gif_url: "gifs/JapanItinery.gif"
+  },
+  {
+    name: "WestCoastMultiRotorClub",
+    displayName: "West Coast Multi Rotor Club",
+    deploy_url: "https://mathew-harvey.github.io/WestCoastMultiRotorClub/",
+    github_url: "https://github.com/Mathew-Harvey/WestCoastMultiRotorClub",
+    description: "Drone racing club website for Western Australia.",
+    category: "personal",
+    tech: ["HTML", "CSS", "JavaScript"],
+    gif_url: "gifs/WestCoastMultiRotorClub.gif"
+  },
+  {
+    name: "VirtualPropertyTour",
+    displayName: "Virtual Property Tour",
+    deploy_url: "https://mathew-harvey.github.io/VirtualPropertyTour/",
+    github_url: "https://github.com/Mathew-Harvey/VirtualPropertyTour",
+    description: "An immersive virtual property tour experience built for the web.",
+    category: "personal",
+    tech: ["HTML", "JavaScript"],
+    gif_url: "gifs/VirtualPropertyTour.gif"
+  },
+  {
+    name: "Mat-Portfolio-2025",
+    displayName: "Portfolio 2025",
+    deploy_url: "https://mathew-harvey.github.io/Mat-Portfolio-2025/",
+    github_url: "https://github.com/Mathew-Harvey/Mat-Portfolio-2025",
+    description: "Previous iteration of this portfolio, designed and written by Claude AI.",
+    category: "personal",
+    tech: ["HTML", "CSS"],
+    gif_url: "gifs/Mat-Portfolio-2025.gif"
+  },
+  {
+    name: "HouseSitter",
+    displayName: "House Sitter Guide",
+    deploy_url: "https://mathew-harvey.github.io/HouseSitter/",
+    github_url: "https://github.com/Mathew-Harvey/HouseSitter",
+    description: "Comprehensive house & pet sitting guide — emergency contacts, pet care, schedules, and local info.",
+    category: "personal",
+    tech: ["HTML", "CSS"],
+    gif_url: "gifs/HouseSitter.gif"
+  },
+  {
+    name: "SkyePortfolio",
+    displayName: "Skye's Portfolio",
+    deploy_url: "https://mathew-harvey.github.io/SkyePortfolio/",
+    github_url: "https://github.com/Mathew-Harvey/SkyePortfolio",
+    description: "A portfolio website built for Skye.",
+    category: "personal",
+    tech: ["HTML", "CSS"],
+    gif_url: "gifs/SkyePortfolio.gif"
+  },
+  {
+    name: "MyStuffHere",
+    displayName: "My Stuff",
+    deploy_url: "https://mathew-harvey.github.io/MyStuffHere/",
+    github_url: "https://github.com/Mathew-Harvey/MyStuffHere",
+    description: "A curated collection of software projects.",
+    category: "personal",
+    tech: ["JavaScript"],
+    gif_url: "gifs/MyStuffHere.gif"
+  },
+  {
+    name: "OnlyPrints",
+    displayName: "Only Prints",
+    deploy_url: "https://mathew-harvey.github.io/OnlyPrints/",
+    github_url: "https://github.com/Mathew-Harvey/OnlyPrints",
+    description: "A print-focused web project built for Tim.",
+    category: "personal",
+    tech: ["HTML"],
+    gif_url: "gifs/OnlyPrints.gif"
+  }
+];
+
+    /* ========================================
+       CATEGORY MAP
+       ======================================== */
+    const categoryLabels = {
+        all: "All",
+        maritime: "Maritime & Industry",
+        simulations: "Simulations & Viz",
+        tools: "Tools & Utilities",
+        personal: "Personal & Creative"
+    };
+
+    /* ========================================
+       STATE
+       ======================================== */
+    let activeFilter = "all";
+    let searchQuery = "";
+
+    const featuredProjects = projects.filter(p => p.featured);
+    const archiveProjects = projects.filter(p => !p.featured);
+
+    /* ========================================
+       SVG ICONS
+       ======================================== */
+    const icons = {
+        github: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>',
+        external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+    };
+
+    /* ========================================
+       RENDER FEATURED PROJECTS
+       ======================================== */
+    const featuredGrid = document.getElementById('featured-grid');
+
+    featuredProjects.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'featured-card';
+        card.dataset.liveUrl = p.deploy_url || '';
+        card.dataset.title = p.displayName;
+
+        const techHtml = (p.tech || []).map(t =>
+            `<span class="tech-tag">${t}</span>`
+        ).join('');
+
+        const hasGif = p.gif_url && p.gif_url.length > 0;
+
+        card.innerHTML = `
+            <div class="featured-card-preview">
+                <div class="fallback"><span class="fallback-text">${p.displayName}</span></div>
+                ${hasGif
+                    ? `<img data-src="${p.gif_url}" alt="${p.displayName} preview" loading="lazy">`
+                    : ''
+                }
+            </div>
+            <div class="featured-card-body">
+                <h3 class="featured-card-name">${p.displayName}</h3>
+                <p class="featured-card-desc">${p.description}</p>
+                <div class="featured-card-footer">
+                    <div class="featured-card-tech">${techHtml}</div>
+                    <div class="featured-card-links">
+                        <a href="${p.github_url}" target="_blank" rel="noopener noreferrer" class="icon-btn" aria-label="GitHub" onclick="event.stopPropagation()">${icons.github}</a>
+                        ${p.deploy_url ? `<a href="${p.deploy_url}" target="_blank" rel="noopener noreferrer" class="card-link card-link-primary" onclick="event.stopPropagation()">View <span aria-hidden="true">&rarr;</span></a>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        card.addEventListener('click', () => {
+            if (p.deploy_url) openModal(p.deploy_url, p.displayName);
+        });
+
+        featuredGrid.appendChild(card);
+    });
+
+    /* ========================================
+       RENDER FILTERS
+       ======================================== */
+    const filterPills = document.getElementById('filter-pills');
+    const categories = ["all", "maritime", "simulations", "tools", "personal"];
+
+    categories.forEach(cat => {
+        const count = cat === "all"
+            ? archiveProjects.length
+            : archiveProjects.filter(p => p.category === cat).length;
+
+        const btn = document.createElement('button');
+        btn.className = 'filter-pill' + (cat === 'all' ? ' active' : '');
+        btn.textContent = categoryLabels[cat] + (cat !== 'all' ? ` (${count})` : '');
+        btn.dataset.category = cat;
+        btn.setAttribute('aria-pressed', cat === 'all' ? 'true' : 'false');
+        btn.addEventListener('click', () => setFilter(cat));
+        filterPills.appendChild(btn);
+    });
+
+    /* ========================================
+       RENDER ARCHIVE CARDS
+       ======================================== */
+    const projectGrid = document.getElementById('project-grid');
+
+    archiveProjects.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'archive-card';
+        card.dataset.category = p.category || '';
+        card.dataset.name = (p.displayName + ' ' + p.name + ' ' + p.description).toLowerCase();
+        card.dataset.liveUrl = p.deploy_url || '';
+        card.dataset.title = p.displayName;
+
+        const techHtml = (p.tech || []).slice(0, 3).map(t =>
+            `<span class="tech-tag">${t}</span>`
+        ).join('');
+
+        const hasGif = p.gif_url && p.gif_url.length > 0;
+
+        card.innerHTML = `
+            <div class="archive-card-preview">
+                <div class="fallback"><span class="fallback-text">${p.displayName}</span></div>
+                ${hasGif
+                    ? `<img data-src="${p.gif_url}" alt="${p.displayName} preview" loading="lazy">`
+                    : ''
+                }
+            </div>
+            <div class="archive-card-body">
+                <h3 class="archive-card-name">${p.displayName}</h3>
+                <p class="archive-card-desc">${p.description}</p>
+                <div class="archive-card-footer">
+                    <div class="archive-card-tech">${techHtml}</div>
+                    <div class="archive-card-links">
+                        <a href="${p.github_url}" target="_blank" rel="noopener noreferrer" class="icon-btn" aria-label="GitHub" onclick="event.stopPropagation()">${icons.github}</a>
+                        ${p.deploy_url ? `<a href="${p.deploy_url}" target="_blank" rel="noopener noreferrer" class="icon-btn" aria-label="Open site" onclick="event.stopPropagation()">${icons.external}</a>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        card.addEventListener('click', () => {
+            if (p.deploy_url) openModal(p.deploy_url, p.displayName);
+        });
+
+        projectGrid.appendChild(card);
+    });
+
+    /* ========================================
+       LAZY LOADING IMAGES
+       ======================================== */
+    const imgObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target.querySelector('img[data-src]');
+                if (img) {
+                    const onLoad = () => {
+                        img.classList.add('loaded');
+                        // Hide the fallback text once the image is visible
+                        const fallback = entry.target.querySelector('.fallback');
+                        if (fallback) fallback.classList.add('hidden');
+                    };
+                    img.onload = onLoad;
+                    img.src = img.dataset.src;
+                    if (img.complete) onLoad();
+                    img.removeAttribute('data-src');
+                }
+                imgObserver.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '200px' });
+
+    document.querySelectorAll('.featured-card-preview, .archive-card-preview').forEach(el => {
+        imgObserver.observe(el);
+    });
+
+    /* ========================================
+       SCROLL-REVEAL FOR ARCHIVE CARDS
+       ======================================== */
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                const delay = entry.target.dataset.revealDelay || 0;
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, delay);
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+
+    function observeArchiveCards() {
+        let visibleIndex = 0;
+        document.querySelectorAll('.archive-card').forEach(card => {
+            if (card.style.display !== 'none') {
+                card.dataset.revealDelay = visibleIndex * 50;
+                if (!card.classList.contains('visible')) {
+                    revealObserver.observe(card);
+                }
+                visibleIndex++;
+            }
+        });
+    }
+
+    observeArchiveCards();
+
+    /* ========================================
+       FILTERING & SEARCH
+       ======================================== */
+    function setFilter(category) {
+        activeFilter = category;
+        document.querySelectorAll('.filter-pill').forEach(btn => {
+            const isActive = btn.dataset.category === category;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+        applyFilters();
+    }
+
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        applyFilters();
+    });
+
+    function applyFilters() {
+        let visibleCount = 0;
+        document.querySelectorAll('.archive-card').forEach(card => {
+            const matchesCategory = activeFilter === 'all' || card.dataset.category === activeFilter;
+            const matchesSearch = !searchQuery || card.dataset.name.includes(searchQuery);
+            const visible = matchesCategory && matchesSearch;
+            card.style.display = visible ? '' : 'none';
+            if (visible) {
+                visibleCount++;
+                if (!card.classList.contains('visible')) {
+                    card.classList.add('visible');
+                }
+            }
+        });
+
+        let noResults = projectGrid.querySelector('.no-results');
+        if (visibleCount === 0) {
+            if (!noResults) {
+                noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.textContent = 'No projects match your search.';
+                projectGrid.appendChild(noResults);
+            }
+        } else if (noResults) {
+            noResults.remove();
+        }
+    }
+
+    /* ========================================
+       MODAL
+       ======================================== */
+    const modal = document.getElementById('site-modal');
+    const modalFrame = document.getElementById('modal-frame');
+    const modalTitle = document.getElementById('modal-title');
+    const modalLink = document.getElementById('modal-link');
+    const modalClose = document.getElementById('modal-close');
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modalLoading = document.getElementById('modal-loading');
+
+    function openModal(url, title) {
+        if (!url) return;
+        modalTitle.textContent = title || 'Preview';
+        modalLink.href = url;
+        modalLoading.style.display = 'flex';
+        modalFrame.src = url;
+        modalFrame.onload = () => {
+            modalLoading.style.display = 'none';
+        };
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        modalClose.focus();
+    }
+
+    function closeModal() {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        modalFrame.src = 'about:blank';
+        document.body.classList.remove('modal-open');
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) {
+            closeModal();
+        }
+    });
+
+    /* ========================================
+       UPDATE STATS
+       ======================================== */
+    document.getElementById('stat-projects').textContent = projects.length;
+    </script>
+</body>
+</html>
