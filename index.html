@@ -354,6 +354,56 @@
             gap: 12px;
         }
 
+        /* ========================================
+           MOBILE GAME BANNER
+           ======================================== */
+        .mobile-game-banner {
+            display: none; /* Hidden on desktop; shown via mobile media query */
+        }
+
+        .mgb-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #818cf8;
+        }
+
+        .mgb-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+        }
+
+        .mgb-text strong {
+            font-size: 0.92rem;
+            color: #e0e7ff;
+            font-weight: 600;
+        }
+
+        .mgb-text small {
+            font-size: 0.75rem;
+            color: #9ca3c8;
+            line-height: 1.35;
+        }
+
+        .mgb-arrow {
+            color: #818cf8;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            transition: transform 300ms ease;
+        }
+
+        .mobile-game-banner:hover .mgb-arrow,
+        .mobile-game-banner:active .mgb-arrow {
+            transform: translateX(4px);
+        }
+
         /* Entrance animations */
         .fade-up {
             opacity: 0;
@@ -1159,6 +1209,22 @@
             }
 
             .game-cta {
+                height: 36px;
+                padding: 0 14px 0 10px;
+                font-size: 0.78rem;
+            }
+
+            .game-cta-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .game-cta-icon svg {
+                width: 9px;
+                height: 9px;
+            }
+
+            .game-cta-arrow {
                 display: none;
             }
 
@@ -1176,6 +1242,20 @@
 
             .hero-cta {
                 margin-top: 32px;
+            }
+
+            .mobile-game-banner {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-top: 28px;
+                padding: 16px 18px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #22224a 100%);
+                border: 1.5px solid rgba(99, 102, 241, 0.45);
+                text-decoration: none;
+                box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+                animation: gameCta-glow 3s ease-in-out infinite;
             }
 
             .featured-section {
@@ -1261,6 +1341,21 @@
 
             .hero {
                 padding: 64px 0 48px;
+            }
+
+            .mobile-game-banner {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-top: 28px;
+                padding: 16px 18px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #22224a 100%);
+                border: 1.5px solid rgba(99, 102, 241, 0.45);
+                text-decoration: none;
+                box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+                animation: gameCta-glow 3s ease-in-out infinite;
+                max-width: 480px;
             }
         }
 
@@ -1431,6 +1526,14 @@
             <div class="hero-cta fade-up fade-up-d5">
                 <a href="#selected-work">View Selected Work <span aria-hidden="true">↓</span></a>
             </div>
+            <a href="ThreeJs.html" class="mobile-game-banner fade-up fade-up-d5" aria-label="Launch 3D portfolio world">
+                <span class="mgb-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" width="18" height="18"><polygon points="8,5 20,12 8,19"/></svg></span>
+                <span class="mgb-text">
+                    <strong>Explore my 3D Portfolio World</strong>
+                    <small>Drive, walk & discover 45 projects in an interactive game</small>
+                </span>
+                <span class="mgb-arrow" aria-hidden="true">&rarr;</span>
+            </a>
         </section>
     </div>
 

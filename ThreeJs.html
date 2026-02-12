@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mat Harvey — Portfolio World</title>
     <style>
         :root{--hud:rgba(10,18,12,.72);--hb:rgba(120,180,100,.22);--t:#e8f0e4;--s:#9ab892;--a:#6ec86e;--a2:#f0c060;--w:#5cc0b8}
-        *{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif;color:var(--t);background:#1a2818}
-        #app{width:100%;height:100%;position:relative}canvas{display:block;width:100%;height:100%}
+        *{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif;color:var(--t);background:#1a2818;overscroll-behavior:none}
+        #app{width:100%;height:100%;position:relative}canvas{display:block;width:100%;height:100%;touch-action:none}
         #loading{position:fixed;inset:0;background:linear-gradient(135deg,#1a2818,#0e180c);display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .8s}
         #loading h1{font-size:2rem;color:#8fcc6a;letter-spacing:.14em;text-transform:uppercase;font-weight:700}#loading p{margin-top:10px;color:#6a9a5c;font-size:.95rem}
         .panel{position:absolute;backdrop-filter:blur(10px);border:1px solid var(--hb);background:var(--hud);border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,.3)}
@@ -154,6 +154,66 @@
         .scope-zoom-label{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);color:rgba(255,80,80,.6);font-size:.7rem;font-weight:600;letter-spacing:.1em;z-index:24;pointer-events:none;opacity:0;transition:opacity .15s}
         .scope-zoom-label.show{opacity:1}
         @media(max-width:860px){.side-panel{top:auto;bottom:60px;right:14px;max-height:32vh}.hud{width:min(280px,calc(100vw - 28px))}}
+        /* ========================================
+           MOBILE / TOUCH CONTROLS
+           ======================================== */
+        #mobile-controls{display:none;position:fixed;inset:0;z-index:30;pointer-events:none}
+        #mobile-controls>*{pointer-events:auto}
+        /* Virtual Joystick */
+        #joystick-zone{position:absolute;left:10px;bottom:10px;width:160px;height:160px;touch-action:none}
+        #joystick-base{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,.06);border:2px solid rgba(110,200,110,.22);backdrop-filter:blur(2px)}
+        #joystick-stick{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:rgba(110,200,110,.28);border:2.5px solid rgba(110,200,110,.5)}
+        /* Action Buttons — bottom-right */
+        #mobile-btns{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+        #mobile-btns-row{display:flex;gap:10px;align-items:center}
+        .mobile-btn{width:60px;height:60px;border-radius:50%;border:2px solid rgba(110,200,110,.35);background:rgba(14,22,14,.65);color:#8fc88f;font-family:inherit;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;touch-action:none;-webkit-user-select:none;user-select:none;cursor:pointer;padding:4px}
+        .mobile-btn:active,.mobile-btn.pressed{background:rgba(110,200,110,.25);border-color:#6ec86e;color:#d4ffd4}
+        .mobile-btn.ctx-hidden{opacity:0;pointer-events:none;transform:scale(.8)}
+        .mobile-btn-lg{width:66px;height:66px;font-size:.72rem;border-color:rgba(110,200,110,.45);background:rgba(110,200,110,.06)}
+        .mobile-btn-sprint{border-color:rgba(240,192,96,.35);color:#d0a040;background:rgba(40,30,10,.55)}
+        .mobile-btn-sprint:active,.mobile-btn-sprint.pressed{background:rgba(240,192,96,.22);border-color:#f0c060;color:#ffe090}
+        /* Camera touch zone — right portion of screen */
+        #cam-touch-zone{position:absolute;top:0;right:0;bottom:0;left:38%;touch-action:none;z-index:29}
+        /* Top nav buttons for mobile */
+        #mobile-top{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:31}
+        .mob-top-btn{height:34px;border-radius:8px;border:1px solid rgba(200,220,196,.25);background:rgba(14,22,14,.7);color:#c8dcc4;font-size:.68rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 10px;touch-action:none;-webkit-user-select:none;user-select:none;cursor:pointer;text-decoration:none;font-family:inherit}
+        .mob-top-btn:active{border-color:#6ec86e;color:#fff}
+        /* Layout adjustments when mobile controls active */
+        body.mobile-active{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;overscroll-behavior:none;position:fixed;width:100%;height:100%}
+        body.mobile-active .hud{width:min(200px,calc(100vw - 80px));padding:6px 8px;gap:3px;border-radius:8px}
+        body.mobile-active .hud .hint{display:none}
+        body.mobile-active .hud-title{font-size:.64rem}
+        body.mobile-active .hud-row{font-size:.7rem;gap:4px}
+        body.mobile-active .side-panel{display:none}
+        body.mobile-active .links{display:none}
+        body.mobile-active .ach-popup{bottom:180px;right:14px;max-width:250px;font-size:.78rem;padding:10px 14px 10px 12px}
+        body.mobile-active .ach-popup .ach-icon{font-size:1.6rem}
+        body.mobile-active .ach-popup .ach-name{font-size:.82rem}
+        body.mobile-active .quest-tracker{bottom:180px;right:14px;width:min(210px,calc(100vw - 28px));padding:10px 12px 8px}
+        body.mobile-active .quest-tracker .qt{font-size:.85rem}
+        body.mobile-active .quest-tracker .qobj{font-size:.76rem}
+        body.mobile-active .quest-tracker .check-item{font-size:.78rem}
+        body.mobile-active .prompt{bottom:180px;min-width:min(280px,calc(100vw - 200px));font-size:.76rem;padding:7px 10px}
+        body.mobile-active .dialog-box{padding:16px 18px 14px;width:min(400px,calc(100vw - 20px))}
+        body.mobile-active .dialog-title{font-size:1.1rem}
+        body.mobile-active .dialog-text{font-size:.88rem}
+        body.mobile-active .dialog-btns{flex-wrap:wrap}
+        body.mobile-active .garage-modal{padding:16px 18px 14px;max-width:94vw;width:94vw}
+        body.mobile-active .garage-title{font-size:1.2rem}
+        body.mobile-active .garage-hint{display:none}
+        body.mobile-active .garage-nav{width:36px;height:36px;font-size:1rem}
+        body.mobile-active .mode-badge{top:auto;bottom:182px;font-size:.62rem;padding:3px 10px}
+        body.mobile-active .speech-bubble{max-width:180px;font-size:.78rem;padding:7px 10px}
+        body.mobile-active .toast{font-size:.72rem;top:52px;padding:6px 10px}
+        body.mobile-active .crosshair,body.mobile-active .scope-overlay,body.mobile-active .scope-zoom-label{display:none}
+        body.mobile-active .gun-hud{display:none}
+        body.mobile-active .hp-bar{display:none}
+        body.mobile-active .death-screen .death-title{font-size:1.6rem}
+        body.mobile-active .death-screen .death-sub{font-size:.85rem}
+        body.mobile-active .obj-complete-banner{padding:18px 14px 16px}
+        body.mobile-active .obj-complete-banner .ocb-title{font-size:1.3rem}
+        body.mobile-active .obj-complete-banner .ocb-sub{font-size:.9rem}
+        body.mobile-active .quest-fanfare .qf-title{font-size:1.6rem}
     </style>
 </head>
 <body>
@@ -166,11 +226,24 @@
         <div class="hud-row"><span>Discovered</span><span class="v" id="visited">0 / 45</span></div>
         <div class="hud-row"><span>Season</span><span class="v" id="season">Spring</span></div>
         <div class="hint">Driving: W/S forward/brake · A/D steer · Shift boost · E interact · F exit car · G garage · M mute</div>
-        <div class="hint">Walking: W/S move · A/D strafe · Hold LMB look · E talk · F car · G garage · 1 equip SMG · Scroll zoom</div>
+        <div class="hint">Walking: W/S move · A/D strafe · Space jump · Hold LMB look · E talk · F car · G garage · 1 equip SMG · Scroll zoom</div>
+        <div class="hint">Diving: WASD swim · Space dive deeper · Shift surface · E to exit near dock/ship</div>
     </div>
     <div class="panel side-panel"><div class="section-label">Achievements <span id="ach-count" style="float:right;color:var(--a);font-weight:600"></span></div><div id="badges"></div></div>
     <div class="ach-popup" id="ach-popup"><div class="ach-icon" id="ach-popup-icon"></div><div class="ach-body"><div class="ach-label">Achievement Unlocked</div><div class="ach-name" id="ach-popup-name"></div><div class="ach-desc" id="ach-popup-desc"></div><div class="ach-bar"><div class="ach-bar-fill" id="ach-popup-bar"></div></div></div></div>
     <div class="prompt" id="prompt"></div><div class="toast" id="toast"></div>
+    <div id="dive-mask" style="position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .4s">
+        <svg width="100%" height="100%" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0">
+            <defs>
+                <radialGradient id="maskGrad" cx="50%" cy="50%" r="52%"><stop offset="70%" stop-color="transparent"/><stop offset="88%" stop-color="rgba(0,0,0,.5)"/><stop offset="100%" stop-color="rgba(0,0,0,.95)"/></radialGradient>
+            </defs>
+            <rect width="1920" height="1080" fill="url(#maskGrad)"/>
+            <ellipse cx="960" cy="540" rx="820" ry="460" fill="none" stroke="rgba(40,40,50,.85)" stroke-width="6"/>
+            <ellipse cx="960" cy="540" rx="830" ry="470" fill="none" stroke="rgba(60,60,70,.4)" stroke-width="2"/>
+        </svg>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(15,60,90,.2) 0%,rgba(5,25,45,.45) 100%)"></div>
+        <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);color:rgba(120,220,255,.7);font:600 13px/1 'Segoe UI',sans-serif;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,100,180,.5)">Diving — WASD move · Space dive · Shift surface · E exit</div>
+    </div>
     <div class="dialog-overlay" id="dialog"><div class="dialog-box"><div class="dialog-npc" id="dialog-npc">Wizard</div><div class="dialog-title" id="dialog-title"></div><div class="dialog-text" id="dialog-text"></div><div class="dialog-progress" id="dialog-progress"></div><div class="dialog-btns" id="dialog-btns"></div></div></div>
     <div class="garage-overlay" id="garage-overlay">
         <div class="garage-modal">
@@ -211,6 +284,24 @@
     <div class="hp-bar" id="hp-bar"><div class="hp-fill" id="hp-fill" style="width:100%"></div></div>
     <div class="muzzle-flash" id="muzzle-flash"></div>
     <div class="links"><a class="btn" href="index.html">← Classic Portfolio</a><button class="btn" id="mute-btn" type="button">Audio: ON</button></div>
+    <!-- ====== MOBILE TOUCH CONTROLS ====== -->
+    <div id="mobile-controls">
+        <div id="cam-touch-zone"></div>
+        <div id="joystick-zone"><div id="joystick-base"><div id="joystick-stick"></div></div></div>
+        <div id="mobile-btns">
+            <button id="btn-car" class="mobile-btn ctx-hidden" data-label-drive="EXIT" data-label-walk="CAR">EXIT</button>
+            <button id="btn-action" class="mobile-btn ctx-hidden">TALK</button>
+            <div id="mobile-btns-row">
+                <button id="btn-sprint" class="mobile-btn mobile-btn-sprint">⚡</button>
+                <button id="btn-jump" class="mobile-btn mobile-btn-lg">JUMP</button>
+            </div>
+        </div>
+        <div id="mobile-top">
+            <a class="mob-top-btn" href="index.html">← Portfolio</a>
+            <button class="mob-top-btn" id="btn-mob-garage" style="display:none">🏎️</button>
+            <button class="mob-top-btn" id="btn-mob-mute">🔊</button>
+        </div>
+    </div>
 </div>
 <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.161.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/" } }
@@ -223,9 +314,27 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
+/* ====== MOBILE DETECTION ====== */
+const IS_MOBILE=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&window.innerWidth<1200;
+if(IS_MOBILE)document.body.classList.add('mobile-active');
+
 /* ====== PERFORMANCE PROFILE ====== */
-const PERF={
-    // Fixed settings across all devices for a consistent experience.
+const PERF=IS_MOBILE?{
+    antialias:false,
+    pixelRatioCap:1,
+    postFx:false,
+    terrainSegs:100,
+    grassBlades:5000,
+    pineCount:70,
+    deciCount:50,
+    leafCount:30,
+    waterSegX:18,
+    waterSegY:10,
+    extraGltf:true,
+    traffic:true,
+    fpsCap:0,
+}:{
+    // Desktop — full quality.
     antialias:true,
     pixelRatioCap:1.25,
     postFx:true,
@@ -302,16 +411,16 @@ maritime:{label:"Port District",dtClass:"dt-port",color:"#3eaaa2",projects:[
     {t:"Clean Hulls Clear Waters",u:"https://mathew-harvey.github.io/CleanHullsClearWaters/",g:"CleanHullsClearWaters.gif"},
 ]},
 simulations:{label:"Science Park",dtClass:"dt-sim",color:"#6878cc",projects:[
-    {t:"3D Ship Visualization",u:"https://mathew-harvey.github.io/3dShip/",g:"3dShip.gif"},
-    {t:"Agentic Bubble Sort",u:"https://mathew-harvey.github.io/AgenticBubbleSort/",g:"AgenticBubbleSort.gif"},
-    {t:"Ant Simulator",u:"https://mathew-harvey.github.io/AntSimulator/",g:"AntSimulator.gif"},
-    {t:"Artificial Life",u:"https://mathew-harvey.github.io/Artificial-Life/",g:"Artificial-Life.gif"},
-    {t:"Cancer Simulator",u:"https://mathew-harvey.github.io/CancerSimulator/",g:"CancerSimulator.gif"},
-    {t:"Game of Life",u:"https://mathew-harvey.github.io/GameOfLife/",g:"GameOfLife.gif"},
-    {t:"One Human Life",u:"https://mathew-harvey.github.io/One-Human-Life-React/",g:"One-Human-Life-React.gif"},
-    {t:"Moltbook Throng",u:"https://mathew-harvey.github.io/Moltbook-Throng/",g:"Moltbook-Throng.gif"},
-    {t:"Consciousness Framework",u:"https://mathew-harvey.github.io/A-New-Framework-for-Understanding-Consciousness/",g:"A-New-Framework-for-Understanding-Consciousness.gif"},
-    {t:"Stages of Mind",u:"https://mathew-harvey.github.io/StagesOfMind/",g:"StagesOfMind.gif"},
+    {t:"3D Ship Visualization",u:"https://mathew-harvey.github.io/3dShip/",g:"3dShip.gif",display:"hologram"},
+    {t:"Agentic Bubble Sort",u:"https://mathew-harvey.github.io/AgenticBubbleSort/",g:"AgenticBubbleSort.gif",display:"hologram"},
+    {t:"Ant Simulator",u:"https://mathew-harvey.github.io/AntSimulator/",g:"AntSimulator.gif",display:"portal"},
+    {t:"Artificial Life",u:"https://mathew-harvey.github.io/Artificial-Life/",g:"Artificial-Life.gif",display:"portal"},
+    {t:"Cancer Simulator",u:"https://mathew-harvey.github.io/CancerSimulator/",g:"CancerSimulator.gif",display:"hologram"},
+    {t:"Game of Life",u:"https://mathew-harvey.github.io/GameOfLife/",g:"GameOfLife.gif",display:"portal"},
+    {t:"One Human Life",u:"https://mathew-harvey.github.io/One-Human-Life-React/",g:"One-Human-Life-React.gif",display:"hologram"},
+    {t:"Moltbook Throng",u:"https://mathew-harvey.github.io/Moltbook-Throng/",g:"Moltbook-Throng.gif",display:"portal"},
+    {t:"Consciousness Framework",u:"https://mathew-harvey.github.io/A-New-Framework-for-Understanding-Consciousness/",g:"A-New-Framework-for-Understanding-Consciousness.gif",display:"hologram"},
+    {t:"Stages of Mind",u:"https://mathew-harvey.github.io/StagesOfMind/",g:"StagesOfMind.gif",display:"hologram"},
 ]},
 tools:{label:"Tech Hub",dtClass:"dt-tool",color:"#d0a030",projects:[
     {t:"Blurred Photos",u:"https://mathew-harvey.github.io/BlurredPhotos/",g:"BlurredPhotos.gif"},
@@ -323,19 +432,19 @@ tools:{label:"Tech Hub",dtClass:"dt-tool",color:"#d0a030",projects:[
     {t:"Document Engine",u:"https://mathew-harvey.github.io/DocumentEngine/",g:"DocumentEngine.gif"},
 ]},
 personal:{label:"Creative Village",dtClass:"dt-per",color:"#cc6088",projects:[
-    {t:"FPV Track Planner",u:"https://mathew-harvey.github.io/FPVTrackPlanner/",g:"FPVTrackPlanner.gif"},
-    {t:"Cat Translator",u:"https://mathew-harvey.github.io/CatTranslator/",g:"CatTranslator.gif"},
+    {t:"FPV Track Planner",u:"https://mathew-harvey.github.io/FPVTrackPlanner/",g:"FPVTrackPlanner.gif",display:"arcade"},
+    {t:"Cat Translator",u:"https://mathew-harvey.github.io/CatTranslator/",g:"CatTranslator.gif",display:"arcade"},
     {t:"Elodie Book One",u:"https://mathew-harvey.github.io/ElodieBook_One/",g:"ElodieBook_One.gif"},
     {t:"Elodie Book Two",u:"https://mathew-harvey.github.io/ElodieBook_Two/",g:"ElodieBook_Two.gif"},
     {t:"Extreme Limit Films",u:"https://mathew-harvey.github.io/ExtremeLimitFilms/",g:"ExtremeLimitFilms.gif"},
     {t:"Family Hiking",u:"https://mathew-harvey.github.io/FamilyHiking/",g:"FamilyHiking.gif"},
-    {t:"Koi Runner",u:"https://mathew-harvey.github.io/KoiRunner/",g:"KoiRunner.gif"},
+    {t:"Koi Runner",u:"https://mathew-harvey.github.io/KoiRunner/",g:"KoiRunner.gif",display:"arcade"},
     {t:"Japan Itinerary",u:"https://mathew-harvey.github.io/JapanItinery/",g:"JapanItinery.gif"},
     {t:"WC MultiRotor Club",u:"https://mathew-harvey.github.io/WestCoastMultiRotorClub/",g:"WestCoastMultiRotorClub.gif"},
-    {t:"Virtual Property Tour",u:"https://mathew-harvey.github.io/VirtualPropertyTour/",g:"VirtualPropertyTour.gif"},
-    {t:"Portfolio 2025",u:"https://mathew-harvey.github.io/Mat-Portfolio-2025/",g:"Mat-Portfolio-2025.gif"},
+    {t:"Virtual Property Tour",u:"https://mathew-harvey.github.io/VirtualPropertyTour/",g:"VirtualPropertyTour.gif",display:"portal"},
+    {t:"Portfolio 2025",u:"https://mathew-harvey.github.io/Mat-Portfolio-2025/",g:"Mat-Portfolio-2025.gif",display:"hologram"},
     {t:"House Sitter Guide",u:"https://mathew-harvey.github.io/HouseSitter/",g:"HouseSitter.gif"},
-    {t:"Skye Portfolio",u:"https://mathew-harvey.github.io/SkyePortfolio/",g:"SkyePortfolio.gif"},
+    {t:"Skye Portfolio",u:"https://mathew-harvey.github.io/SkyePortfolio/",g:"SkyePortfolio.gif",display:"arcade"},
     {t:"My Stuff",u:"https://mathew-harvey.github.io/MyStuffHere/",g:"MyStuffHere.gif"},
     {t:"Only Prints",u:"https://mathew-harvey.github.io/OnlyPrints/",g:"OnlyPrints.gif"},
 ]},
@@ -354,12 +463,13 @@ const portRow2=[[-48,-50],[-34,-50],[-18,-50],[18,-50],[34,-50],[48,-50]];
 DISTRICTS.maritime.projects.forEach((p,i)=>{const pos=i<7?portRow1[i]:portRow2[i-7];if(!pos)return;p.district="maritime";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
 // Science: N-S road at x=50 (x=45..55), also avoid E-W road (z=-8..8)
 // East col (x=60) safe z: skip z=-8..8 → z=-18,-12,12,18,24
-const sciCol1=[[60,-18],[60,-12],[60,12],[72,16],[72,28]];
-const sciCol2=[[40,-18],[40,-12],[40,12],[40,18],[40,28]];
+// Moved (72,16) to (66,12) to avoid building at (74,18)
+const sciCol1=[[60,-18],[60,-14],[60,14],[66,14],[60,28]];
+const sciCol2=[[58,-26],[58,26],[32,-18],[32,-14],[32,14]];
 DISTRICTS.simulations.projects.forEach((p,i)=>{const pos=i<5?sciCol1[i]:sciCol2[i-5];if(!pos)return;p.district="simulations";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
 // Tech: N-S road at x=-50 (x=-55..-45), avoid E-W road (z=-8..8)
-const techCol1=[[-60,-18],[-60,-12],[-60,12],[-74,28]];
-const techCol2=[[-40,-18],[-40,-12],[-40,14]];
+const techCol1=[[-58,-26],[-58,26],[-60,14],[-74,28]];
+const techCol2=[[-32,-18],[-32,-14],[-32,14]];
 DISTRICTS.tools.projects.forEach((p,i)=>{const pos=i<4?techCol1[i]:techCol2[i-4];if(!pos)return;p.district="tools";p.wx=pos[0];p.wz=pos[1];ALL_PROJECTS.push(p);});
 // Creative: road z=50 (z=44..56), also avoid N-S road (x=-8..8), connectors (x=-42..-34, x=34..42 at z<50)
 // Row 1 z=38: manually skip road bands
@@ -419,6 +529,10 @@ const ACHIEVEMENTS=[
     {id:"night",title:"Night Owl",desc:"Drive for 5 real minutes.",icon:"\u{1F319}"},
     {id:"crash50",title:"Chaos Agent",desc:"Send 50 objects flying.",icon:"\u{1F32A}"},
     {id:"mountain",title:"Mountaineer",desc:"Reach the highest terrain point.",icon:"\u{26F0}"},
+    {id:"swimmer",title:"Sea Legs",desc:"Jump into the ocean and swim.",icon:"\u{1F3CA}"},
+    {id:"diver",title:"Deep Diver",desc:"Dive underwater near the ship.",icon:"\u{1F9BF}"},
+    {id:"hull_inspect",title:"Hull Inspector",desc:"Swim under the ship's hull.",icon:"\u{1F6A2}"},
+    {id:"aboard",title:"All Aboard!",desc:"Board the frigate.",icon:"\u{2693}"},
 ];
 
 /* ====== STATE ====== */
@@ -437,6 +551,11 @@ const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:
     hasGun:false,gunEquipped:false,
     // Wizard protection
     wizardWarnings:0,isDead:false,
+    // Swimming & jumping
+    swimming:false,underwater:false,swimVelY:0,onShip:false,
+    jumpVelY:0,isJumping:false,avatarY:0,swimTime:0,
+    // Diving mode (FPS underwater)
+    diving:false,divePos:null,diveCamYaw:0,diveCamPitch:0,
     // Destruction tracking (non-persistent — resets on refresh)
     destroyCount:0,destroyBuildings:0,destroyCars:0,destroyBillboards:0,destroyShips:0,
     destroyTimestamps:[], // for rampage detection
@@ -510,12 +629,12 @@ function unlock(id){
     if(a)_showAchPopup(a);
 }
 renderBadges();
-function getDistrict(x,z){if(z<-28)return"Port District";if(z>30)return"Creative Village";if(x>28)return"Science Park";if(x<-28)return"Tech Hub";return"Town Center";}
+function getDistrict(x,z){if(z<-65)return"Open Ocean";if(z<-28)return"Port District";if(z>30)return"Creative Village";if(x>28)return"Science Park";if(x<-28)return"Tech Hub";return"Town Center";}
 
 /* ====== SCENE ====== */
 const scene=new THREE.Scene();scene.background=new THREE.Color("#78b8e6");scene.fog=new THREE.Fog("#a8d4ec",70,240);
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,500);camera.position.set(0,10,18);
-const renderer=new THREE.WebGLRenderer({antialias:PERF.antialias,powerPreference:"high-performance",precision:"highp"});
+const renderer=new THREE.WebGLRenderer({antialias:PERF.antialias,powerPreference:"high-performance",precision:IS_MOBILE?"mediump":"highp"});
 renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,PERF.pixelRatioCap));
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 document.getElementById("app").appendChild(renderer.domElement);
@@ -539,7 +658,7 @@ function hash2(a,b){const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.f
 function ss(t){return t*t*(3-2*t);}function vn(x,z){const x0=Math.floor(x),z0=Math.floor(z),tx=ss(x-x0),tz=ss(z-z0);const a=hash2(x0,z0)+(hash2(x0+1,z0)-hash2(x0,z0))*tx;const b=hash2(x0,z0+1)+(hash2(x0+1,z0+1)-hash2(x0,z0+1))*tx;return a+(b-a)*tz;}
 function fbm(x,z){let a=1,f=1,s=0,n=0;for(let i=0;i<5;i++){s+=vn(x*f,z*f)*a;n+=a;a*=.5;f*=2.1;}return s/n;}
 const ROAD_SEGS=[
-    {x1:0,z1:-68,x2:0,z2:75,hw:8},{x1:-75,z1:0,x2:75,z2:0,hw:8},        // Main boulevards 16 wide
+    {x1:0,z1:-43,x2:0,z2:75,hw:8},{x1:-75,z1:0,x2:75,z2:0,hw:8},        // Main boulevards 16 wide
     {x1:-55,z1:-40,x2:55,z2:-40,hw:6},{x1:-48,z1:50,x2:48,z2:50,hw:6},   // Port & Creative roads 12 wide
     {x1:-50,z1:-22,x2:-50,z2:22,hw:5},{x1:50,z1:-22,x2:50,z2:22,hw:5},   // Tech & Science entries 10 wide
     {x1:-38,z1:-40,x2:-38,z2:50,hw:4},{x1:38,z1:-40,x2:38,z2:50,hw:4},   // Side connectors 8 wide
@@ -547,11 +666,21 @@ const ROAD_SEGS=[
 function ptSeg(px,pz,x1,z1,x2,z2){const dx=x2-x1,dz=z2-z1,l2=dx*dx+dz*dz;if(l2<.01)return Math.hypot(px-x1,pz-z1);const t=Math.max(0,Math.min(1,((px-x1)*dx+(pz-z1)*dz)/l2));return Math.hypot(px-(x1+t*dx),pz-(z1+t*dz));}
 function roadDist(x,z){let m=999;for(const r of ROAD_SEGS)m=Math.min(m,ptSeg(x,z,r.x1,r.z1,r.x2,r.z2)-r.hw);return m;}
 const ROAD_Y=.25;
+const WATER_LEVEL=-0.8;
 function terrainHeight(x,z){
     let h=(fbm(x*.02,z*.02)-.5)*9;h+=Math.sin(x*.04)*.6+Math.cos(z*.04)*.6;
     h*=Math.min(1,Math.max(.2,Math.hypot(x,z)/60));
     const rd=roadDist(x,z);if(rd<=0)h=ROAD_Y;else if(rd<8)h=ROAD_Y+(h-ROAD_Y)*ss(rd/8);
-    if(z<-44){const p=Math.min(1,(-z-44)/22);h=h*(1-p*p)+(-1.2)*p*p;}return h;}
+    // Ocean floor: steep drop from shore (-44) to deep seabed
+    // -44 to -55: coastal shelf, drops to -2
+    // -55 to -65: dock zone, ~-2 to -4
+    // -65+: deep ocean, drops to -12 under ship and beyond
+    if(z<-44){
+        const d=-z-44; // distance south of shore
+        if(d<11){const p=d/11;h=h*(1-p)+(-2)*p;} // shelf: smooth to -2
+        else if(d<21){const p=(d-11)/10;h=-2+(-2)*p;} // dock->deep: -2 to -4
+        else{const p=Math.min(1,(d-21)/15);h=-4+(-8)*p;} // deep ocean: -4 to -12
+    }return h;}
 const WORLD=400,SEGS=PERF.terrainSegs;
 const tGeo=new THREE.PlaneGeometry(WORLD,WORLD,SEGS,SEGS);tGeo.rotateX(-Math.PI/2);
 const tPos=tGeo.attributes.position,tColors=new Float32Array(tPos.count*3);
@@ -564,7 +693,7 @@ const roadMat=new THREE.MeshStandardMaterial({color:"#5a6050",roughness:.92}),li
 function addRoad(cx,cz,w,d){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),roadMat);m.rotation.x=-Math.PI/2;m.position.set(cx,ROAD_Y+.02,cz);scene.add(m);
 const hz=w>d,len=hz?w:d;for(let i=-len/2+3;i<len/2;i+=6){const mk=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.22),lineMat);mk.rotation.x=-Math.PI/2;
 if(hz)mk.position.set(cx-len/2+i+3,ROAD_Y+.04,cz);else{mk.rotation.z=Math.PI/2;mk.position.set(cx,ROAD_Y+.04,cz-len/2+i+3);}scene.add(mk);}}
-addRoad(0,3.5,16,143);addRoad(0,0,150,16);addRoad(0,-40,110,12);addRoad(0,50,96,12);
+addRoad(0,16,16,118);addRoad(0,0,150,16);addRoad(0,-40,110,12);addRoad(0,50,96,12);
 addRoad(-50,0,10,44);addRoad(50,0,10,44);addRoad(-38,5,8,90);addRoad(38,5,8,90);
 // Road-end roundabouts — small circular pads where roads terminate
 function addRoundabout(x,z,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r||5,24),roadMat);m.rotation.x=-Math.PI/2;m.position.set(x,ROAD_Y+.02,z);scene.add(m);}
@@ -667,7 +796,7 @@ let bi=0;while(bi<300){const x=(Math.random()-.5)*280,z=(Math.random()-.5)*260;i
 dm.rotation.set(0,0,0);[flowerIM,rockIM,bushIM].forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
 
 /* ====== WATER ====== */
-const water=new THREE.Mesh(new THREE.PlaneGeometry(260,80,PERF.waterSegX,PERF.waterSegY),waterMat);water.rotation.x=-Math.PI/2;water.position.set(0,-1,-78);scene.add(water);
+const water=new THREE.Mesh(new THREE.PlaneGeometry(300,120,PERF.waterSegX,PERF.waterSegY),waterMat);water.rotation.x=-Math.PI/2;water.position.set(0,-.8,-85);scene.add(water);
 
 /* ====== COLLISION ====== */
 const staticCol=[];const dynCol=[];
@@ -804,10 +933,10 @@ mkSign(10,-25,"PORT DISTRICT","#2a6a66");mkSign(-10,26,"CREATIVE VILLAGE","#8a40
 mkSign(24,10,"SCIENCE PARK","#3a4080");mkSign(-24,10,"TECH HUB","#8a6a20");
 // Lamp posts — NO collision, just decorative
 function mkLamp(x,z){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,4.2,8),botw("#383840","#1a1a20"));m.position.y=2.1;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.8),botw("#383840","#1a1a20"));m.position.set(0,3.9,.35);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),new THREE.MeshBasicMaterial({color:"#ffe8a0"}));m.position.set(0,3.6,.65);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);return g;}
-// Lamp posts at corners/edges of town center — outside road bands (x=-8..8, z=-8..8)
-[[12,12],[-12,12],[12,-12],[-12,-12],[18,12],[-18,12],[18,-12],[-18,-12],
- // Along connector road edges
- [-33,20],[-33,35],[-43,20],[-43,35],[33,20],[33,35],[43,20],[43,35]
+// Lamp posts at corners/edges of town center — 4+ units outside road bands
+[[14,14],[-14,14],[14,-14],[-14,-14],[20,14],[-20,14],[20,-14],[-20,-14],
+ // Along connector road edges (connectors are x=-42..-34 and x=34..42)
+ [-32,22],[-32,35],[-46,28],[-46,35],[32,22],[32,35],[46,28],[46,35]
 ].forEach(([x,z])=>mkLamp(x,z));
 // Benches — dynamic (breakable)
 function mkBench(x,z,r){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.08,.5),botw("#a08060","#504020"));m.position.y=.5;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.5,.06),botw("#907050","#483828"));m.position.set(0,.75,-.2);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);g.rotation.y=r||0;scene.add(g);addDynamic(g);return g;}
@@ -815,8 +944,50 @@ function mkBench(x,z,r){const g=new THREE.Group();g.add((()=>{const m=new THREE.
 [[-12,10,0],[12,10,Math.PI],[-12,-10,0],[12,-10,Math.PI],[18,18,Math.PI/4],[-18,18,-Math.PI/4]].forEach(([x,z,r])=>mkBench(x,z,r));
 
 /* ====== PORT ====== */
-const dock=new THREE.Mesh(new THREE.BoxGeometry(120,.6,20),botw("#7d5a38","#3a2818"));dock.position.set(0,-.1,-55);scene.add(dock);addStatic(dock);
-for(let x=-55;x<=55;x+=8){const p=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,3.5,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.5,-64);scene.add(p);}
+const dock=new THREE.Mesh(new THREE.BoxGeometry(120,.6,20),botw("#7d5a38","#3a2818"));dock.position.set(0,-.1,-55);scene.add(dock);
+// Dock planking detail — darker strips
+for(let dz=-63;dz<=-47;dz+=2){
+    const plank=new THREE.Mesh(new THREE.BoxGeometry(118,.02,.15),botw("#5a3a20","#3a2010"));
+    plank.position.set(0,.21,dz);scene.add(plank);
+}
+// Dock support pilings (visible from water)
+for(let x=-55;x<=55;x+=8){const p=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,4,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.8,-64);scene.add(p);}
+for(let x=-55;x<=55;x+=12){const p=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,4,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.8,-46);scene.add(p);}
+// ── Dock railings ──
+const railMat=botw("#5a5a60","#2a2a30");
+const railPostMat=botw("#4a4a50","#222228");
+// South railing (water edge z=-65) — this is what you jump over to swim
+for(let x=-58;x<=58;x+=4){
+    // Post
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,1.2,6),railPostMat);
+    post.position.set(x,.8,-64.5);scene.add(post);
+}
+// South top rail
+const sRail=new THREE.Mesh(new THREE.BoxGeometry(118,.08,.08),railMat);sRail.position.set(0,1.35,-64.5);scene.add(sRail);
+// South mid rail
+const sMidRail=new THREE.Mesh(new THREE.BoxGeometry(118,.06,.06),railMat);sMidRail.position.set(0,.85,-64.5);scene.add(sMidRail);
+// East railing (x=60)
+for(let z=-63;z<=-47;z+=4){
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,1.2,6),railPostMat);
+    post.position.set(59.5,.8,z);scene.add(post);
+}
+const eRail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,18),railMat);eRail.position.set(59.5,1.35,-55);scene.add(eRail);
+const eMidRail=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,18),railMat);eMidRail.position.set(59.5,.85,-55);scene.add(eMidRail);
+// West railing (x=-60)
+for(let z=-63;z<=-47;z+=4){
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,1.2,6),railPostMat);
+    post.position.set(-59.5,.8,z);scene.add(post);
+}
+const wRail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,18),railMat);wRail.position.set(-59.5,1.35,-55);scene.add(wRail);
+const wMidRail=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,18),railMat);wMidRail.position.set(-59.5,.85,-55);scene.add(wMidRail);
+// Bollards (mooring posts) along dock
+const bollardMat=botw("#4a4a50","#222228");
+for(let x=-48;x<=48;x+=16){
+    const boll=new THREE.Group();
+    boll.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,.7,8),bollardMat);m.position.y=.55;return m;})());
+    boll.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.1,8),bollardMat);m.position.y=.9;return m;})());
+    boll.position.set(x,.0,-63.5);scene.add(boll);
+}
 const lh=new THREE.Group();lh.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.7,14,12),botw("#e0dcd0","#808078"));m.position.y=7;return m;})());lh.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,2.5,12),botw("#cc2830","#601010"));m.position.y=9;return m;})());lh.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.5,12,12),new THREE.MeshBasicMaterial({color:"#ffee60"}));m.position.y=16;return m;})());lh.position.set(-62,terrainHeight(-62,-55),-55);scene.add(lh);addStatic(lh,.5);
 const contC=["#c44030","#3060a0","#d08030","#309050","#a040a0","#c0a030"];
 for(let i=0;i<12;i++){const c=new THREE.Mesh(new THREE.BoxGeometry(3.2,2,2),botw(contC[i%6]));c.position.set(48+(i%4)*4,.8,-55-Math.floor(i/4)*2.6);c.rotation.y=.08*(i%3);scene.add(c);addStatic(c);}
@@ -834,8 +1005,8 @@ new GLTFLoader().load('models/ship/kotor-class_frigate.glb',gltf=>{
     // Measure raw bounds for scaling
     const b=realBounds(m);
     const rawLen=Math.max(b.max.x-b.min.x,b.max.z-b.min.z);
-    // Scale so ship is ~35 units long (fills port nicely)
-    const sc=35/rawLen;m.scale.setScalar(sc);
+    // Scale so ship is ~55 units long (imposing compared to person)
+    const sc=55/rawLen;m.scale.setScalar(sc);
     m.updateMatrixWorld(true);
     const b2=realBounds(m);
     // Create group, ground the model so bottom sits at water level
@@ -847,12 +1018,39 @@ new GLTFLoader().load('models/ship/kotor-class_frigate.glb',gltf=>{
     m.traverse(ch=>{if(ch.isMesh&&ch.material){
         const mats=Array.isArray(ch.material)?ch.material:[ch.material];
         mats.forEach(mt=>{mt.depthWrite=true;mt.side=THREE.FrontSide;});}});
-    // Position at port dock — rotated so bow faces along dock (parallel to shore)
-    shipGroup.position.set(10,-0.5,-70);
-    shipGroup.rotation.y=Math.PI/2+0.08;
+    // Position alongside the dock — bow parallel to shore, hull in deep water
+    shipGroup.position.set(5,-0.3,-75);
+    shipGroup.rotation.y=Math.PI/2+0.05;
     scene.add(shipGroup);
-    addStatic(shipGroup,1);
+    // No addStatic — player can walk on deck
+    window._shipGroup=shipGroup;
+    // Deck level: the walkable deck sits low on the model (masts/antennas are above)
+    // Model bottom is offset by (-b2.min.y - 1.0) from group origin
+    // Group is at y=-0.3. Main deck is roughly 18% of total model height.
+    const modelHeight=b2.max.y-b2.min.y;
+    const modelBottomOffset=-b2.min.y-1.0;
+    window._shipDeckY=shipGroup.position.y+modelBottomOffset+modelHeight*.18;
+    console.log('Ship: deckY='+window._shipDeckY.toFixed(2)+' modelH='+modelHeight.toFixed(1)+' botOff='+modelBottomOffset.toFixed(1)+' groupY='+shipGroup.position.y);
     registerDestroyable(shipGroup,200,"ship");
+    // ── Gangplank from dock to ship ──
+    const deckY=window._shipDeckY;
+    const dockY=0.2;
+    const gpLen=12; // length of gangplank
+    const gpAngle=Math.atan2(deckY-dockY,gpLen); // slope angle
+    const gangplank=new THREE.Group();
+    // Main plank
+    gangplank.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(2,0.12,gpLen),botw("#8a7048","#5a4028"));m.position.z=-gpLen/2;return m;})());
+    // Side rails
+    gangplank.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,1,gpLen),botw("#5a5a60","#2a2a30"));m.position.set(-1,.5,-gpLen/2);return m;})());
+    gangplank.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,1,gpLen),botw("#5a5a60","#2a2a30"));m.position.set(1,.5,-gpLen/2);return m;})());
+    // Cross slats for grip
+    for(let gi=1;gi<gpLen;gi+=1.2){
+        gangplank.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(2,.04,.15),botw("#6a5030","#3a2818"));m.position.set(0,.07,-gi);return m;})());
+    }
+    gangplank.position.set(5,dockY,-65);
+    gangplank.rotation.x=-gpAngle;
+    scene.add(gangplank);
+    window._gangplank={z1:-65,z2:-65-gpLen,x:5,w:1.5,y1:dockY,y2:deckY};
     console.log('Ship loaded: length='+(b2.max.x-b2.min.x).toFixed(1)+' scaled='+sc.toFixed(3));
 },undefined,e=>{
     console.warn('Ship GLB failed, placing fallback:',e);
@@ -940,40 +1138,181 @@ if(HAS_IMG_DEC){
     }).catch(()=>{d._dec=null;});}
 return d;});
 
-ALL_PROJECTS.forEach((pr,idx)=>{
-    const g=new THREE.Group();const y=Math.max(terrainHeight(pr.wx,pr.wz),ROAD_Y)+.1;
-    g.position.set(pr.wx,y,pr.wz);
-    // Posts
+// ── Display type builders ──
+// BILLBOARD: classic roadside sign with parking bay
+function buildBillboard(pr,idx,g,bm){
     const pm=botw("#707078","#383840");
     const pl=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,5,8),pm);const pr2=pl.clone();
     pl.position.set(-1.8,2.5,0);pr2.position.set(1.8,2.5,0);g.add(pl,pr2);
-    // Frame
     g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(5,2.2,.14),frameMat);m.position.y=4;return m;})());
-    // Screen
-    const bm=new THREE.MeshStandardMaterial({map:gifData[idx].tex,roughness:.3,metalness:.05,emissive:"#fff",emissiveMap:gifData[idx].tex,emissiveIntensity:.35});
     const bd=new THREE.Mesh(new THREE.BoxGeometry(4.8,2,.2),bm);bd.position.set(0,4,.02);bd.userData.project=pr;g.add(bd);
-    // Click target
     const tr=new THREE.Mesh(new THREE.PlaneGeometry(5.2,2.3),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
     tr.position.set(0,4,.25);tr.userData.project=pr;g.add(tr);
-    // Neon accent bars (Times Square feel on all billboards)
     const nc=DISTRICTS[pr.district].color;const nm=new THREE.MeshBasicMaterial({color:nc});
     g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(5.2,.12,.12),nm);m.position.set(0,5.05,.05);return m;})());
     g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(5.2,.12,.12),nm);m.position.set(0,2.95,.05);return m;})());
-    // Parking bay (local +z = in front of screen)
     const bay=new THREE.Group();
     bay.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.14,4),bayMat);m.rotation.x=-Math.PI/2;m.position.set(-1.6,.03,3);return m;})());
     bay.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.14,4),bayMat);m.rotation.x=-Math.PI/2;m.position.set(1.6,.03,3);return m;})());
     bay.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,.14),bayMat);m.rotation.x=-Math.PI/2;m.position.set(0,.03,1);return m;})());
     bay.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.8,.8),new THREE.MeshBasicMaterial({map:pTex,transparent:true}));m.rotation.x=-Math.PI/2;m.position.set(0,.04,3);return m;})());
     g.add(bay);
-    // Rotation: use direct rotation.y (no lookAt) — guaranteed correct
+    interactables.push(bd,tr);
+    return 3; // bay offset
+}
+
+// HOLOGRAM PEDESTAL: floating translucent screen above a glowing pedestal
+function buildHologram(pr,idx,g,bm){
+    const nc=DISTRICTS[pr.district].color;
+    // Pedestal base — octagonal
+    const baseMat=botw("#2a2a38","#14141c");
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.1,.6,8),baseMat);m.position.y=.3;return m;})());
+    // Glowing ring on top of pedestal
+    const ringMat=new THREE.MeshBasicMaterial({color:nc,transparent:true,opacity:.7});
+    g.add((()=>{const m=new THREE.Mesh(new THREE.TorusGeometry(.85,.06,8,24),ringMat);m.rotation.x=-Math.PI/2;m.position.y=.62;return m;})());
+    // Vertical light beam
+    const beamMat=new THREE.MeshBasicMaterial({color:nc,transparent:true,opacity:.12,side:THREE.DoubleSide});
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.3,.7,3,12,1,true),beamMat);m.position.y=2.1;return m;})());
+    // Floating screen — holographic look (translucent, emissive)
+    const holoBm=bm.clone();holoBm.transparent=true;holoBm.opacity=.85;holoBm.emissiveIntensity=.6;
+    const screen=new THREE.Mesh(new THREE.PlaneGeometry(3.2,1.8),holoBm);
+    screen.position.y=3.2;screen.userData.project=pr;screen.userData._holoFloat=true;
+    g.add(screen);
+    // Back face
+    const screenBack=screen.clone();screenBack.rotation.y=Math.PI;screenBack.position.z=-0.02;
+    screenBack.userData.project=pr;g.add(screenBack);
+    // Title label below screen
+    const labelCv=document.createElement("canvas");labelCv.width=512;labelCv.height=64;
+    const lctx=labelCv.getContext("2d");lctx.fillStyle=nc;lctx.font="bold 24px Segoe UI";
+    lctx.textAlign="center";lctx.fillText(pr.t,256,40);
+    const labelTex=new THREE.CanvasTexture(labelCv);labelTex.colorSpace=THREE.SRGBColorSpace;
+    const label=new THREE.Mesh(new THREE.PlaneGeometry(2.8,.35),new THREE.MeshBasicMaterial({map:labelTex,transparent:true}));
+    label.position.y=2.1;g.add(label);
+    // Click target
+    const tr=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    tr.position.set(0,3.2,.15);tr.userData.project=pr;g.add(tr);
+    interactables.push(screen,screenBack,tr);
+    return 2.5;
+}
+
+// ARCADE CABINET: retro game-machine shape with GIF as screen
+function buildArcade(pr,idx,g,bm){
+    const nc=DISTRICTS[pr.district].color;
+    const cabinetMat=botw("#1a1a28","#0a0a14");
+    const sideMat=botw("#222230","#10101c");
+    const trimMat=new THREE.MeshBasicMaterial({color:nc});
+    // Main body
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,3.2,.8),cabinetMat);m.position.set(0,1.6,0);return m;})());
+    // Header/marquee
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.7,.4,.85),sideMat);m.position.set(0,3.4,0);return m;})());
+    // Marquee light strip
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.5,.1,.1),trimMat);m.position.set(0,3.55,.4);return m;})());
+    // Marquee title
+    const mqCv=document.createElement("canvas");mqCv.width=256;mqCv.height=64;
+    const mqCtx=mqCv.getContext("2d");mqCtx.fillStyle="#0a0a14";mqCtx.fillRect(0,0,256,64);
+    mqCtx.fillStyle=nc;mqCtx.font="bold 22px Segoe UI";mqCtx.textAlign="center";mqCtx.fillText(pr.t,128,42);
+    const mqTex=new THREE.CanvasTexture(mqCv);mqTex.colorSpace=THREE.SRGBColorSpace;
+    g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.3),new THREE.MeshStandardMaterial({map:mqTex,emissive:"#fff",emissiveMap:mqTex,emissiveIntensity:.4}));m.position.set(0,3.3,.43);return m;})());
+    // Screen (angled back slightly)
+    const screenBm=bm.clone();screenBm.emissiveIntensity=.5;
+    const screen=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1),screenBm);
+    screen.position.set(0,2.6,.42);screen.rotation.x=-.15;screen.userData.project=pr;g.add(screen);
+    // Control panel (angled deck)
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.5,.1,.5),sideMat);m.position.set(0,1.7,.55);m.rotation.x=-.4;return m;})());
+    // Joystick
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.25,6),trimMat);m.position.set(-.2,1.85,.55);return m;})());
+    // Buttons (2)
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.04,8),new THREE.MeshBasicMaterial({color:"#ff3344"}));m.rotation.x=-Math.PI/2;m.position.set(.15,1.82,.55);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.04,8),new THREE.MeshBasicMaterial({color:"#44aaff"}));m.rotation.x=-Math.PI/2;m.position.set(.35,1.82,.55);return m;})());
+    // Coin slot
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.15,.02,.06),new THREE.MeshBasicMaterial({color:"#888888"}));m.position.set(0,1,.43);return m;})());
+    // Click target
+    const tr=new THREE.Mesh(new THREE.PlaneGeometry(1.8,3.5),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    tr.position.set(0,1.8,.5);tr.userData.project=pr;g.add(tr);
+    interactables.push(screen,tr);
+    return 2.5;
+}
+
+// PORTAL FRAME: glowing energy doorway showing the project GIF inside
+function buildPortal(pr,idx,g,bm){
+    const nc=DISTRICTS[pr.district].color;
+    const frameMat2=new THREE.MeshStandardMaterial({color:"#1a1a28",roughness:.5,metalness:.6});
+    const glowMat=new THREE.MeshBasicMaterial({color:nc,transparent:true,opacity:.8});
+    // ── Heavy base platform — the "device" that generates the portal ──
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.8,2,0.4,12),botw("#1a1a28","#0a0a10"));m.position.y=.2;return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.6,0.15,12),frameMat2);m.position.y=.48;return m;})());
+    // Glowing ring on device top
+    g.add((()=>{const m=new THREE.Mesh(new THREE.TorusGeometry(1.4,.06,8,32),glowMat);m.rotation.x=-Math.PI/2;m.position.y=.56;return m;})());
+    // ── Twin emitter pylons on left and right ──
+    const pylonMat=botw("#2a2a38","#14141c");
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.35,4,.35),pylonMat);m.position.set(-1.7,2.5,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.35,4,.35),pylonMat);m.position.set(1.7,2.5,0);return m;})());
+    // Pylon caps
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.45,.2,.45),frameMat2);m.position.set(-1.7,4.55,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.45,.2,.45),frameMat2);m.position.set(1.7,4.55,0);return m;})());
+    // Pylon glow emitters (the "projectors")
+    g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.15,8,8),glowMat);m.position.set(-1.7,4.7,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.15,8,8),glowMat);m.position.set(1.7,4.7,0);return m;})());
+    // Energy beams from pylons toward screen center
+    const beamMat=new THREE.MeshBasicMaterial({color:nc,transparent:true,opacity:.1,side:THREE.DoubleSide});
+    g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.1,2),beamMat);m.position.set(-1.2,3.8,0);m.rotation.z=.5;return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(.1,2),beamMat);m.position.set(1.2,3.8,0);m.rotation.z=-.5;return m;})());
+    // ── Top crossbar connecting pylons ──
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(3.8,.2,.2),frameMat2);m.position.set(0,4.65,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(3.4,.06,.06),glowMat);m.position.set(0,4.78,0);return m;})());
+    // ── Large projected screen — fills the space between pylons ──
+    const portalBm=bm.clone();portalBm.emissiveIntensity=.55;
+    const scrW=2.6,scrH=1.7; // screen fits inside pylons (pylons at ±1.7)
+    const screen=new THREE.Mesh(new THREE.PlaneGeometry(scrW,scrH),portalBm);
+    screen.position.set(0,3,.01);screen.userData.project=pr;
+    g.add(screen);
+    // Back-face
+    const screenBack=screen.clone();screenBack.rotation.y=Math.PI;screenBack.position.z=-0.02;
+    screenBack.userData.project=pr;g.add(screenBack);
+    // Translucent energy fill behind screen
+    const swirlMat=new THREE.MeshBasicMaterial({color:nc,transparent:true,opacity:.08,side:THREE.DoubleSide});
+    g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(scrW+.2,scrH+.4),swirlMat);m.position.set(0,3,-.04);return m;})());
+    // Glowing border around screen
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(scrW+.15,.06,.06),glowMat);m.position.set(0,3+scrH/2+.05,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(scrW+.15,.06,.06),glowMat);m.position.set(0,3-scrH/2-.05,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,scrH+.15,.06),glowMat);m.position.set(-scrW/2-.05,3,0);return m;})());
+    g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,scrH+.15,.06),glowMat);m.position.set(scrW/2+.05,3,0);return m;})());
+    // Ground rune circle
+    const runeMat=new THREE.MeshBasicMaterial({color:nc,transparent:true,opacity:.25});
+    g.add((()=>{const m=new THREE.Mesh(new THREE.RingGeometry(1.5,1.8,24),runeMat);m.rotation.x=-Math.PI/2;m.position.y=.05;return m;})());
+    // Title plate on base front
+    const labelCv=document.createElement("canvas");labelCv.width=512;labelCv.height=64;
+    const lctx=labelCv.getContext("2d");lctx.fillStyle=nc;lctx.font="bold 24px Segoe UI";
+    lctx.textAlign="center";lctx.fillText(pr.t,256,42);
+    const labelTex=new THREE.CanvasTexture(labelCv);labelTex.colorSpace=THREE.SRGBColorSpace;
+    g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(2.8,.35),new THREE.MeshBasicMaterial({map:labelTex,transparent:true}));m.position.set(0,.7,.9);return m;})());
+    // Click target
+    const tr=new THREE.Mesh(new THREE.PlaneGeometry(3.4,4),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    tr.position.set(0,2.5,.2);tr.userData.project=pr;g.add(tr);
+    interactables.push(screen,screenBack,tr);
+    return 3;
+}
+
+// ── Build all projects using the appropriate display type ──
+ALL_PROJECTS.forEach((pr,idx)=>{
+    const g=new THREE.Group();const y=Math.max(terrainHeight(pr.wx,pr.wz),ROAD_Y)+.1;
+    g.position.set(pr.wx,y,pr.wz);
+    const bm=new THREE.MeshStandardMaterial({map:gifData[idx].tex,roughness:.3,metalness:.05,emissive:"#fff",emissiveMap:gifData[idx].tex,emissiveIntensity:.35});
+    // Build the right display type
+    let bayOff;
+    const dtype=pr.display||"billboard";
+    if(dtype==="hologram")bayOff=buildHologram(pr,idx,g,bm);
+    else if(dtype==="arcade")bayOff=buildArcade(pr,idx,g,bm);
+    else if(dtype==="portal")bayOff=buildPortal(pr,idx,g,bm);
+    else bayOff=buildBillboard(pr,idx,g,bm);
+    // Rotation
     g.rotation.y=bbRot(pr);
-    scene.add(g);interactables.push(bd,tr);
-    // Compute bay world position from rotation
-    const bayLocal=new THREE.Vector3(0,0,3);
+    scene.add(g);
+    // Compute interaction position
+    const bayLocal=new THREE.Vector3(0,0,bayOff);
     bayLocal.applyAxisAngle(new THREE.Vector3(0,1,0),g.rotation.y);
     const bayPos=g.position.clone().add(bayLocal);
-    billboards.push({group:g,project:pr,boardMat:bm,bayPos,gifIdx:idx});
+    billboards.push({group:g,project:pr,boardMat:bm,bayPos,gifIdx:idx,displayType:dtype});
     registerDestroyable(g,20,"billboard");
 });
 
@@ -1030,7 +1369,7 @@ function updateArcade(t,dt,active,bb){
         const gx=Math.sin(t*47)*.8,gy=Math.cos(t*31)*.4;
         pc.fillText("INSERT COIN",128+gx,28+gy);
         pc.fillStyle=`rgba(0,255,136,${.6+slowP*.4})`;pc.font="bold 16px 'Courier New',monospace";
-        pc.fillText("[ PRESS E ]",128,52);
+        pc.fillText(IS_MOBILE?"[ TAP OPEN ]":"[ PRESS E ]",128,52);
     }
     pressTex.needsUpdate=true;
 }
@@ -1184,7 +1523,10 @@ new GLTFLoader().load('models/person1/scene.gltf',gltf=>{
     const legGeo=new THREE.BoxGeometry(.14,.46,.14);
     const lLeg=new THREE.Mesh(legGeo,pantsMat);lLeg.position.set(.11,.36,0);avatar.add(lLeg);
     const rLeg=new THREE.Mesh(legGeo,pantsMat);rLeg.position.set(-.11,.36,0);avatar.add(rLeg);
-    avatar.userData._fallback=true;avatar.userData.lLeg=lLeg;avatar.userData.rLeg=rLeg;
+    const armGeo=new THREE.BoxGeometry(.12,.44,.12);
+    const lArm=new THREE.Mesh(armGeo,shirtMat);lArm.position.set(.34,1.0,0);avatar.add(lArm);
+    const rArm=new THREE.Mesh(armGeo,shirtMat);rArm.position.set(-.34,1.0,0);avatar.add(rArm);
+    avatar.userData._fallback=true;avatar.userData.lLeg=lLeg;avatar.userData.rLeg=rLeg;avatar.userData.lArm=lArm;avatar.userData.rArm=rArm;
 });
 
 /* ====== NPC QUEST GIVER (GLB: wizard) ====== */
@@ -2190,7 +2532,8 @@ function handleWizardShot(){
 
 // Equip/holster gun
 function toggleGun(){
-    if(!state.hasGun||state.mode!=="walking"||state.isDead)return;
+    if(IS_MOBILE)return; // Combat disabled on mobile (requires pointer lock)
+    if(!state.hasGun||state.mode!=="walking"||state.isDead||state.swimming)return;
     state.gunEquipped=!state.gunEquipped;
     if(state.gunEquipped){
         // Avatar stays visible — gun appears at their side
@@ -2471,6 +2814,66 @@ const leafGeo=new THREE.BufferGeometry();leafGeo.setAttribute("position",new THR
 const leafMat=new THREE.ShaderMaterial({uniforms:{fogColor:{value:scene.fog.color},fogNear:{value:70},fogFar:{value:240}},vertexShader:`attribute float aSize;varying float vAlpha,vFD;void main(){vAlpha=.5+.3*sin(position.x+position.z);vec4 mv=modelViewMatrix*vec4(position,1.);vFD=-mv.z;gl_PointSize=aSize*(200./max(-mv.z,1.));gl_Position=projectionMatrix*mv;}`,fragmentShader:`uniform vec3 fogColor;uniform float fogNear,fogFar;varying float vAlpha,vFD;void main(){float d=length(gl_PointCoord-.5);if(d>.45)discard;float ff=smoothstep(fogNear,fogFar,vFD);vec3 col=mix(vec3(.85,.6,.28),fogColor,ff);gl_FragColor=vec4(col,vAlpha*(1.-d*2.2));}`,transparent:true,depthWrite:false});
 scene.add(new THREE.Points(leafGeo,leafMat));
 
+// ── Underwater bubble particles ──
+const BUBBLE_N=40;
+const bubbleGeo=new THREE.SphereGeometry(.06,6,6);
+const bubbleMat=new THREE.MeshBasicMaterial({color:"#80d0f0",transparent:true,opacity:.4});
+const bubbles=[];
+for(let i=0;i<BUBBLE_N;i++){
+    const b=new THREE.Mesh(bubbleGeo,bubbleMat.clone());
+    b.visible=false;b.userData.vy=0;b.userData.life=0;b.userData.maxLife=0;
+    b.scale.setScalar(.5+Math.random()*.8);
+    scene.add(b);bubbles.push(b);
+}
+let _bubbleTimer=0;
+
+// ── Underwater fish ──
+const fishGroup=new THREE.Group();fishGroup.visible=false;scene.add(fishGroup);
+const FISH_COLORS=["#ff8844","#44aaff","#ffcc22","#88dd55","#dd66aa","#55ddcc","#ff6666","#aabb44"];
+const fishArr=[];
+for(let i=0;i<25;i++){
+    const fg=new THREE.Group();
+    const col=FISH_COLORS[i%FISH_COLORS.length];
+    // Body
+    fg.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.3,6,4),new THREE.MeshStandardMaterial({color:col,roughness:.4}));m.scale.set(1.8,1,.7);return m;})());
+    // Tail
+    fg.add((()=>{const m=new THREE.Mesh(new THREE.ConeGeometry(.2,.5,4),new THREE.MeshStandardMaterial({color:col,roughness:.4}));m.rotation.z=Math.PI/2;m.position.x=.5;return m;})());
+    // Eye
+    fg.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.06,4,4),new THREE.MeshBasicMaterial({color:"#111"}));m.position.set(-.35,.08,.15);return m;})());
+    fg.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.06,4,4),new THREE.MeshBasicMaterial({color:"#111"}));m.position.set(-.35,.08,-.15);return m;})());
+    // Randomize size
+    const sc=.4+Math.random()*.8;fg.scale.setScalar(sc);
+    // Random position in ocean area
+    fg.position.set((Math.random()-.5)*100,-1.5-Math.random()*6,-65-Math.random()*50);
+    fg.userData.speed=.8+Math.random()*1.5;
+    fg.userData.phase=Math.random()*Math.PI*2;
+    fg.userData.baseY=fg.position.y;
+    fg.userData.circleR=5+Math.random()*15;
+    fg.userData.centerX=fg.position.x;
+    fg.userData.centerZ=fg.position.z;
+    fishGroup.add(fg);fishArr.push(fg);
+}
+// Seaweed clusters
+for(let i=0;i<15;i++){
+    const sw=new THREE.Group();
+    const stems=3+Math.floor(Math.random()*4);
+    for(let s=0;s<stems;s++){
+        const h=1+Math.random()*2;
+        const m=new THREE.Mesh(new THREE.CylinderGeometry(.03,.06,h,4),new THREE.MeshStandardMaterial({color:"#2a6a30",roughness:.6}));
+        m.position.set((Math.random()-.5)*.5,h/2,(Math.random()-.5)*.5);
+        m.rotation.x=(Math.random()-.5)*.3;m.rotation.z=(Math.random()-.5)*.3;
+        sw.add(m);
+    }
+    sw.position.set((Math.random()-.5)*80,terrainHeight((Math.random()-.5)*80,-70-Math.random()*30),-70-Math.random()*30);
+    fishGroup.add(sw);
+}
+// Diver headlamp — follows diver position in the animation loop
+const diveLight=new THREE.PointLight("#88ccff",6,30);
+diveLight.visible=false;scene.add(diveLight);
+// Underwater ambient — makes fish/hull visible
+const diveAmbient=new THREE.PointLight("#4488aa",3,60);
+diveAmbient.position.set(5,-3,-80);diveAmbient.visible=false;scene.add(diveAmbient);
+
 /* ====== AUDIO ====== */
 class AudioEngine{constructor(){this.ctx=null;this.master=null;this.initialized=false;this.muted=false;}
 init(){if(this.initialized)return;try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();this.master=this.ctx.createGain();this.master.gain.value=.2;this.master.connect(this.ctx.destination);this.lo=this.ctx.createOscillator();this.hi=this.ctx.createOscillator();this.lo.type="sawtooth";this.hi.type="triangle";this.lg=this.ctx.createGain();this.hg=this.ctx.createGain();this.lg.gain.value=0;this.hg.gain.value=0;this.lo.connect(this.lg).connect(this.master);this.hi.connect(this.hg).connect(this.master);this.lo.start();this.hi.start();const buf=this.ctx.createBuffer(1,this.ctx.sampleRate*2,this.ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.wind=this.ctx.createBufferSource();this.wind.buffer=buf;this.wind.loop=true;const bp=this.ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=500;this.wg=this.ctx.createGain();this.wg.gain.value=.01;this.wind.connect(bp).connect(this.wg).connect(this.master);this.wind.start();this.initialized=true;}catch(e){}}
@@ -2482,7 +2885,7 @@ function toggleMute(){state.muted=!state.muted;audio.setMuted(state.muted);muteB
 muteBtn.addEventListener("click",toggleMute);
 
 /* ====== INPUT ====== */
-const pressed=new Set();const KM={KeyW:"f",ArrowUp:"f",KeyS:"b",ArrowDown:"b",KeyA:"l",ArrowLeft:"l",KeyD:"r",ArrowRight:"r",ShiftLeft:"x",ShiftRight:"x"};
+const pressed=new Set();const KM={KeyW:"f",ArrowUp:"f",KeyS:"b",ArrowDown:"b",KeyA:"l",ArrowLeft:"l",KeyD:"r",ArrowRight:"r",ShiftLeft:"x",ShiftRight:"x",Space:"j"};
 window.addEventListener("keydown",e=>{
     const k=KM[e.code];if(k){pressed.add(k);e.preventDefault();}
     if(!audio.initialized)audio.init();
@@ -2510,7 +2913,7 @@ window.addEventListener("keydown",e=>{
             zoomFactor=3; // full zoom out
             avatar.visible=true;
             audio.chime(600,.08);
-            showToast("Press F near the car to get back in");
+            showToast(IS_MOBILE?"Tap CAR near your vehicle to get back in":"Press F near the car to get back in");
             updateModeBadge();
         }else if(state.mode==="walking"){
             // Check near car — enter directly or open garage
@@ -2528,15 +2931,44 @@ window.addEventListener("keydown",e=>{
     }
     // E key: context-sensitive interaction
     if(e.code==="KeyE"){
-        if(state.mode==="driving"){
+        if(state.mode==="diving"){
+            // Exit water — check if near dock/ship surface
+            if(state._nearExitWater){
+                // Return to walking on dock
+                state.mode="walking";
+                state.swimming=false;state.underwater=false;state.swimVelY=0;state.diving=false;
+                avatar.visible=true;
+                if(window._avatarGun&&state.gunEquipped)window._avatarGun.visible=true;
+                avatar.position.set(0,.3,-55); // Place on dock center
+                state.jumpVelY=0;state.isJumping=false;
+                diveLight.visible=false;diveAmbient.visible=false;
+                camera.fov=NORMAL_FOV;camera.updateProjectionMatrix();
+                showToast("Back on solid ground!");
+                audio.chime(400,.08);setTimeout(()=>audio.chime(500,.06),100);
+                state.divePos=null;
+            }
+        }else if(state.mode==="driving"){
             openBB(); // existing billboard interaction
         }else if(state.mode==="walking"){
-            // Check NPC proximity first, then billboard
+            // Check NPC proximity first, then billboard, then water entry
             const _ePos=avatar.position;
             if(_ePos.distanceTo(npcGuide.position)<4){
                 showDialog(npcGuide);
             }else if(state.canInteract){
                 openBB(); // open billboard on foot
+            }else if(state._nearWaterEdge){
+                // Enter diving mode!
+                state.mode="diving";
+                state.diving=true;state.swimming=true;state.underwater=true;
+                state.divePos=new THREE.Vector3(avatar.position.x,WATER_LEVEL-.5,avatar.position.z-3);
+                state.diveCamYaw=_camYaw;state.diveCamPitch=0;
+                state.swimVelY=0;
+                if(state.gunEquipped)holsterGun();
+                avatar.visible=false;
+                if(window._avatarGun)window._avatarGun.visible=false;
+                unlock("swimmer");unlock("diver");
+                showToast("Diving! WASD to swim — Space to dive deeper — Shift to surface — E to exit");
+                audio.chime(180,.15);setTimeout(()=>audio.chime(120,.1),100);
             }
         }else if(state.mode==="dialog"){
             window._closeDialog();
@@ -2558,6 +2990,194 @@ window.addEventListener("keydown",e=>{
 window.addEventListener("keyup",e=>{const k=KM[e.code];if(k){pressed.delete(k);e.preventDefault();}},{passive:false});
 window.addEventListener("pointerdown",()=>{if(!audio.initialized)audio.init();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)pressed.clear();});
+
+/* ====== MOBILE TOUCH CONTROLS ====== */
+if(IS_MOBILE){
+const _mobileCtrl=document.getElementById("mobile-controls");
+if(_mobileCtrl)_mobileCtrl.style.display="block";
+
+// ── Virtual Joystick ──
+const _jZone=document.getElementById("joystick-zone");
+const _jBase=document.getElementById("joystick-base");
+const _jStick=document.getElementById("joystick-stick");
+let _jTouchId=null;
+const _jCenter={x:0,y:0};
+const J_MAX=48,J_DEAD=10;
+
+function _jUpdate(tx,ty){
+    let dx=tx-_jCenter.x,dy=ty-_jCenter.y;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>J_MAX){dx=dx/dist*J_MAX;dy=dy/dist*J_MAX;}
+    _jStick.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    pressed.delete("f");pressed.delete("b");pressed.delete("l");pressed.delete("r");
+    if(dy<-J_DEAD)pressed.add("f");
+    if(dy>J_DEAD)pressed.add("b");
+    if(dx<-J_DEAD)pressed.add("l");
+    if(dx>J_DEAD)pressed.add("r");
+}
+_jZone.addEventListener("touchstart",e=>{
+    e.preventDefault();if(_jTouchId!==null)return;
+    const t=e.changedTouches[0];_jTouchId=t.identifier;
+    const r=_jBase.getBoundingClientRect();
+    _jCenter.x=r.left+r.width/2;_jCenter.y=r.top+r.height/2;
+    _jUpdate(t.clientX,t.clientY);
+    if(!audio.initialized)audio.init();
+},{passive:false});
+_jZone.addEventListener("touchmove",e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){if(t.identifier===_jTouchId)_jUpdate(t.clientX,t.clientY);}
+},{passive:false});
+function _jEnd(e){for(const t of e.changedTouches){if(t.identifier===_jTouchId){
+    _jTouchId=null;_jStick.style.transform="translate(-50%,-50%)";
+    pressed.delete("f");pressed.delete("b");pressed.delete("l");pressed.delete("r");
+}}}
+_jZone.addEventListener("touchend",_jEnd);
+_jZone.addEventListener("touchcancel",_jEnd);
+
+// ── Camera Touch (right side of screen) ──
+const _camZone=document.getElementById("cam-touch-zone");
+let _camTouchId=null,_camLastX=0,_camLastY=0;
+
+_camZone.addEventListener("touchstart",e=>{
+    if(_camTouchId!==null)return;
+    const t=e.changedTouches[0];
+    // Don't capture if touch is on a button
+    const el=document.elementFromPoint(t.clientX,t.clientY);
+    if(el&&(el.closest("#mobile-btns")||el.closest("#mobile-top")))return;
+    _camTouchId=t.identifier;_camLastX=t.clientX;_camLastY=t.clientY;
+    e.preventDefault();
+    if(!audio.initialized)audio.init();
+},{passive:false});
+_camZone.addEventListener("touchmove",e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){
+        if(t.identifier!==_camTouchId)continue;
+        const dx=t.clientX-_camLastX,dy=t.clientY-_camLastY;
+        _camYaw-=dx*.005;
+        if(state.mode==="driving"){
+            // Driving: no pitch changes needed, camera follows car
+        }else{
+            _camPitch=THREE.MathUtils.clamp(_camPitch-dy*.004,.05,1.2);
+        }
+        _camLastX=t.clientX;_camLastY=t.clientY;
+    }
+},{passive:false});
+function _camEnd(e){for(const t of e.changedTouches){if(t.identifier===_camTouchId)_camTouchId=null;}}
+_camZone.addEventListener("touchend",_camEnd);
+_camZone.addEventListener("touchcancel",_camEnd);
+
+// ── Action Buttons ──
+const _btnJump=document.getElementById("btn-jump");
+const _btnSprint=document.getElementById("btn-sprint");
+const _btnAction=document.getElementById("btn-action");
+const _btnCar=document.getElementById("btn-car");
+const _btnGarage=document.getElementById("btn-mob-garage");
+const _btnMute=document.getElementById("btn-mob-mute");
+
+function _mobHold(btn,key){
+    btn.addEventListener("touchstart",e=>{e.preventDefault();e.stopPropagation();pressed.add(key);btn.classList.add("pressed");if(!audio.initialized)audio.init();},{passive:false});
+    btn.addEventListener("touchend",e=>{e.preventDefault();e.stopPropagation();pressed.delete(key);btn.classList.remove("pressed");},{passive:false});
+    btn.addEventListener("touchcancel",e=>{pressed.delete(key);btn.classList.remove("pressed");});
+}
+_mobHold(_btnJump,"j");
+_mobHold(_btnSprint,"x");
+
+// E button — context-sensitive interact
+_btnAction.addEventListener("touchstart",e=>{
+    e.preventDefault();e.stopPropagation();
+    if(!audio.initialized)audio.init();
+    // Use the same E-key logic via synthetic event
+    window.dispatchEvent(new KeyboardEvent("keydown",{code:"KeyE",bubbles:true}));
+    setTimeout(()=>window.dispatchEvent(new KeyboardEvent("keyup",{code:"KeyE",bubbles:true})),80);
+},{passive:false});
+
+// F button — enter/exit car
+_btnCar.addEventListener("touchstart",e=>{
+    e.preventDefault();e.stopPropagation();
+    if(!audio.initialized)audio.init();
+    // Dispatch synthetic key event to reuse existing F-key logic
+    window.dispatchEvent(new KeyboardEvent("keydown",{code:"KeyF",bubbles:true}));
+    setTimeout(()=>window.dispatchEvent(new KeyboardEvent("keyup",{code:"KeyF",bubbles:true})),80);
+},{passive:false});
+
+// Garage button
+if(_btnGarage)_btnGarage.addEventListener("touchstart",e=>{
+    e.preventDefault();e.stopPropagation();
+    if(state.unlockedCars.length>1)openGarage();
+},{passive:false});
+
+// Mute button
+if(_btnMute)_btnMute.addEventListener("touchstart",e=>{
+    e.preventDefault();e.stopPropagation();
+    toggleMute();
+    _btnMute.textContent=state.muted?"🔇":"🔊";
+},{passive:false});
+
+// ── Mobile UI Update (called from game loop) ──
+window._mobileUIUpdate=function(){
+    if(!IS_MOBILE)return;
+    // Contextual button visibility
+    const showAction=state.canInteract||state.nearNPC||(state.mode==="dialog");
+    _btnAction.classList.toggle("ctx-hidden",!showAction);
+    // Action button label
+    if(state.mode==="dialog"){_btnAction.textContent="OK";}
+    else if(state.nearNPC){_btnAction.textContent="TALK";}
+    else if(state.canInteract){_btnAction.textContent="OPEN";}
+
+    // Car button
+    const nearCar=state.mode==="walking"&&avatar.position.distanceTo(car.position)<5;
+    const canExit=state.mode==="driving"&&Math.abs(state.speed)<1;
+    _btnCar.classList.toggle("ctx-hidden",!nearCar&&!canExit);
+    _btnCar.textContent=canExit?"EXIT":"CAR";
+
+    // Jump label changes
+    if(state.mode==="diving"){
+        _btnJump.textContent="DIVE";
+        _btnSprint.textContent="SURF";
+    }else{
+        _btnJump.textContent="JUMP";
+        _btnSprint.textContent="⚡";
+    }
+    // Show action button to enter/exit diving
+    if(state._nearWaterEdge&&state.mode==="walking"){
+        _btnAction.classList.remove("ctx-hidden");
+        _btnAction.textContent="SWIM";
+    }else if(state._nearExitWater&&state.mode==="diving"){
+        _btnAction.classList.remove("ctx-hidden");
+        _btnAction.textContent="EXIT";
+    }
+
+    // Garage button visibility
+    if(_btnGarage)_btnGarage.style.display=state.unlockedCars.length>1?"flex":"none";
+};
+
+// ── Pinch-to-zoom for camera distance ──
+let _pinchDist=0;
+document.addEventListener("touchstart",e=>{
+    if(e.touches.length===2){
+        const dx=e.touches[0].clientX-e.touches[1].clientX;
+        const dy=e.touches[0].clientY-e.touches[1].clientY;
+        _pinchDist=Math.sqrt(dx*dx+dy*dy);
+    }
+},{passive:true});
+document.addEventListener("touchmove",e=>{
+    if(e.touches.length===2&&_pinchDist>0){
+        const dx=e.touches[0].clientX-e.touches[1].clientX;
+        const dy=e.touches[0].clientY-e.touches[1].clientY;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        const delta=_pinchDist-dist;
+        zoomFactor=THREE.MathUtils.clamp(zoomFactor+delta*.005,.2,3);
+        _pinchDist=dist;
+    }
+},{passive:true});
+document.addEventListener("touchend",e=>{if(e.touches.length<2)_pinchDist=0;},{passive:true});
+
+// ── Prevent iOS rubber-band scrolling and double-tap zoom ──
+document.addEventListener("touchmove",e=>{if(e.target.closest("#app"))e.preventDefault();},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault());
+document.addEventListener("gesturechange",e=>e.preventDefault());
+
+} // end IS_MOBILE block
 
 /* ====== ZOOM (mouse wheel) ====== */
 let zoomFactor=1; // 0.12 = bonnet cam, 1 = default, 3 = bird's eye
@@ -2660,20 +3280,20 @@ if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pac
     //   Connectors x=-42..-34 & x=34..42, Science x=45..55, Tech x=-55..-45
     if(bldgs.Light){
         [
-         // Town center corners (outside all road bands)
-         [12,12],[-12,12],[12,-12],[-12,-12],
-         // Along N-S road edges (x=±10, safe z values away from E-W road)
-         [10,-20],[-10,-20],[10,-28],[-10,-28],[10,20],[-10,20],[10,28],[-10,28],
-         // Along E-W road edges (z=±10, safe x values away from N-S road)
-         [20,10],[-20,10],[20,-10],[-20,-10],[30,10],[-30,10],[30,-10],[-30,-10],
-         // Port district road edges (z=-33 or z=-47, x values clear of N-S & connectors)
-         [20,-33],[-20,-33],[48,-33],[-48,-33],[20,-47],[-20,-47],
-         // Creative district road edges (z=43 or z=57, x clear of N-S & connectors)
-         [20,43],[-20,43],[20,57],[-20,57],[46,57],[-46,57],
-         // Science park (x=56 or x=44, z clear of E-W road)
-         [56,14],[56,-14],[44,14],[44,-14],
-         // Tech hub (x=-56 or x=-44, z clear of E-W road)
-         [-56,14],[-56,-14],[-44,14],[-44,-14],
+         // Town center corners (outside all road bands, 4+ units from edge)
+         [14,14],[-14,14],[14,-14],[-14,-14],
+         // Along N-S road edges (x=±12, 4 units from road edge, safe z away from E-W)
+         [12,-20],[-12,-20],[12,-28],[-12,-28],[12,20],[-12,20],[12,28],[-12,28],
+         // Along E-W road edges (z=±12, 4 units from road edge, safe x away from N-S)
+         [22,12],[-22,12],[22,-12],[-22,-12],[30,12],[-30,12],[30,-12],[-30,-12],
+         // Port district road edges (z=-32 or z=-48, x clear of N-S & connectors)
+         [20,-32],[-20,-32],[48,-32],[-48,-32],[20,-48],[-20,-48],
+         // Creative district road edges (z=42 or z=58, x clear of N-S & connectors)
+         [20,42],[-20,42],[20,58],[-20,58],[46,58],[-46,58],
+         // Science park (x=58 or x=42, z clear of E-W road — note: connector is x=34..42)
+         [58,14],[58,-14],[44,26],[44,-26],
+         // Tech hub (x=-58 or x=-44, z clear of E-W road — note: connector is x=-42..-34)
+         [-58,14],[-58,-14],[-44,26],[-44,-26],
         ].forEach(([lx,lz])=>placeGLB(bldgs.Light,lx,lz,4.5,Math.random()*Math.PI*2));}
     // Bins near benches/intersections — all clear of roads
     if(bldgs.Bin){
@@ -2837,7 +3457,7 @@ if(PERF.extraGltf)glbLoader.load('models/trees/realistic_trees_collection.glb',g
 
 /* ====== GAME LOOP ====== */
 const clock=new THREE.Clock();
-setTimeout(()=>{const ld=document.getElementById("loading");ld.style.opacity="0";setTimeout(()=>ld.remove(),800);},800);
+setTimeout(()=>{const ld=document.getElementById("loading");ld.style.opacity="0";setTimeout(()=>{ld.remove();if(IS_MOBILE)showToast("Use joystick to drive · Swipe right side to look around");},800);},800);
 const CAR_R=1.0;const NPC_R=1.4;const AVATAR_R=0.4;
 let _camShake=0;
 const frameBudget=PERF.fpsCap>0?1/PERF.fpsCap:0;
@@ -2965,8 +3585,11 @@ function tick(){
             }
         }
     }
-    // Ground following
-    const gy=terrainHeight(cp.x,cp.z);
+    // Ground following — dock acts as solid surface for cars too
+    let gy=terrainHeight(cp.x,cp.z);
+    const carOnDock=cp.z<-44.5&&cp.z>-65.5&&cp.x>-60&&cp.x<60;
+    if(carOnDock) gy=Math.max(gy,0.2);
+    else if(roadDist(cp.x,cp.z)<=0) gy=Math.max(gy,ROAD_Y);
     cp.y=THREE.MathUtils.lerp(cp.y,gy,.6);
     carShadow.position.set(cp.x,gy+.03,cp.z);
     carShadow.scale.set(carShadowW,carShadowD,1);
@@ -2985,7 +3608,7 @@ function tick(){
     const parked=nearD<4&&Math.abs(state.speed)<.4&&nearBB;
     if(parked){
         state.canInteract=nearBB.project;const di=DISTRICTS[nearBB.project.district];
-        promptEl.innerHTML=`<strong>${nearBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br><span style="font-size:.7rem;color:var(--s)">F to exit car · E to open project</span>`;
+        promptEl.innerHTML=`<strong>${nearBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br><span style="font-size:.7rem;color:var(--s)">${IS_MOBILE?"Tap OPEN to view project":"F to exit car · E to open project"}</span>`;
         promptEl.classList.add("show");renderer.domElement.style.cursor="pointer";
     }else{state.canInteract=null;promptEl.classList.remove("show");renderer.domElement.style.cursor="default";}
     updateArcade(t,dt,parked,nearBB);
@@ -3040,59 +3663,128 @@ function tick(){
         state.avatarAngle=_camYaw;
         activeAvatar.rotation.y=_camYaw;
     }
-    // Clamp world bounds
-    ap.x=THREE.MathUtils.clamp(ap.x,-160,160);ap.z=THREE.MathUtils.clamp(ap.z,-68,160);
-    // Ground follow
-    const agy=Math.max(terrainHeight(ap.x,ap.z),ROAD_Y);
-    ap.y=THREE.MathUtils.lerp(ap.y,agy,.5);
+    // Clamp world bounds — walking stops at dock edge (can't walk into water)
+    ap.x=THREE.MathUtils.clamp(ap.x,-160,160);ap.z=THREE.MathUtils.clamp(ap.z,-65,160);
+
+    // ── Constants ──
+    const DOCK_TOP=0.2;
+    const GRAVITY=18;
+    const JUMP_VEL=7.5;
+    const groundH=terrainHeight(ap.x,ap.z);
+    const wantJump=pressed.has("j");
+
+    // ── Surface detection ──
+    // Dock mesh spans x=-60..60, z=-65..-45, top surface at y=0.2
+    const onDock=ap.z<-44.5&&ap.z>-65.5&&ap.x>-60&&ap.x<60;
+    let onShipDeck=false, shipDeckY=1.5;
+    if(window._shipGroup&&window._shipGroup.visible){
+        const sp=window._shipGroup.position;
+        const dx2=ap.x-sp.x,dz2=ap.z-sp.z;
+        const cosR=Math.cos(-window._shipGroup.rotation.y),sinR=Math.sin(-window._shipGroup.rotation.y);
+        const lx=dx2*cosR-dz2*sinR,lz=dx2*sinR+dz2*cosR;
+        shipDeckY=window._shipDeckY||1.5;
+        // Ship ~55 long, ~9 wide (scaled up); detect when above deck height
+        if(Math.abs(lx)<28&&Math.abs(lz)<6&&ap.y>shipDeckY-2){
+            onShipDeck=true;
+            if(!state.onShip){state.onShip=true;unlock("aboard");showToast("You've boarded the frigate!");}
+        }else{state.onShip=false;}
+    }
+
+    // ── Gangplank detection ──
+    let onGangplank=false, gangplankY=0;
+    if(window._gangplank){
+        const gp=window._gangplank;
+        if(Math.abs(ap.x-gp.x)<gp.w&&ap.z<gp.z1&&ap.z>gp.z2){
+            const t2=(gp.z1-ap.z)/(gp.z1-gp.z2); // 0=dock end, 1=ship end
+            gangplankY=gp.y1+(gp.y2-gp.y1)*t2;
+            onGangplank=true;
+        }
+    }
+    // Determine solid ground Y under feet
+    const onRoad=roadDist(ap.x,ap.z)<=0;
+    let solidY;
+    if(onShipDeck) solidY=shipDeckY;
+    else if(onGangplank) solidY=gangplankY;
+    else if(onDock) solidY=DOCK_TOP;
+    else if(onRoad) solidY=ROAD_Y;
+    else solidY=groundH;
+
+    // ── Water edge detection (for prompt, NOT auto-enter) ──
+    const nearWaterEdge=onDock&&ap.z<-62;
+
+    // ══════════ LAND / DECK (player never auto-falls into water) ══════════
+    {
+        const onGround=ap.y<=solidY+.05&&state.jumpVelY<=0;
+        if(onGround){
+            ap.y=THREE.MathUtils.lerp(ap.y,solidY,.45);
+            state.isJumping=false;state.jumpVelY=0;
+            if(wantJump){state.jumpVelY=JUMP_VEL;state.isJumping=true;audio.chime(500,.06);}
+        }else{
+            state.jumpVelY-=GRAVITY*dt;ap.y+=state.jumpVelY*dt;
+            if(ap.y<=solidY){ap.y=solidY;state.jumpVelY=0;state.isJumping=false;}
+        }
+        // Clamp: never sink below dock surface when on dock
+        if(onDock&&ap.y<DOCK_TOP)ap.y=DOCK_TOP;
+    }
+
     // Static collision for avatar
     for(const box of staticCol){
+        if(box.max.y<ap.y+0.3)continue;
         const nx2=Math.max(box.min.x,Math.min(ap.x,box.max.x)),nz2=Math.max(box.min.z,Math.min(ap.z,box.max.z));
-        const dx=ap.x-nx2,dz=ap.z-nz2,dist=Math.sqrt(dx*dx+dz*dz);
-        if(dist<AVATAR_R&&dist>.01){const push=(AVATAR_R-dist)/dist;ap.x+=dx*push;ap.z+=dz*push;}
+        const dx3=ap.x-nx2,dz3=ap.z-nz2,dist3=Math.sqrt(dx3*dx3+dz3*dz3);
+        if(dist3<AVATAR_R&&dist3>.01){const push=(AVATAR_R-dist3)/dist3;ap.x+=dx3*push;ap.z+=dz3*push;}
     }
-    // Walking animation — always runs on the normal avatar
+    // ── Avatar animation (land only — no swimming animation needed, diving is FPS) ──
     {
         const ud=avatar.userData;
+        activeAvatar.rotation.x=0; // always upright
+        if(ud._fallback&&ud.lArm){ud.lArm.rotation.z=0;ud.rArm.rotation.z=0;}
         if(ud.mixer){
-            ud.mixer.update(dt);
-            if(ud.walkAction){
-                if(moving){
-                    if(ud.walkAction.paused){ud.walkAction.paused=false;}
-                    if(!ud.walkAction.isRunning()){
-                        if(ud.idleAction)ud.idleAction.fadeOut(.2);
-                        ud.walkAction.reset().fadeIn(.2).play();
-                    }
-                }else{
-                    if(ud.idleAction&&ud.walkAction.isRunning()){
-                        ud.walkAction.fadeOut(.2);
-                        ud.idleAction.reset().fadeIn(.2).play();
-                    }else if(!ud.idleAction){
-                        ud.walkAction.paused=true;
+                ud.mixer.update(dt);
+                if(ud.walkAction){
+                    if(moving){
+                        if(ud.walkAction.paused){ud.walkAction.paused=false;}
+                        if(!ud.walkAction.isRunning()){
+                            if(ud.idleAction)ud.idleAction.fadeOut(.2);
+                            ud.walkAction.reset().fadeIn(.2).play();
+                        }
+                    }else{
+                        if(ud.idleAction&&ud.walkAction.isRunning()){
+                            ud.walkAction.fadeOut(.2);
+                            ud.idleAction.reset().fadeIn(.2).play();
+                        }else if(!ud.idleAction){
+                            ud.walkAction.paused=true;
+                        }
                     }
                 }
+            }else if(ud._fallback){
+                if(moving){
+                    ud.walkTime=(ud.walkTime||0)+dt*8;
+                    const sw=Math.sin(ud.walkTime)*.4;
+                    if(ud.lLeg){ud.lLeg.rotation.x=sw;ud.rLeg.rotation.x=-sw;}
+                    // Arm swing while walking
+                    if(ud.lArm){ud.lArm.rotation.x=-sw*.5;ud.rArm.rotation.x=sw*.5;}
+                }else{
+                    ud.walkTime=0;
+                    if(ud.lLeg){ud.lLeg.rotation.x=0;ud.rLeg.rotation.x=0;}
+                }
             }
-        }else if(ud._fallback){
-            if(moving){
-                ud.walkTime+=dt*8;
-                const sw=Math.sin(ud.walkTime)*.4;
-                if(ud.lLeg){ud.lLeg.rotation.x=sw;ud.rLeg.rotation.x=-sw;}
-            }else{
-                ud.walkTime=0;
-                if(ud.lLeg){ud.lLeg.rotation.x=0;ud.rLeg.rotation.x=0;}
+
+            // Walking bob
+            if(moving&&!state.isJumping){
+                ud.walkTime=(ud.walkTime||0)+dt*8;
+                ap.y+=Math.abs(Math.sin((ud.walkTime||0)*2))*.03;
             }
         }
-        // Subtle bob when walking
-        if(moving){avatar.userData.walkTime=(avatar.userData.walkTime||0)+dt*8;ap.y+=Math.abs(Math.sin((avatar.userData.walkTime||0)*2))*.03;}
-    }
     // Proximity checks — NPC, billboards, car
+    state._nearWaterEdge=false;
     const npcDist=ap.distanceTo(npcGuide.position);
     // Check billboards on foot — use billboard board position (not bay)
     let _walkBB=null,_walkBBd=Infinity;
     billboards.forEach(b=>{const d2=ap.distanceTo(b.group.position);if(d2<_walkBBd){_walkBBd=d2;_walkBB=b;}});
     const nearBBOnFoot=_walkBBd<5&&_walkBB;
     if(npcDist<4){
-        promptEl.innerHTML=`<strong>${npcGuide.userData.name}</strong> — Press <b>E</b> to talk`;
+        promptEl.innerHTML=`<strong>${npcGuide.userData.name}</strong> — ${IS_MOBILE?"Tap <b>TALK</b>":"Press <b>E</b> to talk"}`;
         promptEl.classList.add("show");
         state.nearNPC=true;
         state.canInteract=null;
@@ -3100,15 +3792,29 @@ function tick(){
         state.nearNPC=false;
         state.canInteract=_walkBB.project;
         const di=DISTRICTS[_walkBB.project.district];
-        promptEl.innerHTML=`<strong>${_walkBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br><span style="font-size:.7rem;color:var(--s)">E to open project</span>`;
+        promptEl.innerHTML=`<strong>${_walkBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br><span style="font-size:.7rem;color:var(--s)">${IS_MOBILE?"Tap OPEN to view":"E to open project"}</span>`;
         promptEl.classList.add("show");
         renderer.domElement.style.cursor="pointer";
     }else{
         state.nearNPC=false;
         state.canInteract=null;
-        // Car proximity — show re-enter prompt (check actual car position)
-        if(ap.distanceTo(car.position)<5){
-            promptEl.innerHTML=`Press <b>F</b> to enter car`;
+        // Ship proximity
+        const shipNear=window._shipGroup&&window._shipGroup.visible&&ap.distanceTo(window._shipGroup.position)<35;
+        if(state.onShip){
+            promptEl.innerHTML=`<b>On Ship</b> — Walk around the deck`;
+            promptEl.classList.add("show");
+            renderer.domElement.style.cursor="default";
+        }else if(nearWaterEdge){
+            promptEl.innerHTML=`<b>Dock Edge</b> — Press <b>E</b> to put on diving gear and enter the water`;
+            promptEl.classList.add("show");
+            renderer.domElement.style.cursor="pointer";
+            state._nearWaterEdge=true;
+        }else if(shipNear&&!state.onShip){
+            promptEl.innerHTML=`<b>Frigate</b> — Walk to the dock edge and jump the railing to board`;
+            promptEl.classList.add("show");
+            renderer.domElement.style.cursor="default";
+        }else if(ap.distanceTo(car.position)<5){
+            promptEl.innerHTML=IS_MOBILE?`Tap <b>CAR</b> to enter`:`Press <b>F</b> to enter car`;
             promptEl.classList.add("show");
             renderer.domElement.style.cursor="pointer";
         }else{
@@ -3119,7 +3825,7 @@ function tick(){
     // Activate arcade glow frame around billboard when on foot
     updateArcade(t,dt,nearBBOnFoot,_walkBB);
     districtEl.textContent=getDistrict(ap.x,ap.z);
-    speedEl.textContent="On Foot";
+    speedEl.textContent=state.onShip?"On Ship":"On Foot";
     audio.update(0,0);
     // Walking camera
     if(state.gunEquipped){
@@ -3181,10 +3887,129 @@ function tick(){
     }
     } // end walking mode
 
+    // ====== MODE: DIVING (FPS underwater) ======
+    else if(state.mode==="diving"){
+    const DIVE_SPEED=4.5;
+    const dp=state.divePos;
+    if(!dp){state.mode="walking";avatar.visible=true;} // safety fallback
+    // Wider FOV for diving immersion
+    const diveFOV=65;
+    if(Math.abs(camera.fov-diveFOV)>.1){camera.fov=THREE.MathUtils.lerp(camera.fov,diveFOV,1-Math.exp(-dt*6));camera.updateProjectionMatrix();}
+    else{
+        // Mouse look → update dive cam yaw/pitch
+        state.diveCamYaw=_camYaw;
+        state.diveCamPitch=_camPitch;
+        // Movement — WASD moves in camera look direction
+        const cp2=Math.cos(state.diveCamPitch),sp2=Math.sin(state.diveCamPitch);
+        const fwX=-Math.sin(state.diveCamYaw)*cp2,fwY=-sp2,fwZ=-Math.cos(state.diveCamYaw)*cp2;
+        const rtX=Math.cos(state.diveCamYaw),rtZ=-Math.sin(state.diveCamYaw);
+        const mv=new THREE.Vector3();
+        if(wF){mv.x+=fwX;mv.y+=fwY;mv.z+=fwZ;}
+        if(wB){mv.x-=fwX;mv.y-=fwY;mv.z-=fwZ;}
+        if(wL){mv.x+=rtX;mv.z+=rtZ;}
+        if(wR){mv.x-=rtX;mv.z-=rtZ;}
+        if(pressed.has("j")){mv.y-=1;} // Space = dive deeper
+        if(bst){mv.y+=1;} // Shift = surface
+        if(mv.lengthSq()>.001)mv.normalize();
+        dp.addScaledVector(mv,DIVE_SPEED*dt);
+        // Clamp to ocean area
+        dp.x=THREE.MathUtils.clamp(dp.x,-120,120);
+        dp.z=THREE.MathUtils.clamp(dp.z,-130,-46);
+        const seabedHere=terrainHeight(dp.x,dp.z)+0.3;
+        dp.y=THREE.MathUtils.clamp(dp.y,seabedHere,WATER_LEVEL-.15);
+        // FPS camera — at diver's eye position
+        camera.position.lerp(dp.clone(),1-Math.exp(-dt*12));
+        const lookTarget=dp.clone().add(new THREE.Vector3(fwX,fwY,fwZ).multiplyScalar(10));
+        camera.lookAt(lookTarget);
+        // Headlamp follows diver
+        diveLight.position.copy(dp);diveLight.visible=true;
+        diveAmbient.visible=true;
+        // Avatar hidden during diving
+        avatar.visible=false;
+        if(window._avatarGun)window._avatarGun.visible=false;
+        // Fish group visible
+        fishGroup.visible=true;
+        // Always underwater in dive mode
+        state.underwater=true;state.swimming=true;
+        // Achievements
+        unlock("swimmer");unlock("diver");
+        // Hull inspection
+        if(window._shipGroup&&window._shipGroup.visible){
+            const sdx=dp.x-window._shipGroup.position.x,sdz=dp.z-window._shipGroup.position.z;
+            if(Math.sqrt(sdx*sdx+sdz*sdz)<32)unlock("hull_inspect");
+        }
+        // Exit detection — near dock edge or near ship
+        const nearDockReturn=dp.z>-48&&dp.y>WATER_LEVEL-1;
+        const nearShipSurface=window._shipGroup&&window._shipGroup.visible&&dp.distanceTo(window._shipGroup.position)<20&&dp.y>WATER_LEVEL-1.5;
+        state._nearExitWater=nearDockReturn||nearShipSurface;
+        if(state._nearExitWater){
+            promptEl.innerHTML=`Press <b>E</b> to exit the water`;
+            promptEl.classList.add("show");
+        }else{
+            promptEl.innerHTML=`<b>Diving</b> — WASD move · Space dive · Shift surface · E exit near dock/ship`;
+            promptEl.classList.add("show");
+        }
+        districtEl.textContent="Ocean";
+        speedEl.textContent="Diving";
+    }
+    } // end diving mode
+
     // ====== MODE: DIALOG ======
     // (No movement, camera stays put)
 
     // ====== SHARED: always runs ======
+    // Dive mask overlay & fog
+    const _diveMask=document.getElementById("dive-mask");
+    if(_diveMask)_diveMask.style.opacity=state.mode==="diving"?"1":"0";
+    // Fish visibility
+    fishGroup.visible=state.mode==="diving";
+    const _isDiving=state.mode==="diving";
+    if(_isDiving){scene.fog.near=5;scene.fog.far=35;scene.fog.color.lerp(new THREE.Color("#1a4a60"),.1);scene.background.lerp(new THREE.Color("#0a2838"),.1);}
+    else{
+        scene.fog.near=THREE.MathUtils.lerp(scene.fog.near,70,.03);
+        scene.fog.far=THREE.MathUtils.lerp(scene.fog.far,240,.03);
+        scene.fog.color.lerp(new THREE.Color("#a8d4ec"),.05);
+        scene.background.lerp(new THREE.Color("#78b8e6"),.05);
+    }
+    // Animate fish
+    if(_isDiving){
+        for(const f of fishArr){
+            f.userData.phase+=dt*f.userData.speed*.4;
+            const r=f.userData.circleR;
+            f.position.x=f.userData.centerX+Math.cos(f.userData.phase)*r;
+            f.position.z=f.userData.centerZ+Math.sin(f.userData.phase)*r;
+            f.position.y=f.userData.baseY+Math.sin(f.userData.phase*1.5)*.5;
+            // Face direction of movement
+            const ang=f.userData.phase+Math.PI/2;
+            f.rotation.y=ang;
+            // Tail wag
+            if(f.children[1])f.children[1].rotation.z=Math.PI/2+Math.sin(t*8+f.userData.phase)*.3;
+        }
+    }
+    // Bubbles — spawn when diving
+    _bubbleTimer+=dt;
+    if(_isDiving&&_bubbleTimer>.08){
+        _bubbleTimer=0;
+        const free=bubbles.find(b=>!b.visible);
+        if(free){
+            const ap2=state.divePos||avatar.position;
+            free.position.set(ap2.x+(Math.random()-.5)*.8,ap2.y+(Math.random()-.5)*.4,ap2.z+(Math.random()-.5)*.8);
+            free.userData.vy=1+Math.random()*1.5;free.userData.life=0;free.userData.maxLife=1.5+Math.random()*2;
+            free.material.opacity=.35+Math.random()*.2;
+            free.scale.setScalar(.3+Math.random()*.5);
+            free.visible=true;
+        }
+    }
+    for(const b of bubbles){
+        if(!b.visible)continue;
+        b.userData.life+=dt;
+        if(b.userData.life>b.userData.maxLife||b.position.y>WATER_LEVEL+.1){b.visible=false;continue;}
+        b.position.y+=b.userData.vy*dt;
+        b.position.x+=Math.sin(t*3+b.position.z*10)*.003;
+        b.position.z+=Math.cos(t*2+b.position.x*10)*.003;
+        b.material.opacity*=.995; // fade out
+    }
+    if(!state.swimming){bubbles.forEach(b=>{if(b.visible){b.userData.life+=dt*3;if(b.userData.life>b.userData.maxLife)b.visible=false;}});}
     // Play time & district tracking
     state.playTime+=dt;
     if(state.playTime>=300)unlock("night"); // 5 minutes
@@ -3328,6 +4153,15 @@ function tick(){
     // Cam position for proximity checks
     const cpRef=state.mode==="driving"?car.position:avatar.position;
     for(let i=0;i<LEAF_N;i++){const i3=i*3;leafPos[i3]+=(Math.sin(t*.7+i*2.3)*.2+.03)*dt*12;leafPos[i3+1]-=(.6+Math.sin(t+i)*.15)*dt*2;leafPos[i3+2]+=Math.cos(t*.5+i*1.7)*.15*dt*12;if(leafPos[i3+1]<0){leafPos[i3+1]=22+Math.random()*12;leafPos[i3]=cpRef.x+(Math.random()-.5)*100;leafPos[i3+2]=cpRef.z+(Math.random()-.5)*100;}}leafGeo.attributes.position.needsUpdate=true;
+    // Hologram ambient animations
+    billboards.forEach(b=>{
+        if(!b.group.visible)return;
+        if(b.displayType==="hologram"){
+            b.group.traverse(ch=>{
+                if(ch.userData._holoFloat){ch.position.y=3.2+Math.sin(t*1.5+b.group.position.x)*.15;}
+            });
+        }
+    });
     // GIF textures
     const gf=Math.floor(t*10);
     if(gf!==tick._lg){tick._lg=gf;
@@ -3351,7 +4185,7 @@ function tick(){
                         const di=DISTRICTS[b.project.district];
                         c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
                         c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
-                        c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText("PRESS E TO OPEN",390,245);
+                        c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText(IS_MOBILE?"TAP OPEN":"PRESS E TO OPEN",IS_MOBILE?440:390,245);
                         gd.tex.needsUpdate=true;gd.playing=true;
                         gd._fIdx=(gd._fIdx+1)%gd._fCount;
                         gd._busy=false;
@@ -3367,7 +4201,7 @@ function tick(){
                     const di=DISTRICTS[b.project.district];
                     c.fillStyle=di.color;c.font="600 11px Segoe UI";c.fillText(di.label.toUpperCase(),14,225);
                     c.fillStyle="#fff";c.font="700 16px Segoe UI";c.fillText(gd.title,14,245);
-                    c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText("PRESS E TO OPEN",390,245);
+                    c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText(IS_MOBILE?"TAP OPEN":"PRESS E TO OPEN",IS_MOBILE?440:390,245);
                     gd.tex.needsUpdate=true;gd.playing=true;
                 }
             }else if(d2<55){
@@ -3389,6 +4223,8 @@ function tick(){
     grassMat.uniforms.uCarPos.value.copy(cpRef);
     grassMat.uniforms.uCarSpeed.value=state.mode==="driving"?state.speed:0;
     grassMat.uniforms.uCamPos.value.copy(camera.position);
+    // Mobile UI contextual updates
+    if(window._mobileUIUpdate)window._mobileUIUpdate();
     if(composer)composer.render();else renderer.render(scene,camera);
     }catch(e){console.error("Loop:",e);}
 }
