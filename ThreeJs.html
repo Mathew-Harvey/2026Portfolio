@@ -22,6 +22,33 @@
         .btn{display:inline-flex;align-items:center;font-size:.76rem;color:#c8dcc4;border:1px solid rgba(200,220,196,.28);border-radius:8px;padding:6px 10px;text-decoration:none;background:rgba(14,22,14,.65);cursor:pointer}.btn:hover{border-color:var(--a);color:#fff}
         .dt{display:inline-block;font-size:.64rem;padding:2px 5px;border-radius:4px;margin-left:5px;font-weight:600}
         .dt-port{background:rgba(92,192,184,.15);color:var(--w)}.dt-sim{background:rgba(120,140,220,.15);color:#8898dd}.dt-tool{background:rgba(220,180,80,.15);color:var(--a2)}.dt-per{background:rgba(200,100,140,.15);color:#dd88aa}
+        .dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .25s}
+        .dialog-overlay.show{opacity:1;pointer-events:auto}
+        .dialog-box{width:min(560px,calc(100vw - 32px));margin-bottom:48px;background:linear-gradient(180deg,rgba(14,24,12,.96),rgba(10,18,10,.98));border:1px solid rgba(110,200,110,.35);border-radius:16px;padding:22px 26px 18px;box-shadow:0 16px 48px rgba(0,0,0,.5)}
+        .dialog-npc{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--a);margin-bottom:4px}
+        .dialog-title{font-size:1.15rem;font-weight:700;color:#e8f0e4;margin-bottom:8px}
+        .dialog-text{font-size:.88rem;color:#b0c0a8;line-height:1.55;margin-bottom:14px;white-space:pre-line}
+        .dialog-progress{font-size:.78rem;color:var(--a2);margin-bottom:10px}
+        .dialog-btns{display:flex;gap:10px;justify-content:flex-end}
+        .dialog-btn{padding:8px 18px;border:1px solid rgba(110,200,110,.4);border-radius:8px;background:rgba(110,200,110,.08);color:#c8f0c0;font-size:.84rem;cursor:pointer;transition:all .15s}.dialog-btn:hover{background:rgba(110,200,110,.2);border-color:var(--a);color:#fff}
+        .dialog-btn.primary{background:rgba(110,200,110,.18);border-color:var(--a);color:#d8ffd0}
+        .car-select-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+        .car-select-overlay.show{opacity:1;pointer-events:auto}
+        .car-select-title{font-size:1.3rem;font-weight:700;color:var(--a);letter-spacing:.08em;margin-bottom:18px;text-transform:uppercase}
+        .car-grid{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+        .car-card{width:180px;padding:18px 14px;border:1px solid rgba(110,200,110,.25);border-radius:14px;background:rgba(14,24,12,.94);text-align:center;cursor:pointer;transition:all .2s}
+        .car-card:hover,.car-card.active{border-color:var(--a);background:rgba(110,200,110,.1);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+        .car-card .car-icon{font-size:2.4rem;margin-bottom:6px}
+        .car-card .car-name{font-size:.9rem;font-weight:600;color:#e0f0dc}
+        .car-card .car-desc{font-size:.72rem;color:var(--s);margin-top:4px}
+        .car-card .locked{color:#665;font-size:.7rem;margin-top:4px}
+        .mode-badge{position:absolute;top:14px;left:50%;transform:translateX(-50%);padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+        .mode-badge.show{opacity:1}
+        .mode-badge.walk{background:rgba(110,200,110,.15);border:1px solid rgba(110,200,110,.4);color:var(--a)}
+        .mode-badge.dialog{background:rgba(240,192,96,.15);border:1px solid rgba(240,192,96,.4);color:var(--a2)}
+        .quest-hud{position:absolute;top:78px;left:14px;padding:8px 12px;border-radius:10px;border:1px solid rgba(240,192,96,.3);background:var(--hud);backdrop-filter:blur(10px);font-size:.78rem;color:var(--a2);opacity:0;pointer-events:none;transition:opacity .3s;max-width:260px}
+        .quest-hud.show{opacity:1}
+        .quest-hud .qt{font-weight:700;color:var(--t);margin-bottom:3px}
         @media(max-width:860px){.side-panel{top:auto;bottom:60px;right:14px;max-height:32vh}.hud{width:min(280px,calc(100vw - 28px))}}
     </style>
 </head>
@@ -34,11 +61,15 @@
         <div class="hud-row"><span>Speed</span><span class="v" id="speed">0 km/h</span></div>
         <div class="hud-row"><span>Discovered</span><span class="v" id="visited">0 / 45</span></div>
         <div class="hud-row"><span>Season</span><span class="v" id="season">Spring</span></div>
-        <div class="hint">W forward · S brake/reverse · A/D steer · Shift boost · E interact · M mute</div>
-        <div class="hint">Scroll wheel: zoom in (driver view) / zoom out (bird's eye). Park in yellow bay to view project.</div>
+        <div class="hint">W forward · S brake/reverse · A/D steer · Shift boost · E interact · F exit/enter car · M mute</div>
+        <div class="hint">Scroll wheel: zoom in / out. Park in yellow bay + E to view project. Walk to NPC + E to talk.</div>
     </div>
     <div class="panel side-panel"><div class="section-label">Achievements</div><div id="badges"></div></div>
     <div class="prompt" id="prompt"></div><div class="toast" id="toast"></div>
+    <div class="dialog-overlay" id="dialog"><div class="dialog-box"><div class="dialog-npc" id="dialog-npc">Guide</div><div class="dialog-title" id="dialog-title"></div><div class="dialog-text" id="dialog-text"></div><div class="dialog-progress" id="dialog-progress"></div><div class="dialog-btns" id="dialog-btns"></div></div></div>
+    <div class="car-select-overlay" id="car-select"><div class="car-select-title">Choose Your Ride</div><div class="car-grid" id="car-grid"></div></div>
+    <div class="mode-badge" id="mode-badge"></div>
+    <div class="quest-hud" id="quest-hud"><div class="qt" id="quest-hud-title"></div><div id="quest-hud-obj"></div></div>
     <div class="links"><a class="btn" href="index.html">← Classic Portfolio</a><button class="btn" id="mute-btn" type="button">Audio: ON</button></div>
 </div>
 <script type="importmap">
@@ -126,11 +157,7 @@ maritime:{label:"Port District",dtClass:"dt-port",color:"#3eaaa2",projects:[
     {t:"MarineStream Workspace",u:"https://MarineStream-Workspace.onrender.com",g:"MarineStream-Workspace.gif"},
     {t:"MarineStream Landing",u:"https://mathew-harvey.github.io/MarineStreamLandingPage/",g:"MarineStreamLandingPage.gif"},
     {t:"MarineStream App",u:"https://mathew-harvey.github.io/MarineStream/",g:"MarineStream.gif"},
-    {t:"IWC Approval Portal",u:"https://mathew-harvey.github.io/IWC-Approval-Portal/",g:"IWC-Approval-Portal.gif"},
     {t:"BFMP Doc Generator",u:"https://mathew-harvey.github.io/Document-Generator/",g:"Document-Generator.gif"},
-    {t:"BFMP Generator",u:"https://mathew-harvey.github.io/bfmpGenerator/",g:"bfmpGenerator.gif"},
-    {t:"In-Water Hull Cleaning",u:"https://mathew-harvey.github.io/iwhc_franmarine/",g:"iwhc_franmarine.gif"},
-    {t:"IWHC Manual Companion",u:"https://mathew-harvey.github.io/IWHCManualCompanionApp/",g:"IWHCManualCompanionApp.gif"},
     {t:"The Hull Truth",u:"https://mathew-harvey.github.io/TheHullTruth/",g:"TheHullTruth.gif"},
     {t:"Clean Hulls Clear Waters",u:"https://mathew-harvey.github.io/CleanHullsClearWaters/",g:"CleanHullsClearWaters.gif"},
 ]},
@@ -219,7 +246,17 @@ const ACHIEVEMENTS=[
 ];
 
 /* ====== STATE ====== */
-const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:new Set(),collectibles:new Set(),muted:false,seasonIndex:0,crashes:0};
+const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:new Set(),collectibles:new Set(),muted:false,seasonIndex:0,crashes:0,
+    mode:"driving",questLog:[],unlockedCars:["mazda"],activeCar:"mazda",carParkedAt:null,nearNPC:false,_showCarSelect:false,avatarAngle:0};
+const QUESTS=[{
+    id:"scout",title:"Portfolio Scout",giver:"guide",
+    desc:"Drive around the city and check out 5 project billboards.\nPark in the yellow bay and press E to visit each one.",
+    objectiveText:"Visit 5 billboards",
+    objective:()=>state.visited.size>=5,
+    rewardText:"A new ride! The Pixelated Sport Car is now available at your car.",
+    reward:()=>{if(!state.unlockedCars.includes("sport"))state.unlockedCars.push("sport");},
+    status:"available" // available | active | complete | done
+}];
 const districtEl=document.getElementById("district"),speedEl=document.getElementById("speed"),visitedEl=document.getElementById("visited"),seasonEl=document.getElementById("season"),badgesEl=document.getElementById("badges"),promptEl=document.getElementById("prompt"),toastEl=document.getElementById("toast"),muteBtn=document.getElementById("mute-btn");
 function showToast(t){toastEl.textContent=t;toastEl.classList.add("show");clearTimeout(showToast._t);showToast._t=setTimeout(()=>toastEl.classList.remove("show"),2200);}
 function renderBadges(){badgesEl.innerHTML="";ACHIEVEMENTS.forEach(a=>{const e=document.createElement("div");e.className="badge"+(state.achievements.has(a.id)?" on":"");e.textContent=`${a.title} — ${a.desc}`;badgesEl.appendChild(e);});}
@@ -725,6 +762,236 @@ new GLTFLoader().load('models/mazda_rx-7_fd.glb',gltf=>{
     console.log(`RX-7 FINAL: bottom=${b.min.y.toFixed(3)} → car.y=${car.position.y.toFixed(3)}, center=(${cxW.toFixed(2)},${czW.toFixed(2)}) → car=(${car.position.x},${car.position.z}), fix=(${wrap.position.x.toFixed(3)},${wrap.position.y.toFixed(3)},${wrap.position.z.toFixed(3)}), wheels=${wh.length}`);
 },undefined,e=>{console.warn('Mazda GLB load failed, using fallback:',e);});
 
+/* ====== AVATAR ====== */
+function createAvatar(){
+    const g=new THREE.Group();
+    const skinMat=botw("#e8c8a0","#b09070");
+    const shirtMat=botw("#4080b0","#284060");
+    const pantsMat=botw("#384858","#1a2830");
+    const hairMat=botw("#3a2818","#1a1008");
+    // Torso
+    const torso=new THREE.Mesh(new THREE.BoxGeometry(.48,.55,.28),shirtMat);
+    torso.position.y=1.05;g.add(torso);
+    // Head
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),skinMat);
+    head.position.y=1.55;g.add(head);
+    // Hair
+    const hair=new THREE.Mesh(new THREE.BoxGeometry(.26,.13,.26),hairMat);
+    hair.position.y=1.7;g.add(hair);
+    // Arms
+    const armGeo=new THREE.BoxGeometry(.11,.44,.12);
+    const lArm=new THREE.Mesh(armGeo,shirtMat);lArm.position.set(.34,.92,0);g.add(lArm);
+    const rArm=new THREE.Mesh(armGeo,shirtMat);rArm.position.set(-.34,.92,0);g.add(rArm);
+    // Legs
+    const legGeo=new THREE.BoxGeometry(.14,.46,.14);
+    const lLeg=new THREE.Mesh(legGeo,pantsMat);lLeg.position.set(.11,.36,0);g.add(lLeg);
+    const rLeg=new THREE.Mesh(legGeo,pantsMat);rLeg.position.set(-.11,.36,0);g.add(rLeg);
+    g.userData={lArm,rArm,lLeg,rLeg,walkTime:0};
+    g.visible=false;
+    scene.add(g);
+    return g;
+}
+const avatar=createAvatar();
+
+/* ====== NPC QUEST GIVER ====== */
+function makeIconSprite(text,bgColor){
+    const cv=document.createElement("canvas");cv.width=64;cv.height=64;
+    const c=cv.getContext("2d");
+    c.fillStyle=bgColor;c.beginPath();c.arc(32,32,28,0,Math.PI*2);c.fill();
+    c.strokeStyle="rgba(255,255,255,.5)";c.lineWidth=2;c.beginPath();c.arc(32,32,28,0,Math.PI*2);c.stroke();
+    c.fillStyle="#fff";c.font="bold 42px sans-serif";c.textAlign="center";c.textBaseline="middle";c.fillText(text,32,30);
+    const tex=new THREE.CanvasTexture(cv);
+    const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,sizeAttenuation:true});
+    const sp=new THREE.Sprite(mat);sp.scale.set(.7,.7,1);
+    return sp;
+}
+function createNPC(x,z){
+    const g=new THREE.Group();
+    const robeMat=botw("#c06830","#704018");
+    const skinMat=botw("#e8c8a0","#b09070");
+    const beltMat=botw("#8a6a30","#4a3818");
+    const hatMat=botw("#a05828","#603010");
+    // Robe
+    const robe=new THREE.Mesh(new THREE.CylinderGeometry(.22,.32,.9,8),robeMat);
+    robe.position.y=.65;g.add(robe);
+    // Belt
+    const belt=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.07,8),beltMat);
+    belt.position.y=.88;g.add(belt);
+    // Shoulders
+    const shoulders=new THREE.Mesh(new THREE.BoxGeometry(.62,.1,.28),robeMat);
+    shoulders.position.y=1.2;g.add(shoulders);
+    // Head
+    const npcHead=new THREE.Mesh(new THREE.SphereGeometry(.2,8,6),skinMat);
+    npcHead.position.y=1.45;g.add(npcHead);
+    // Hat
+    const hat=new THREE.Mesh(new THREE.ConeGeometry(.25,.3,8),hatMat);
+    hat.position.y=1.75;g.add(hat);
+    // Quest icons (above head)
+    const iconGroup=new THREE.Group();iconGroup.position.y=2.4;
+    const iconExclaim=makeIconSprite("!","#e8c020");
+    const iconQReady=makeIconSprite("?","#e8c020");
+    const iconQActive=makeIconSprite("?","#888888");
+    iconGroup.add(iconExclaim,iconQReady,iconQActive);
+    iconQReady.visible=false;iconQActive.visible=false;
+    g.add(iconGroup);
+    const ny=Math.max(terrainHeight(x,z),ROAD_Y);
+    g.position.set(x,ny,z);
+    g.userData={id:"guide",name:"The Guide",iconGroup,iconExclaim,iconQReady,iconQActive,baseY:ny};
+    scene.add(g);
+    // NPC has a static collision box
+    addStatic(g,.3);
+    return g;
+}
+const npcGuide=createNPC(6,-5);
+
+/* ====== DIALOG SYSTEM ====== */
+const dialogEl=document.getElementById("dialog"),dialogNpc=document.getElementById("dialog-npc"),
+      dialogTitle=document.getElementById("dialog-title"),dialogText=document.getElementById("dialog-text"),
+      dialogProgress=document.getElementById("dialog-progress"),dialogBtns=document.getElementById("dialog-btns"),
+      carSelectEl=document.getElementById("car-select"),carGrid=document.getElementById("car-grid"),
+      modeBadge=document.getElementById("mode-badge"),questHud=document.getElementById("quest-hud"),
+      questHudTitle=document.getElementById("quest-hud-title"),questHudObj=document.getElementById("quest-hud-obj");
+
+function showDialog(npc){
+    const q=QUESTS.find(q=>q.giver===npc.userData.id&&(q.status==="available"||q.status==="active"||q.status==="complete"));
+    state.mode="dialog";
+    dialogNpc.textContent=npc.userData.name;
+    if(!q){
+        dialogTitle.textContent="Hello, adventurer!";
+        dialogText.textContent="I have no more tasks for you right now. Enjoy exploring the city!";
+        dialogProgress.textContent="";
+        dialogBtns.innerHTML=`<button class="dialog-btn" onclick="window._closeDialog()">Close</button>`;
+    }else if(q.status==="available"){
+        dialogTitle.textContent=q.title;
+        dialogText.textContent=q.desc;
+        dialogProgress.textContent="";
+        dialogBtns.innerHTML=`<button class="dialog-btn primary" onclick="window._acceptQuest('${q.id}')">Accept Quest</button><button class="dialog-btn" onclick="window._closeDialog()">Not now</button>`;
+    }else if(q.status==="active"){
+        dialogTitle.textContent=q.title;
+        dialogText.textContent="You haven't completed the objective yet. Keep exploring!";
+        dialogProgress.textContent=q.objectiveText+": "+state.visited.size+" / 5";
+        dialogBtns.innerHTML=`<button class="dialog-btn" onclick="window._closeDialog()">Got it</button>`;
+    }else if(q.status==="complete"){
+        dialogTitle.textContent="Quest Complete!";
+        dialogText.textContent=q.rewardText;
+        dialogProgress.textContent="";
+        dialogBtns.innerHTML=`<button class="dialog-btn primary" onclick="window._completeQuest('${q.id}')">Claim Reward</button>`;
+    }
+    dialogEl.classList.add("show");
+    updateModeBadge();
+}
+window._closeDialog=function(){
+    dialogEl.classList.remove("show");
+    state.mode="walking";
+    updateModeBadge();
+};
+window._acceptQuest=function(id){
+    const q=QUESTS.find(q=>q.id===id);
+    if(q){q.status="active";showToast("Quest accepted: "+q.title);}
+    dialogEl.classList.remove("show");
+    state.mode="walking";
+    updateModeBadge();updateQuestHud();updateNPCIcon();
+};
+window._completeQuest=function(id){
+    const q=QUESTS.find(q=>q.id===id);
+    if(q){q.status="done";q.reward();showToast("Quest complete! Reward unlocked!");}
+    dialogEl.classList.remove("show");
+    state.mode="walking";
+    state._showCarSelect=state.unlockedCars.length>1;
+    updateModeBadge();updateQuestHud();updateNPCIcon();
+};
+function updateModeBadge(){
+    if(state.mode==="walking"){modeBadge.textContent="On Foot — F to enter car";modeBadge.className="mode-badge show walk";}
+    else if(state.mode==="dialog"){modeBadge.textContent="Talking";modeBadge.className="mode-badge show dialog";}
+    else{modeBadge.className="mode-badge";}
+}
+function updateQuestHud(){
+    const q=QUESTS.find(q=>q.status==="active");
+    if(q){questHudTitle.textContent=q.title;questHudObj.textContent=q.objectiveText+": "+state.visited.size+" / 5";questHud.classList.add("show");}
+    else questHud.classList.remove("show");
+}
+function updateNPCIcon(){
+    const q=QUESTS.find(q=>q.giver==="guide"&&q.status!=="done");
+    const d=npcGuide.userData;
+    d.iconExclaim.visible=false;d.iconQReady.visible=false;d.iconQActive.visible=false;
+    if(!q)return;
+    if(q.status==="available")d.iconExclaim.visible=true;
+    else if(q.status==="active")d.iconQActive.visible=true;
+    else if(q.status==="complete")d.iconQReady.visible=true;
+}
+updateNPCIcon();
+
+/* ====== CAR SWAP ====== */
+const CAR_MODELS={
+    mazda:{path:"models/mazda_rx-7_fd.glb",name:"Mazda RX-7 FD",desc:"Classic JDM icon",icon:"\uD83D\uDE97",rotY:Math.PI},
+    sport:{path:"models/cars2/low-poly_pixelated_sport_car.glb",name:"Sport Car",desc:"Pixelated speed demon",icon:"\uD83C\uDFCE\uFE0F",rotY:Math.PI}
+};
+function showCarSelect(){
+    carGrid.innerHTML="";
+    Object.entries(CAR_MODELS).forEach(([key,cm])=>{
+        const unlocked=state.unlockedCars.includes(key);
+        const card=document.createElement("div");
+        card.className="car-card"+(state.activeCar===key?" active":"");
+        card.innerHTML=`<div class="car-icon">${cm.icon}</div><div class="car-name">${cm.name}</div><div class="car-desc">${cm.desc}</div>${unlocked?"":'<div class="locked">🔒 Locked</div>'}`;
+        if(unlocked)card.onclick=()=>selectCar(key);
+        carGrid.appendChild(card);
+    });
+    carSelectEl.classList.add("show");
+}
+function selectCar(key){
+    carSelectEl.classList.remove("show");
+    state._showCarSelect=false;
+    if(key===state.activeCar){enterCarMode();return;}
+    state.activeCar=key;
+    const cm=CAR_MODELS[key];
+    // Remove current car children
+    while(car.children.length)car.remove(car.children[0]);
+    // Load new model
+    new GLTFLoader().load(cm.path,gltf=>{
+        const m=gltf.scene;
+        let b=realBounds(m);
+        const rawW=b.max.x-b.min.x,rawD=b.max.z-b.min.z;
+        const sc=4.0/Math.max(rawW,rawD);
+        m.scale.setScalar(sc);
+        m.traverse(ch=>{
+            if(!ch.isMesh)return;
+            if(ch.name.toLowerCase().includes('collider')){ch.visible=false;return;}
+            const mats=Array.isArray(ch.material)?ch.material:[ch.material];
+            mats.forEach(mt=>{
+                mt.depthWrite=true;
+                const nm=(mt.name||'').toLowerCase()+(ch.name||'').toLowerCase();
+                if(nm.includes('glass')||nm.includes('window')||nm.includes('transparent')){
+                    mt.transparent=true;mt.opacity=0.3;mt.side=THREE.FrontSide;
+                }else{
+                    mt.transparent=false;mt.opacity=1;mt.side=THREE.FrontSide;
+                }});});
+        const wrap=new THREE.Group();wrap.add(m);
+        wrap.rotation.y=cm.rotY;
+        car.add(wrap);
+        b=realBounds(car);
+        const cxW=(b.min.x+b.max.x)/2,czW=(b.min.z+b.max.z)/2;
+        wrap.position.y+=car.position.y-b.min.y;
+        wrap.position.x+=car.position.x-cxW;
+        wrap.position.z+=car.position.z-czW;
+        carShadowW=(b.max.x-b.min.x)*1.05;carShadowD=(b.max.z-b.min.z)*1.05;
+        const wh=[];m.traverse(c=>{if(c.isMesh){const n=c.name.toLowerCase();if(n.includes('wheel')||n.includes('tire')||n.includes('rim'))wh.push(c);}});
+        car.userData.wheels=wh;
+        enterCarMode();
+    },undefined,()=>{
+        // Fallback: re-add procedural car
+        car.add(fb.group);car.userData.wheels=fb.wheels;
+        enterCarMode();
+    });
+}
+function enterCarMode(){
+    state.mode="driving";
+    avatar.visible=false;
+    state.speed=0; // fresh start when entering car
+    state.canInteract=null;
+    promptEl.classList.remove("show");
+    updateModeBadge();
+}
+
 /* ====== PARTICLES ====== */
 const LEAF_N=PERF.leafCount;const leafPos=new Float32Array(LEAF_N*3),leafSizes=new Float32Array(LEAF_N);
 for(let i=0;i<LEAF_N;i++){leafPos[i*3]=(Math.random()-.5)*160;leafPos[i*3+1]=3+Math.random()*25;leafPos[i*3+2]=(Math.random()-.5)*160;leafSizes[i]=1.5+Math.random()*2.5;}
@@ -744,7 +1011,54 @@ muteBtn.addEventListener("click",toggleMute);
 
 /* ====== INPUT ====== */
 const pressed=new Set();const KM={KeyW:"f",ArrowUp:"f",KeyS:"b",ArrowDown:"b",KeyA:"l",ArrowLeft:"l",KeyD:"r",ArrowRight:"r",ShiftLeft:"x",ShiftRight:"x"};
-window.addEventListener("keydown",e=>{const k=KM[e.code];if(k){pressed.add(k);e.preventDefault();}if(e.code==="KeyE")openBB();if(e.code==="KeyM")toggleMute();if(!audio.initialized)audio.init();},{passive:false});
+window.addEventListener("keydown",e=>{
+    const k=KM[e.code];if(k){pressed.add(k);e.preventDefault();}
+    if(!audio.initialized)audio.init();
+    if(e.code==="KeyM")toggleMute();
+    // F key: exit/enter car
+    if(e.code==="KeyF"){
+        if(state.mode==="driving"&&Math.abs(state.speed)<1){
+            // Exit car → walking mode
+            state.mode="walking";
+            state.carParkedAt=car.position.clone();
+            state.canInteract=null;
+            state.speed=0;
+            // Place avatar next to car (driver side offset)
+            const heading=car.rotation.y;
+            const ox=Math.cos(heading+Math.PI/2)*2.5, oz=Math.sin(heading+Math.PI/2)*-2.5;
+            avatar.position.set(car.position.x+ox,car.position.y,car.position.z+oz);
+            state.avatarAngle=heading;avatar.rotation.y=heading;
+            avatar.visible=true;
+            audio.chime(600,.08);
+            updateModeBadge();
+        }else if(state.mode==="walking"){
+            // Check near car
+            if(state.carParkedAt&&avatar.position.distanceTo(state.carParkedAt)<4){
+                if(state._showCarSelect){showCarSelect();return;}
+                enterCarMode();
+                audio.chime(800,.08);
+            }
+        }
+    }
+    // E key: context-sensitive interaction
+    if(e.code==="KeyE"){
+        if(state.mode==="driving"){
+            openBB(); // existing billboard interaction
+        }else if(state.mode==="walking"){
+            // Check NPC proximity
+            if(avatar.position.distanceTo(npcGuide.position)<4){
+                showDialog(npcGuide);
+            }
+        }else if(state.mode==="dialog"){
+            window._closeDialog();
+        }
+    }
+    // Escape: close dialogs / car select
+    if(e.code==="Escape"){
+        if(state.mode==="dialog")window._closeDialog();
+        if(carSelectEl.classList.contains("show")){carSelectEl.classList.remove("show");state._showCarSelect=false;enterCarMode();}
+    }
+},{passive:false});
 window.addEventListener("keyup",e=>{const k=KM[e.code];if(k){pressed.delete(k);e.preventDefault();}},{passive:false});
 window.addEventListener("pointerdown",()=>{if(!audio.initialized)audio.init();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)pressed.clear();});
@@ -758,7 +1072,7 @@ const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 function openBB(){if(!state.canInteract)return;window.open(state.canInteract.u,"_blank","noopener");state.visited.add(state.canInteract.t);visitedEl.textContent=`${state.visited.size} / ${ALL_PROJECTS.length}`;unlock("first");
 const portAll=DISTRICTS.maritime.projects.every(p=>state.visited.has(p.t));if(portAll)unlock("port");
 const simAll=DISTRICTS.simulations.projects.every(p=>state.visited.has(p.t));if(simAll)unlock("science");
-if(state.visited.size===ALL_PROJECTS.length)unlock("all");audio.chime(960,.12);}
+if(state.visited.size===ALL_PROJECTS.length)unlock("all");audio.chime(960,.12);updateQuestHud();}
 renderer.domElement.addEventListener("pointerdown",e=>{const rc=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rc.left)/rc.width)*2-1;pointer.y=-((e.clientY-rc.top)/rc.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(interactables,false)[0];if(!hit)return;const p=hit.object.userData.project;if(!p||!state.canInteract||state.canInteract.t!==p.t)return;openBB();});
 
 /* ====== SEASONS ====== */
@@ -988,8 +1302,8 @@ if(PERF.extraGltf)glbLoader.load('models/trees/realistic_trees_collection.glb',g
 /* ====== GAME LOOP ====== */
 const clock=new THREE.Clock();
 setTimeout(()=>{const ld=document.getElementById("loading");ld.style.opacity="0";setTimeout(()=>ld.remove(),800);},800);
-const CAR_R=1.0;const NPC_R=1.4; // NPC car collision radius
-let _camShake=0; // camera shake intensity from crashes
+const CAR_R=1.0;const NPC_R=1.4;const AVATAR_R=0.4;
+let _camShake=0;
 const frameBudget=PERF.fpsCap>0?1/PERF.fpsCap:0;
 let frameAccum=0;
 
@@ -997,13 +1311,13 @@ function tick(){
     requestAnimationFrame(tick);
     try{
     const rawDt=clock.getDelta(),t=clock.getElapsedTime();
-    if(frameBudget>0){
-        frameAccum+=rawDt;
-        if(frameAccum<frameBudget)return;
-    }
+    if(frameBudget>0){frameAccum+=rawDt;if(frameAccum<frameBudget)return;}
     const dt=Math.min(frameBudget>0?frameAccum:rawDt,.033);
     if(frameBudget>0)frameAccum=0;
     const wF=pressed.has("f"),wB=pressed.has("b"),wL=pressed.has("l"),wR=pressed.has("r"),bst=pressed.has("x");
+
+    // ====== MODE: DRIVING ======
+    if(state.mode==="driving"){
     const accel=bst?34:24,brake=38,revRate=14,drag=7,mxF=bst?45:32,mxR=-14;
     if(wF){if(state.speed<0){state.speed+=brake*dt;if(state.speed>0)state.speed=0;}else state.speed+=accel*dt;}
     if(wB){if(state.speed>.5){state.speed-=brake*dt;if(state.speed<0)state.speed=0;}else state.speed-=revRate*dt;}
@@ -1016,28 +1330,25 @@ function tick(){
     car.position.addScaledVector(dir,state.speed*dt);
     car.position.x=THREE.MathUtils.clamp(car.position.x,-160,160);car.position.z=THREE.MathUtils.clamp(car.position.z,-68,160);
     const cp=car.position;
-
-    // STATIC COLLISIONS — gentle push-out
+    // STATIC COLLISIONS
     for(const box of staticCol){
-        const nx=Math.max(box.min.x,Math.min(cp.x,box.max.x)),nz=Math.max(box.min.z,Math.min(cp.z,box.max.z));
-        const dx=cp.x-nx,dz=cp.z-nz,dist=Math.sqrt(dx*dx+dz*dz);
+        const nx2=Math.max(box.min.x,Math.min(cp.x,box.max.x)),nz2=Math.max(box.min.z,Math.min(cp.z,box.max.z));
+        const dx=cp.x-nx2,dz=cp.z-nz2,dist=Math.sqrt(dx*dx+dz*dz);
         if(dist<CAR_R&&dist>.01){const push=(CAR_R-dist)/dist;cp.x+=dx*push;cp.z+=dz*push;state.speed*=.5;}
         else if(dist<.01&&cp.x>=box.min.x&&cp.x<=box.max.x&&cp.z>=box.min.z&&cp.z<=box.max.z){
-            // Inside box — find best push-out axis
             const pushX=Math.min(cp.x-box.min.x,box.max.x-cp.x),pushZ=Math.min(cp.z-box.min.z,box.max.z-cp.z);
             if(pushX<pushZ)cp.x+=(cp.x-box.min.x<box.max.x-cp.x)?-pushX-CAR_R:pushX+CAR_R;
             else cp.z+=(cp.z-box.min.z<box.max.z-cp.z)?-pushZ-CAR_R:pushZ+CAR_R;
             state.speed*=.4;
         }
     }
-    // DYNAMIC COLLISIONS — small objects fly away
+    // DYNAMIC COLLISIONS
     for(const d of dynCol){const dp=d.mesh.position;const dx=dp.x-cp.x,dz=dp.z-cp.z;const dist=Math.sqrt(dx*dx+dz*dz);
         if(dist<CAR_R+.8&&Math.abs(state.speed)>.5){const imp=new THREE.Vector3(dx,.5,dz).normalize().multiplyScalar(Math.max(Math.abs(state.speed)*1.5,3));
         d.vel.add(imp);state.speed*=.92;state.crashes++;if(state.crashes>=10)unlock("crash");audio.chime(200,.08);}}
     for(const d of dynCol){if(d.vel.lengthSq()<.01)continue;d.mesh.position.addScaledVector(d.vel,dt);d.mesh.rotation.x+=d.vel.z*dt*2;d.mesh.rotation.z-=d.vel.x*dt*2;d.vel.y-=15*dt;d.vel.multiplyScalar(.96);
     const gy2=terrainHeight(d.mesh.position.x,d.mesh.position.z);if(d.mesh.position.y<gy2+.3){d.mesh.position.y=gy2+.3;d.vel.y=Math.abs(d.vel.y)*.3;d.vel.x*=.85;d.vel.z*=.85;}}
-
-    // NPC CAR COLLISIONS — proper physics: bounce, push, crash effects
+    // NPC CAR COLLISIONS
     const absSpd=Math.abs(state.speed);
     for(const npc of npcCars){
         const np=npc.position;
@@ -1045,131 +1356,211 @@ function tick(){
         const dist=Math.sqrt(dx*dx+dz*dz);
         const minDist=CAR_R+NPC_R;
         if(dist>=minDist||dist<.01)continue;
-        // Collision normal (NPC → player)
-        const nx=dx/dist,nz=dz/dist;
-        // Separate cars (60% player, 40% NPC)
+        const nx3=dx/dist,nz3=dz/dist;
         const overlap=minDist-dist;
-        cp.x+=nx*overlap*.6;cp.z+=nz*overlap*.6;
-        np.x-=nx*overlap*.4;np.z-=nz*overlap*.4;
-        // Player velocity component along collision normal
-        const playerVn=state.speed*(dir.x*nx+dir.z*nz);
-        // NPC velocity along normal (driving cars have route speed)
+        cp.x+=nx3*overlap*.6;cp.z+=nz3*overlap*.6;
+        np.x-=nx3*overlap*.4;np.z-=nz3*overlap*.4;
+        const playerVn=state.speed*(dir.x*nx3+dir.z*nz3);
         let npcVn=0;
         if(npc.userData.route&&npc.userData._crashed<=0){
             const r=npc.userData.route,pts=r.pts;
             const i0=npc.userData.wpIdx,i1=(i0+1)%pts.length;
             const rdx=pts[i1][0]-pts[i0][0],rdz=pts[i1][1]-pts[i0][1];
             const rLen=Math.hypot(rdx,rdz);
-            if(rLen>.01){npcVn=r.speed*((-rdx/rLen)*nx+(-rdz/rLen)*nz);}
+            if(rLen>.01){npcVn=r.speed*((-rdx/rLen)*nx3+(-rdz/rLen)*nz3);}
         }
-        // Elastic collision with restitution
-        const e=0.55; // coefficient of restitution (0=inelastic, 1=perfectly elastic)
+        const e2=0.55;
         const relVn=playerVn-npcVn;
-        if(relVn>0)continue; // already separating
-        const impulse=-(1+e)*relVn*0.5; // equal mass assumption
-        // Apply impulse to player car
+        if(relVn>0)continue;
+        const impulse=-(1+e2)*relVn*0.5;
         const impactForce=Math.abs(impulse);
-        state.speed+=impulse*(dir.x*nx+dir.z*nz)*.8;
-        // Clamp player speed to prevent super-bounces
+        state.speed+=impulse*(dir.x*nx3+dir.z*nz3)*.8;
         state.speed=THREE.MathUtils.clamp(state.speed,-mxF*.6,mxF*.6);
-        // Apply impulse to NPC car (push it away + spin)
         const npcImpulse=Math.max(impactForce*1.2,absSpd*.4);
-        npc.userData._vel.x-=nx*npcImpulse*.7;
-        npc.userData._vel.z-=nz*npcImpulse*.7;
-        npc.userData._vel.y=Math.min(npcImpulse*.08,2); // slight lift
-        npc.userData._angVel=(Math.random()-.5)*npcImpulse*.5; // spin on impact
-        // Crash timer: NPC is disrupted for a duration proportional to impact
+        npc.userData._vel.x-=nx3*npcImpulse*.7;
+        npc.userData._vel.z-=nz3*npcImpulse*.7;
+        npc.userData._vel.y=Math.min(npcImpulse*.08,2);
+        npc.userData._angVel=(Math.random()-.5)*npcImpulse*.5;
         npc.userData._crashed=Math.max(npc.userData._crashed,1.5+impactForce*.15);
-        // Crash effects
         _camShake=Math.max(_camShake,Math.min(impactForce*.25,2.0));
         state.crashes++;if(state.crashes>=10)unlock("crash");
-        // Crash audio — low thud
         audio.chime(80+impactForce*5,Math.min(impactForce*.04,.3));
     }
-    // Update parked NPC car physics (pushed cars slide and settle)
+    // NPC car sliding physics
     for(const npc of npcCars){
         const v=npc.userData._vel;
         if(!v||v.lengthSq()<.005)continue;
-        if(npc.userData.route&&npc.userData._crashed<=0)continue; // driving cars handled by npcTick
+        if(npc.userData.route&&npc.userData._crashed<=0)continue;
         npc.position.addScaledVector(v,dt);
-        v.y-=15*dt; // gravity
+        v.y-=15*dt;
         const gy2=Math.max(terrainHeight(npc.position.x,npc.position.z),ROAD_Y);
         if(npc.position.y<gy2){npc.position.y=gy2;v.y=Math.abs(v.y)*.15;v.x*=.88;v.z*=.88;}
-        v.multiplyScalar(.94); // drag
+        v.multiplyScalar(.94);
         if(npc.userData._angVel){npc.rotation.y+=npc.userData._angVel*dt;npc.userData._angVel*=.93;}
-        // Settle: zero out tiny velocities
         if(v.lengthSq()<.005){v.set(0,0,0);npc.userData._angVel=0;}
     }
-
-    // Ground following — car sits directly on terrain, reacts to bumps/gutters
+    // Ground following
     const gy=terrainHeight(cp.x,cp.z);
-    cp.y=THREE.MathUtils.lerp(cp.y,gy,.6); // tight ground follow, no gap
+    cp.y=THREE.MathUtils.lerp(cp.y,gy,.6);
     carShadow.position.set(cp.x,gy+.03,cp.z);
     carShadow.scale.set(carShadowW,carShadowD,1);
     const rv=new THREE.Vector3(dir.z,0,-dir.x);
-    // Sample terrain at wheel positions for pitch & roll
     const hF=terrainHeight(cp.x+dir.x*1.6,cp.z+dir.z*1.6),hB=terrainHeight(cp.x-dir.x*1.6,cp.z-dir.z*1.6);
     const hL=terrainHeight(cp.x-rv.x*.9,cp.z-rv.z*.9),hR=terrainHeight(cp.x+rv.x*.9,cp.z+rv.z*.9);
-    const pitchTarget=-Math.atan2(hF-hB,3.2);
-    const rollTarget=Math.atan2(hR-hL,1.8);
-    car.rotation.x=THREE.MathUtils.lerp(car.rotation.x,pitchTarget,.2);
-    car.rotation.z=THREE.MathUtils.lerp(car.rotation.z,rollTarget,.2);
-    car.userData.wheels.forEach((w,i)=>{w.rotation.x-=state.speed*dt*2;if(i<2)w.rotation.y=si*.22;});
-    speedEl.textContent=`${Math.round(Math.abs(state.speed)*4.2)} km/h`;districtEl.textContent=getDistrict(cp.x,cp.z);audio.update(state.speed,wF?1:0);
+    car.rotation.x=THREE.MathUtils.lerp(car.rotation.x,-Math.atan2(hF-hB,3.2),.2);
+    car.rotation.z=THREE.MathUtils.lerp(car.rotation.z,Math.atan2(hR-hL,1.8),.2);
+    car.userData.wheels.forEach((w,i)=>{w.rotation.x-=state.speed*dt*2;if(i<2)w.rotation.y=((wL?1:0)-(wR?1:0))*.22;});
+    speedEl.textContent=`${Math.round(Math.abs(state.speed)*4.2)} km/h`;
+    districtEl.textContent=getDistrict(cp.x,cp.z);
+    audio.update(state.speed,wF?1:0);
     orbs.forEach(o=>{if(!o.visible)return;o.rotation.y+=.025;o.position.y+=Math.sin(t*3+o.position.x)*.004;if(cp.distanceTo(o.position)<2.2){o.visible=false;state.collectibles.add(o.userData.id);audio.chime(1100,.09);if(state.collectibles.size===orbs.length)unlock("collector");}});
-
     // Billboard proximity — park in bay
     let nearBB=null,nearD=Infinity;billboards.forEach(b=>{const d2=cp.distanceTo(b.bayPos);if(d2<nearD){nearD=d2;nearBB=b;}});
     const parked=nearD<4&&Math.abs(state.speed)<.4&&nearBB;
     if(parked){
         state.canInteract=nearBB.project;const di=DISTRICTS[nearBB.project.district];
-        promptEl.innerHTML=`<strong>${nearBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span>`;
+        promptEl.innerHTML=`<strong>${nearBB.project.t}</strong><span class="dt ${di.dtClass}">${di.label}</span><br><span style="font-size:.7rem;color:var(--s)">F to exit car · E to open project</span>`;
         promptEl.classList.add("show");renderer.domElement.style.cursor="pointer";
     }else{state.canInteract=null;promptEl.classList.remove("show");renderer.domElement.style.cursor="default";}
     updateArcade(t,dt,parked,nearBB);
-    const si3=Math.floor(t/50)%4;if(si3!==state.seasonIndex){state.seasonIndex=si3;applySeason();}seasonEl.textContent=["Spring","Summer","Autumn","Winter"][si3];
-    const sn=Math.min(Math.abs(state.speed)/mxF,1);
+    // Driving camera
+    const sn=Math.min(Math.abs(state.speed)/32,1);
     if(zoomFactor<.25){
-        // Bonnet / driver cam — on top of car looking forward
         const fwd=dir.clone().multiplyScalar(.8);const up=new THREE.Vector3(0,1.8+(.25-zoomFactor)*4,0);
         const driverPos=cp.clone().add(fwd).add(up);
         camera.position.lerp(driverPos,1-Math.exp(-dt*8));
         const lookFwd=cp.clone().add(dir.clone().multiplyScalar(20)).add(new THREE.Vector3(0,1.5,0));
         camera.lookAt(lookFwd.x,lookFwd.y,lookFwd.z);
     }else{
-        // Third person — zoom scales distance and height
         const baseDist=(14+sn*4)*zoomFactor,baseH=(7+sn*2)*zoomFactor;
         const dc=cp.clone().add(new THREE.Vector3(-dir.x*baseDist,baseH,-dir.z*baseDist));
         camera.position.lerp(dc,1-Math.exp(-dt*4.5));camera.lookAt(cp.x,cp.y+1.2,cp.z);
     }
-    // Camera shake from crashes — decays over time
+    } // end driving mode
+
+    // ====== MODE: WALKING ======
+    else if(state.mode==="walking"){
+    const WALK_SPEED=bst?8:5;
+    const ap=avatar.position;
+    // Camera forward direction (projected onto XZ)
+    const camFwd=new THREE.Vector3();
+    camera.getWorldDirection(camFwd);camFwd.y=0;camFwd.normalize();
+    const camRight=new THREE.Vector3(camFwd.z,0,-camFwd.x);
+    // Movement direction from WASD
+    const moveDir=new THREE.Vector3();
+    if(wF)moveDir.add(camFwd);
+    if(wB)moveDir.sub(camFwd);
+    if(wL)moveDir.sub(camRight);
+    if(wR)moveDir.add(camRight);
+    const moving=moveDir.lengthSq()>0.01;
+    if(moving){
+        moveDir.normalize();
+        ap.addScaledVector(moveDir,WALK_SPEED*dt);
+        // Rotate avatar to face movement direction
+        state.avatarAngle=Math.atan2(-moveDir.x,-moveDir.z);
+        avatar.rotation.y=state.avatarAngle;
+    }
+    // Clamp world bounds
+    ap.x=THREE.MathUtils.clamp(ap.x,-160,160);ap.z=THREE.MathUtils.clamp(ap.z,-68,160);
+    // Ground follow
+    const agy=Math.max(terrainHeight(ap.x,ap.z),ROAD_Y);
+    ap.y=THREE.MathUtils.lerp(ap.y,agy,.5);
+    // Static collision for avatar
+    for(const box of staticCol){
+        const nx2=Math.max(box.min.x,Math.min(ap.x,box.max.x)),nz2=Math.max(box.min.z,Math.min(ap.z,box.max.z));
+        const dx=ap.x-nx2,dz=ap.z-nz2,dist=Math.sqrt(dx*dx+dz*dz);
+        if(dist<AVATAR_R&&dist>.01){const push=(AVATAR_R-dist)/dist;ap.x+=dx*push;ap.z+=dz*push;}
+    }
+    // Walking animation (bob + arm/leg swing)
+    const ud=avatar.userData;
+    if(moving){
+        ud.walkTime+=dt*8;
+        const sw=Math.sin(ud.walkTime)*.4;
+        ud.lLeg.rotation.x=sw;ud.rLeg.rotation.x=-sw;
+        ud.lArm.rotation.x=-sw*.6;ud.rArm.rotation.x=sw*.6;
+        avatar.position.y+=Math.abs(Math.sin(ud.walkTime*2))*.04; // subtle bob
+    }else{
+        ud.walkTime=0;
+        ud.lLeg.rotation.x=0;ud.rLeg.rotation.x=0;
+        ud.lArm.rotation.x=0;ud.rArm.rotation.x=0;
+    }
+    // NPC proximity check — show prompt
+    const npcDist=ap.distanceTo(npcGuide.position);
+    if(npcDist<4){
+        const q=QUESTS.find(q=>q.giver==="guide"&&q.status!=="done");
+        promptEl.innerHTML=`<strong>${npcGuide.userData.name}</strong> — Press <b>E</b> to talk`;
+        promptEl.classList.add("show");
+        state.nearNPC=true;
+    }else{
+        state.nearNPC=false;
+        // Car proximity — show re-enter prompt
+        if(state.carParkedAt&&ap.distanceTo(state.carParkedAt)<4){
+            promptEl.innerHTML=`Press <b>F</b> to enter car`;
+            promptEl.classList.add("show");
+        }else{
+            promptEl.classList.remove("show");
+        }
+    }
+    districtEl.textContent=getDistrict(ap.x,ap.z);
+    speedEl.textContent="On Foot";
+    audio.update(0,0);
+    // Walking camera — third person behind avatar
+    const avDir=new THREE.Vector3(-Math.sin(state.avatarAngle),0,-Math.cos(state.avatarAngle));
+    const camDist=6*zoomFactor,camH=3.5*zoomFactor;
+    const targetCam=ap.clone().add(new THREE.Vector3(-avDir.x*camDist,camH,-avDir.z*camDist));
+    camera.position.lerp(targetCam,1-Math.exp(-dt*5));
+    camera.lookAt(ap.x,ap.y+1.2,ap.z);
+    } // end walking mode
+
+    // ====== MODE: DIALOG ======
+    // (No movement, camera stays put)
+
+    // ====== SHARED: always runs ======
+    // Quest objective tracking
+    const activeQ=QUESTS.find(q=>q.status==="active");
+    if(activeQ&&activeQ.objective()&&activeQ.status==="active"){
+        activeQ.status="complete";
+        showToast("Quest objective complete! Return to "+npcGuide.userData.name+".");
+        updateNPCIcon();updateQuestHud();
+    }
+    // NPC idle animation — gentle bob + slow rotation
+    const npcD=npcGuide.userData;
+    npcGuide.position.y=npcD.baseY+Math.sin(t*1.5)*.06;
+    // Quest icon pulse
+    const iconS=.7+Math.sin(t*3)*.12;
+    npcD.iconGroup.children.forEach(sp=>{if(sp.visible)sp.scale.set(iconS,iconS,1);});
+    npcD.iconGroup.rotation.y=t*.5;
+    // Camera shake from crashes
     if(_camShake>.01){
         camera.position.x+=(Math.random()-.5)*_camShake*.35;
         camera.position.y+=(Math.random()-.5)*_camShake*.2;
         camera.position.z+=(Math.random()-.5)*_camShake*.35;
-        _camShake*=.85; // rapid decay
+        _camShake*=.85;
     }
+    // Season cycle
+    const si3=Math.floor(t/50)%4;if(si3!==state.seasonIndex){state.seasonIndex=si3;applySeason();}seasonEl.textContent=["Spring","Summer","Autumn","Winter"][si3];
+    // Sun, water, windmill, NPC cars, leaves
     const so=t*.04;sun.position.set(Math.cos(so)*100,80+Math.sin(so*.6)*20,Math.sin(so)*60);sunSphere.position.copy(sun.position.clone().setLength(170));
     waterMat.uniforms.uTime.value=t;bladeGroup.rotation.z+=dt*.5;
     if(window._npcTick)window._npcTick(t,dt);
-    for(let i=0;i<LEAF_N;i++){const i3=i*3;leafPos[i3]+=(Math.sin(t*.7+i*2.3)*.2+.03)*dt*12;leafPos[i3+1]-=(.6+Math.sin(t+i)*.15)*dt*2;leafPos[i3+2]+=Math.cos(t*.5+i*1.7)*.15*dt*12;if(leafPos[i3+1]<0){leafPos[i3+1]=22+Math.random()*12;leafPos[i3]=cp.x+(Math.random()-.5)*100;leafPos[i3+2]=cp.z+(Math.random()-.5)*100;}}leafGeo.attributes.position.needsUpdate=true;
-    // GIF textures — ImageDecoder (Chrome/Edge) or <img> fallback
-    const gf=Math.floor(t*10); // ~10fps for GIF frame advance
+    // Cam position for proximity checks
+    const cpRef=state.mode==="driving"?car.position:avatar.position;
+    for(let i=0;i<LEAF_N;i++){const i3=i*3;leafPos[i3]+=(Math.sin(t*.7+i*2.3)*.2+.03)*dt*12;leafPos[i3+1]-=(.6+Math.sin(t+i)*.15)*dt*2;leafPos[i3+2]+=Math.cos(t*.5+i*1.7)*.15*dt*12;if(leafPos[i3+1]<0){leafPos[i3+1]=22+Math.random()*12;leafPos[i3]=cpRef.x+(Math.random()-.5)*100;leafPos[i3+2]=cpRef.z+(Math.random()-.5)*100;}}leafGeo.attributes.position.needsUpdate=true;
+    // GIF textures
+    const gf=Math.floor(t*10);
     if(gf!==tick._lg){tick._lg=gf;
+        const parked2=state.mode==="driving"&&state.canInteract;
         billboards.forEach(b=>{
             const gd=gifData[b.gifIdx];if(!gd.loaded||gd._failed)return;
-            const d2=cp.distanceTo(b.group.position);
-            const isParkedHere=parked&&nearBB===b;
-            // --- PARKED: play animated GIF ---
+            const d2=cpRef.distanceTo(b.group.position);
+            const isParkedHere=parked2&&state.canInteract&&state.canInteract.t===b.project.t;
             if(isParkedHere){
-                // Method A: ImageDecoder (frame-perfect, Chrome/Edge)
                 if(gd._dec&&gd._fCount>0&&!gd._busy){
                     gd._busy=true;
                     gd._dec.decode({frameIndex:gd._fIdx}).then(result=>{
                         const c=gd.ctx;
                         c.drawImage(result.image,0,0,512,256);
                         result.image.close();
-                        // HUD overlays
                         c.fillStyle="rgba(0,0,0,.55)";c.fillRect(424,6,80,26);
                         c.fillStyle="#ff3344";c.beginPath();c.arc(438,19,5,0,Math.PI*2);c.fill();
                         c.fillStyle="#fff";c.font="bold 12px Segoe UI";c.fillText("LIVE",450,24);
@@ -1183,9 +1574,7 @@ function tick(){
                         gd._fIdx=(gd._fIdx+1)%gd._fCount;
                         gd._busy=false;
                     }).catch(()=>{gd._busy=false;gd._fIdx=0;});
-                }
-                // Method B: <img> fallback (Firefox/Safari — relies on browser GIF animation)
-                else if(!gd._dec&&gd.img){
+                }else if(!gd._dec&&gd.img){
                     const c=gd.ctx;
                     c.drawImage(gd.img,0,0,512,256);
                     c.fillStyle="rgba(0,0,0,.55)";c.fillRect(424,6,80,26);
@@ -1199,12 +1588,9 @@ function tick(){
                     c.fillStyle="#00ff88";c.font="bold 10px Segoe UI";c.fillText("PRESS E TO OPEN",390,245);
                     gd.tex.needsUpdate=true;gd.playing=true;
                 }
-            }
-            // --- NEARBY: show static poster ---
-            else if(d2<55){
+            }else if(d2<55){
                 if(gd.playing||!gd._hasStatic){
                     const c=gd.ctx;
-                    // Draw one frame as static background
                     if(gd.img&&gd.img.complete&&gd.img.naturalWidth>0)c.drawImage(gd.img,0,0,512,256);
                     else{c.fillStyle="#0a0a14";c.fillRect(0,0,512,256);}
                     c.fillStyle="rgba(0,0,10,.5)";c.fillRect(0,0,512,256);
@@ -1218,8 +1604,8 @@ function tick(){
             }
         });}
     grassMat.uniforms.uTime.value=t;
-    grassMat.uniforms.uCarPos.value.copy(cp);
-    grassMat.uniforms.uCarSpeed.value=state.speed;
+    grassMat.uniforms.uCarPos.value.copy(cpRef);
+    grassMat.uniforms.uCarSpeed.value=state.mode==="driving"?state.speed:0;
     grassMat.uniforms.uCamPos.value.copy(camera.position);
     if(composer)composer.render();else renderer.render(scene,camera);
     }catch(e){console.error("Loop:",e);}
