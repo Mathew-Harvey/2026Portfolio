@@ -930,20 +930,21 @@ fountain.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.4,12,12),new
 fountain.position.set(0,ROAD_Y,0);scene.add(fountain);
 // Only a small sphere collider for fountain
 staticCol.push(new THREE.Box3(new THREE.Vector3(-2,-.5,-2),new THREE.Vector3(2,6,2)));
+registerDestroyable(fountain,50,"prop");
 // District signs — dynamic (breakable)
-function mkSign(x,z,text,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,2.5,8),botw("#5a4a30","#2a2010"));m.position.y=1.25;return m;})());const cv=document.createElement("canvas");cv.width=256;cv.height=64;const ct=cv.getContext("2d");ct.fillStyle=color;ct.fillRect(0,0,256,64);ct.fillStyle="#fff";ct.font="bold 26px Segoe UI";ct.textAlign="center";ct.fillText(text,128,42);const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.45),new THREE.MeshStandardMaterial({map:tex,emissive:color,emissiveIntensity:.15}));m.position.y=2.6;return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);addDynamic(g);return g;}
+function mkSign(x,z,text,color){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,2.5,8),botw("#5a4a30","#2a2010"));m.position.y=1.25;return m;})());const cv=document.createElement("canvas");cv.width=256;cv.height=64;const ct=cv.getContext("2d");ct.fillStyle=color;ct.fillRect(0,0,256,64);ct.fillStyle="#fff";ct.font="bold 26px Segoe UI";ct.textAlign="center";ct.fillText(text,128,42);const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;g.add((()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.45),new THREE.MeshStandardMaterial({map:tex,emissive:color,emissiveIntensity:.15}));m.position.y=2.6;return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);addDynamic(g);registerDestroyable(g,10,"prop");return g;}
 // District signs — placed on sidewalks, not in road bands
 mkSign(10,-25,"PORT DISTRICT","#2a6a66");mkSign(-10,26,"CREATIVE VILLAGE","#8a4060");
 mkSign(24,10,"SCIENCE PARK","#3a4080");mkSign(-24,10,"TECH HUB","#8a6a20");
 // Lamp posts — NO collision, just decorative
-function mkLamp(x,z){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,4.2,8),botw("#383840","#1a1a20"));m.position.y=2.1;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.8),botw("#383840","#1a1a20"));m.position.set(0,3.9,.35);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),new THREE.MeshBasicMaterial({color:"#ffe8a0"}));m.position.set(0,3.6,.65);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);return g;}
+function mkLamp(x,z){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,4.2,8),botw("#383840","#1a1a20"));m.position.y=2.1;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.8),botw("#383840","#1a1a20"));m.position.set(0,3.9,.35);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),new THREE.MeshBasicMaterial({color:"#ffe8a0"}));m.position.set(0,3.6,.65);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);registerDestroyable(g,15,"prop");return g;}
 // Lamp posts at corners/edges of town center — 4+ units outside road bands
 [[14,14],[-14,14],[14,-14],[-14,-14],[20,14],[-20,14],[20,-14],[-20,-14],
  // Along connector road edges (connectors are x=-42..-34 and x=34..42)
  [-32,22],[-32,35],[-46,28],[-46,35],[32,22],[32,35],[46,28],[46,35]
 ].forEach(([x,z])=>mkLamp(x,z));
 // Benches — dynamic (breakable)
-function mkBench(x,z,r){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.08,.5),botw("#a08060","#504020"));m.position.y=.5;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.5,.06),botw("#907050","#483828"));m.position.set(0,.75,-.2);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);g.rotation.y=r||0;scene.add(g);addDynamic(g);return g;}
+function mkBench(x,z,r){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.08,.5),botw("#a08060","#504020"));m.position.y=.5;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.5,.06),botw("#907050","#483828"));m.position.set(0,.75,-.2);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);g.rotation.y=r||0;scene.add(g);addDynamic(g);registerDestroyable(g,12,"prop");return g;}
 // Benches in town center quadrants — outside road bands (x=-8..8, z=-8..8)
 [[-12,10,0],[12,10,Math.PI],[-12,-10,0],[12,-10,Math.PI],[18,18,Math.PI/4],[-18,18,-Math.PI/4]].forEach(([x,z,r])=>mkBench(x,z,r));
 
@@ -955,8 +956,8 @@ for(let dz=-63;dz<=-47;dz+=2){
     plank.position.set(0,.21,dz);scene.add(plank);
 }
 // Dock support pilings (visible from water)
-for(let x=-55;x<=55;x+=8){const p=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,4,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.8,-64);scene.add(p);}
-for(let x=-55;x<=55;x+=12){const p=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,4,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.8,-46);scene.add(p);}
+for(let x=-55;x<=55;x+=8){const p=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,4,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.8,-64);scene.add(p);registerDestroyable(p,8,"prop");}
+for(let x=-55;x<=55;x+=12){const p=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,4,8),botw("#6a4a28","#301a08"));p.position.set(x,-1.8,-46);scene.add(p);registerDestroyable(p,8,"prop");}
 // ── Dock railings ──
 const railMat=botw("#5a5a60","#2a2a30");
 const railPostMat=botw("#4a4a50","#222228");
@@ -964,41 +965,41 @@ const railPostMat=botw("#4a4a50","#222228");
 for(let x=-58;x<=58;x+=4){
     // Post
     const post=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,1.2,6),railPostMat);
-    post.position.set(x,.8,-64.5);scene.add(post);
+    post.position.set(x,.8,-64.5);scene.add(post);registerDestroyable(post,5,"prop");
 }
 // South top rail
-const sRail=new THREE.Mesh(new THREE.BoxGeometry(118,.08,.08),railMat);sRail.position.set(0,1.35,-64.5);scene.add(sRail);
+const sRail=new THREE.Mesh(new THREE.BoxGeometry(118,.08,.08),railMat);sRail.position.set(0,1.35,-64.5);scene.add(sRail);registerDestroyable(sRail,10,"prop");
 // South mid rail
-const sMidRail=new THREE.Mesh(new THREE.BoxGeometry(118,.06,.06),railMat);sMidRail.position.set(0,.85,-64.5);scene.add(sMidRail);
+const sMidRail=new THREE.Mesh(new THREE.BoxGeometry(118,.06,.06),railMat);sMidRail.position.set(0,.85,-64.5);scene.add(sMidRail);registerDestroyable(sMidRail,10,"prop");
 // East railing (x=60)
 for(let z=-63;z<=-47;z+=4){
     const post=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,1.2,6),railPostMat);
-    post.position.set(59.5,.8,z);scene.add(post);
+    post.position.set(59.5,.8,z);scene.add(post);registerDestroyable(post,5,"prop");
 }
-const eRail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,18),railMat);eRail.position.set(59.5,1.35,-55);scene.add(eRail);
-const eMidRail=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,18),railMat);eMidRail.position.set(59.5,.85,-55);scene.add(eMidRail);
+const eRail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,18),railMat);eRail.position.set(59.5,1.35,-55);scene.add(eRail);registerDestroyable(eRail,10,"prop");
+const eMidRail=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,18),railMat);eMidRail.position.set(59.5,.85,-55);scene.add(eMidRail);registerDestroyable(eMidRail,10,"prop");
 // West railing (x=-60)
 for(let z=-63;z<=-47;z+=4){
     const post=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,1.2,6),railPostMat);
-    post.position.set(-59.5,.8,z);scene.add(post);
+    post.position.set(-59.5,.8,z);scene.add(post);registerDestroyable(post,5,"prop");
 }
-const wRail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,18),railMat);wRail.position.set(-59.5,1.35,-55);scene.add(wRail);
-const wMidRail=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,18),railMat);wMidRail.position.set(-59.5,.85,-55);scene.add(wMidRail);
+const wRail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,18),railMat);wRail.position.set(-59.5,1.35,-55);scene.add(wRail);registerDestroyable(wRail,10,"prop");
+const wMidRail=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,18),railMat);wMidRail.position.set(-59.5,.85,-55);scene.add(wMidRail);registerDestroyable(wMidRail,10,"prop");
 // Bollards (mooring posts) along dock
 const bollardMat=botw("#4a4a50","#222228");
 for(let x=-48;x<=48;x+=16){
     const boll=new THREE.Group();
     boll.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,.7,8),bollardMat);m.position.y=.55;return m;})());
     boll.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.1,8),bollardMat);m.position.y=.9;return m;})());
-    boll.position.set(x,.0,-63.5);scene.add(boll);
+    boll.position.set(x,.0,-63.5);scene.add(boll);registerDestroyable(boll,5,"prop");
 }
-const lh=new THREE.Group();lh.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.7,14,12),botw("#e0dcd0","#808078"));m.position.y=7;return m;})());lh.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,2.5,12),botw("#cc2830","#601010"));m.position.y=9;return m;})());lh.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.5,12,12),new THREE.MeshBasicMaterial({color:"#ffee60"}));m.position.y=16;return m;})());lh.position.set(-62,terrainHeight(-62,-55),-55);scene.add(lh);addStatic(lh,.5);
+const lh=new THREE.Group();lh.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.7,14,12),botw("#e0dcd0","#808078"));m.position.y=7;return m;})());lh.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,2.5,12),botw("#cc2830","#601010"));m.position.y=9;return m;})());lh.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.5,12,12),new THREE.MeshBasicMaterial({color:"#ffee60"}));m.position.y=16;return m;})());lh.position.set(-62,terrainHeight(-62,-55),-55);scene.add(lh);addStatic(lh,.5);registerDestroyable(lh,80,"building");
 const contC=["#c44030","#3060a0","#d08030","#309050","#a040a0","#c0a030"];
-for(let i=0;i<12;i++){const c=new THREE.Mesh(new THREE.BoxGeometry(3.2,2,2),botw(contC[i%6]));c.position.set(48+(i%4)*4,.8,-55-Math.floor(i/4)*2.6);c.rotation.y=.08*(i%3);scene.add(c);addStatic(c);}
+for(let i=0;i<12;i++){const c=new THREE.Mesh(new THREE.BoxGeometry(3.2,2,2),botw(contC[i%6]));c.position.set(48+(i%4)*4,.8,-55-Math.floor(i/4)*2.6);c.rotation.y=.08*(i%3);scene.add(c);addStatic(c);registerDestroyable(c,25,"prop");}
 // Dynamic crates and barrels — these fly when hit
 const crateMat=botw("#8a7048","#4a3820"),barrelMat=botw("#6a5838","#3a2818");
-[[-40,-52],[-37,-53],[-34,-51],[52,-48],[55,-49],[57,-47],[-42,-48],[-30,-50],[45,-52],[50,-46]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),crateMat);cr.position.set(x,.3+Math.max(terrainHeight(x,z),ROAD_Y),z);cr.rotation.y=Math.random()*.5;scene.add(cr);addDynamic(cr);});
-[[-38,-54],[54,-50],[58,-48],[-32,-52],[48,-47]].forEach(([x,z])=>{const br=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,1.1,10),barrelMat);br.position.set(x,.35+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(br);addDynamic(br);});
+[[-40,-52],[-37,-53],[-34,-51],[52,-48],[55,-49],[57,-47],[-42,-48],[-30,-50],[45,-52],[50,-46]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),crateMat);cr.position.set(x,.3+Math.max(terrainHeight(x,z),ROAD_Y),z);cr.rotation.y=Math.random()*.5;scene.add(cr);addDynamic(cr);registerDestroyable(cr,8,"prop");});
+[[-38,-54],[54,-50],[58,-48],[-32,-52],[48,-47]].forEach(([x,z])=>{const br=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,1.1,10),barrelMat);br.position.set(x,.35+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(br);addDynamic(br);registerDestroyable(br,8,"prop");});
 // Crane
 const crane=new THREE.Group();crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.8,16,.8),botw("#d08030","#704010"));m.position.y=8;return m;})());crane.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(12,.6,.6),botw("#d08030","#704010"));m.position.set(4,15.5,0);return m;})());crane.position.set(62,terrainHeight(62,-55),-55);scene.add(crane);addStatic(crane,.3);registerDestroyable(crane,60,"building");
 
@@ -1096,7 +1097,7 @@ const windmill=new THREE.Group();windmill.add((()=>{const m=new THREE.Mesh(new T
 const bladeGroup=new THREE.Group();for(let i=0;i<4;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.3,3.5,.05),botw("#d0c8b0","#706850"));bl.position.set(0,1.75,0);const pv=new THREE.Group();pv.add(bl);pv.rotation.z=i*Math.PI/2;bladeGroup.add(pv);}
 bladeGroup.position.set(0,8,1.2);windmill.add(bladeGroup);windmill.position.set(42,terrainHeight(42,72),72);scene.add(windmill);addStatic(windmill,.5);registerDestroyable(windmill,50,"building");
 // Garden props clear of roads
-[[-24,36],[16,36],[28,36],[-18,66],[18,66],[44,66]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),botw("#7a6040","#3a2818"));cr.position.set(x,.2+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(cr);addDynamic(cr);});
+[[-24,36],[16,36],[28,36],[-18,66],[18,66],[44,66]].forEach(([x,z])=>{const cr=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),botw("#7a6040","#3a2818"));cr.position.set(x,.2+Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(cr);addDynamic(cr);registerDestroyable(cr,8,"prop");});
 
 /* ====== MOUNTAINS ====== */
 const mtMats=[botw("#707078","#383840"),botw("#7a7a82","#404048"),botw("#686870","#303038")];
@@ -2310,6 +2311,10 @@ function destroyObject(dest){
         const b=staticCol[i];
         if(b.intersectsBox(meshBox)||b.containsPoint(pos)){staticCol.splice(i,1);break;}
     }
+    // Remove from dynCol too (benches, signs, crates, barrels, etc.)
+    for(let i=dynCol.length-1;i>=0;i--){
+        if(dynCol[i].mesh===dest.mesh){dynCol.splice(i,1);break;}
+    }
     // Track destruction for achievements
     state.destroyCount++;
     if(dest.type==="building")state.destroyBuildings++;
@@ -2510,6 +2515,90 @@ function destroyObject(dest){
                 }
             },
             finish(a){a.mesh.visible=false;scene.remove(a.expLight);
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
+            }
+        });
+
+    }else if(dest.type==="prop"){
+        // PROP SMASH: pops upward, spins, debris burst, fades quickly
+        spawnDebris(pos,"#8a7a60",8);
+        spawnDustCloud(pos,"#b0a890",4,1.5);
+        spawnSparks(pos,4);
+        audio.chime(300,.08);setTimeout(()=>audio.chime(180,.06),100);
+        _camShake=Math.max(_camShake,.15);
+        const origY=dest.mesh.position.y;
+        const spinDir=(Math.random()-.5)*12;
+        const launchX=(Math.random()-.5)*3;
+        const launchZ=(Math.random()-.5)*3;
+        _destructAnims.push({
+            mesh:dest.mesh,elapsed:0,duration:1.2,origY,spinDir,launchX,launchZ,
+            update(a,dt){
+                const t=Math.min(a.elapsed/a.duration,1);
+                // Pop upward then fall
+                const arc=Math.sin(t*Math.PI)*2.5;
+                a.mesh.position.y=a.origY+arc*(1-t);
+                a.mesh.position.x+=a.launchX*dt;
+                a.mesh.position.z+=a.launchZ*dt;
+                // Spin wildly
+                a.mesh.rotation.x+=a.spinDir*dt;
+                a.mesh.rotation.z+=a.spinDir*.7*dt;
+                // Shrink
+                const shrink=Math.max(1-t*t,.01);
+                if(!a._origScale)a._origScale=a.mesh.scale.clone();
+                a.mesh.scale.copy(a._origScale).multiplyScalar(shrink);
+                if(t>.3){
+                    a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material){
+                        if(!ch.material._origOpacity){ch.material._origOpacity=ch.material.opacity;ch.material.transparent=true;}
+                        ch.material.opacity=ch.material._origOpacity*(1-((t-.3)/.7));
+                    }});
+                }
+            },
+            finish(a){a.mesh.visible=false;
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
+            }
+        });
+
+    }else if(dest.type==="tree"){
+        // TREE TIMBER: leans to one side and crashes down with leaves scattering
+        spawnDebris(pos,"#4a8a3a",10); // green leaf debris
+        spawnDebris(pos,"#7d5a38",4);  // bark chunks
+        spawnDustCloud(new THREE.Vector3(pos.x,pos.y+1,pos.z),"#8a9a60",6,2);
+        audio.chime(120,.1);setTimeout(()=>audio.chime(60,.12),500);setTimeout(()=>audio.chime(40,.08),900);
+        _camShake=Math.max(_camShake,.25);
+        const fallDir=Math.random()>.5?1:-1;
+        const fallAxis=Math.random()>.5?0:1; // 0=Z, 1=X
+        const origRotX=dest.mesh.rotation.x;
+        const origRotZ=dest.mesh.rotation.z;
+        _destructAnims.push({
+            mesh:dest.mesh,elapsed:0,duration:2.0,fallDir,fallAxis,origRotX,origRotZ,impacted:false,
+            update(a,dt){
+                const t=Math.min(a.elapsed/a.duration,1);
+                // Slow start, accelerating fall like timber
+                const angle=a.fallDir*(Math.PI/2)*Math.min(t*t*2,1);
+                if(a.fallAxis===0){
+                    a.mesh.rotation.z=a.origRotZ+angle;
+                }else{
+                    a.mesh.rotation.x=a.origRotX+angle;
+                }
+                // Ground impact at ~70%
+                if(t>.55&&!a.impacted){
+                    a.impacted=true;
+                    const impPos=new THREE.Vector3();a.mesh.getWorldPosition(impPos);
+                    spawnDebris(impPos,"#4a8a3a",6);
+                    spawnDustCloud(impPos,"#889870",3,2.5);
+                    audio.chime(50,.1);
+                    _camShake=Math.max(_camShake,.15);
+                }
+                // Fade out after hitting ground
+                if(t>.65){
+                    const fade=(t-.65)/0.35;
+                    a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material){
+                        if(!ch.material._origOpacity){ch.material._origOpacity=ch.material.opacity;ch.material.transparent=true;}
+                        ch.material.opacity=ch.material._origOpacity*(1-fade);
+                    }});
+                }
+            },
+            finish(a){a.mesh.visible=false;
                 a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
             }
         });
@@ -3496,12 +3585,12 @@ if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pac
         ];
         // On mobile only place every 3rd light to reduce draw calls
         const _lightArr=IS_MOBILE?_lights.filter((_,i)=>i%3===0):_lights;
-        _lightArr.forEach(([lx,lz])=>placeGLB(bldgs.Light,lx,lz,4.5,Math.random()*Math.PI*2));}
+        _lightArr.forEach(([lx,lz])=>{const m=placeGLB(bldgs.Light,lx,lz,4.5,Math.random()*Math.PI*2);registerDestroyable(m,15,"prop");});}
     // Bins near benches/intersections — all clear of roads
     if(bldgs.Bin){
         [[12,12],[-12,12],[12,-12],[-12,-12],[20,20],[-20,-20],
          [22,-33],[-22,-33],[22,43],[-22,43],[56,20],[-56,20]
-        ].forEach(([bx,bz])=>placeGLB(bldgs.Bin,bx,bz,1.2,Math.random()*Math.PI*2));}
+        ].forEach(([bx,bz])=>{const m=placeGLB(bldgs.Bin,bx,bz,1.2,Math.random()*Math.PI*2);registerDestroyable(m,8,"prop");});}
     console.log('Buildings pack loaded:',Object.keys(bldgs).join(', '));
 },undefined,e=>console.warn('Buildings GLB failed:',e));
 
@@ -3643,17 +3732,17 @@ if(PERF.extraGltf)glbLoader.load('models/trees/realistic_trees_collection.glb',g
         const tIdx=Math.floor(Math.random()*treeTypes.length);
         const isBush=treeTypes[tIdx].name.includes('Bush');
         const targetH=isBush?1.5+Math.random()*2:5+Math.random()*6;
-        placeGLB(treeTypes[tIdx],x,z,targetH,Math.random()*Math.PI*2);
+        const tm=placeGLB(treeTypes[tIdx],x,z,targetH,Math.random()*Math.PI*2);registerDestroyable(tm,isBush?10:25,"tree");
         placed++;}
     // Line trees along road edges for avenues — skip any spot ON a crossing road
     for(let z2=-55;z2<70;z2+=12){
         if(Math.abs(z2)<10)continue; // skip main intersection
-        if(roadDist(10,z2)>=1) placeGLB(treeTypes[0%treeTypes.length],10,z2,7+Math.random()*3,Math.random()*6);
-        if(roadDist(-10,z2)>=1) placeGLB(treeTypes[1%treeTypes.length],-10,z2,7+Math.random()*3,Math.random()*6);}
+        if(roadDist(10,z2)>=1){const m=placeGLB(treeTypes[0%treeTypes.length],10,z2,7+Math.random()*3,Math.random()*6);registerDestroyable(m,25,"tree");}
+        if(roadDist(-10,z2)>=1){const m=placeGLB(treeTypes[1%treeTypes.length],-10,z2,7+Math.random()*3,Math.random()*6);registerDestroyable(m,25,"tree");}}
     for(let x2=-55;x2<55;x2+=12){
         if(Math.abs(x2)<10)continue;
-        if(roadDist(x2,10)>=1) placeGLB(treeTypes[2%treeTypes.length],x2,10,6+Math.random()*3,Math.random()*6);
-        if(roadDist(x2,-10)>=1) placeGLB(treeTypes[3%treeTypes.length],x2,-10,6+Math.random()*3,Math.random()*6);}
+        if(roadDist(x2,10)>=1){const m=placeGLB(treeTypes[2%treeTypes.length],x2,10,6+Math.random()*3,Math.random()*6);registerDestroyable(m,25,"tree");}
+        if(roadDist(x2,-10)>=1){const m=placeGLB(treeTypes[3%treeTypes.length],x2,-10,6+Math.random()*3,Math.random()*6);registerDestroyable(m,25,"tree");}}
     console.log(`Trees: ${treeTypes.length} types, ${placed} scattered + avenue trees`);
 },undefined,e=>console.warn('Trees GLB failed:',e));
 
