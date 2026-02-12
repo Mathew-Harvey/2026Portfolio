@@ -359,14 +359,46 @@ function bbRot(p){
 }
 
 const ACHIEVEMENTS=[
+    // ── Driving & Exploration ──
     {id:"ignite",title:"Ignition",desc:"Start the engine.",icon:"\u{1F525}"},
     {id:"first",title:"Explorer",desc:"Visit your first project.",icon:"\u{1F9ED}"},
     {id:"port",title:"Harbor Master",desc:"All maritime projects.",icon:"\u{2693}"},
     {id:"science",title:"Scientist",desc:"All simulation projects.",icon:"\u{1F52C}"},
     {id:"all",title:"Portfolio Complete",desc:"Visit every project.",icon:"\u{1F3C6}"},
     {id:"speed",title:"JDM Spirit",desc:"Hit 120 km/h.",icon:"\u{1F3CE}"},
+    {id:"speed2",title:"Speed Demon",desc:"Hit 180 km/h.",icon:"\u{26A1}"},
     {id:"collector",title:"Treasure Hunter",desc:"Collect all orbs.",icon:"\u{1F48E}"},
     {id:"crash",title:"Demolition Derby",desc:"Send 10 objects flying.",icon:"\u{1F4A5}"},
+    {id:"hotlap",title:"Track Star",desc:"Complete the City Circuit.",icon:"\u{1F3C1}"},
+    {id:"two_wheels",title:"Garage Collector",desc:"Unlock a second car.",icon:"\u{1F697}"},
+    {id:"all_cars",title:"Car Enthusiast",desc:"Unlock all vehicles.",icon:"\u{1F3CE}"},
+    {id:"walker",title:"On Foot",desc:"Exit the car for the first time.",icon:"\u{1F6B6}"},
+    {id:"districts",title:"Sightseer",desc:"Visit all 5 districts.",icon:"\u{1F30D}"},
+    {id:"quest1",title:"Helpful Citizen",desc:"Complete your first quest.",icon:"\u{2705}"},
+    {id:"quests_all",title:"Quest Master",desc:"Complete every quest.",icon:"\u{1F451}"},
+    {id:"distance",title:"Road Warrior",desc:"Drive 10 km total.",icon:"\u{1F6E3}"},
+    {id:"drift",title:"Drift King",desc:"Slide sideways for 3 seconds.",icon:"\u{1F4A8}"},
+    // ── Combat & Destruction ──
+    {id:"armed",title:"Locked & Loaded",desc:"Equip the SMG.",icon:"\u{1F52B}"},
+    {id:"first_kill",title:"First Blood",desc:"Destroy your first object.",icon:"\u{1F4A2}"},
+    {id:"build5",title:"Wrecking Ball",desc:"Destroy 5 buildings.",icon:"\u{1F3DA}"},
+    {id:"build_all",title:"Urban Renewal",desc:"Destroy every building.",icon:"\u{1F3D7}"},
+    {id:"car5",title:"Car Crusher",desc:"Destroy 5 cars.",icon:"\u{1F698}"},
+    {id:"bb5",title:"Ad Blocker",desc:"Destroy 5 billboards.",icon:"\u{1F4FA}"},
+    {id:"ship",title:"Ship Sinker",desc:"Sink the frigate.",icon:"\u{1F6A2}"},
+    {id:"destroy10",title:"Mayhem",desc:"Destroy 10 things.",icon:"\u{1F525}"},
+    {id:"destroy25",title:"Rampage",desc:"Destroy 25 things.",icon:"\u{1F4A5}"},
+    {id:"destroy_all",title:"Total Annihilation",desc:"Destroy EVERYTHING.",icon:"\u{2622}"},
+    {id:"rampage5",title:"Unstoppable",desc:"Destroy 5 objects within 30 seconds.",icon:"\u{26A1}"},
+    {id:"wizard_warn",title:"Playing With Fire",desc:"Get warned by the Wizard.",icon:"\u{26A0}"},
+    {id:"died",title:"Oops",desc:"Die to the Wizard's fireball.",icon:"\u{1F480}"},
+    {id:"phoenix",title:"Phoenix",desc:"Die and respawn 3 times.",icon:"\u{1F426}"},
+    {id:"pacifist",title:"Pacifist",desc:"Complete all quests without destroying anything.",icon:"\u{262E}"},
+    // ── Hidden / Fun ──
+    {id:"orbhalf",title:"Halfway There",desc:"Collect half the orbs.",icon:"\u{2728}"},
+    {id:"night",title:"Night Owl",desc:"Drive for 5 real minutes.",icon:"\u{1F319}"},
+    {id:"crash50",title:"Chaos Agent",desc:"Send 50 objects flying.",icon:"\u{1F32A}"},
+    {id:"mountain",title:"Mountaineer",desc:"Reach the highest terrain point.",icon:"\u{26F0}"},
 ];
 
 /* ====== STATE ====== */
@@ -384,7 +416,16 @@ const state={speed:0,maxSpeed:0,canInteract:null,visited:new Set(),achievements:
     // Gun & combat
     hasGun:false,gunEquipped:false,
     // Wizard protection
-    wizardWarnings:0,isDead:false};
+    wizardWarnings:0,isDead:false,
+    // Destruction tracking (non-persistent — resets on refresh)
+    destroyCount:0,destroyBuildings:0,destroyCars:0,destroyBillboards:0,destroyShips:0,
+    destroyTimestamps:[], // for rampage detection
+    // Driving tracking
+    totalDistance:0,driftTime:0,playTime:0,
+    // Death tracking
+    deathCount:0,
+    // Districts visited
+    visitedDistricts:new Set()};
 function _saveGarage(){localStorage.setItem("portfolioGarage",JSON.stringify({unlockedCars:state.unlockedCars,activeCar:state.activeCar}));}
 const QUESTS=[{
     id:"scout",title:"Portfolio Scout",giver:"guide",
@@ -478,7 +519,7 @@ function hash2(a,b){const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.f
 function ss(t){return t*t*(3-2*t);}function vn(x,z){const x0=Math.floor(x),z0=Math.floor(z),tx=ss(x-x0),tz=ss(z-z0);const a=hash2(x0,z0)+(hash2(x0+1,z0)-hash2(x0,z0))*tx;const b=hash2(x0,z0+1)+(hash2(x0+1,z0+1)-hash2(x0,z0+1))*tx;return a+(b-a)*tz;}
 function fbm(x,z){let a=1,f=1,s=0,n=0;for(let i=0;i<5;i++){s+=vn(x*f,z*f)*a;n+=a;a*=.5;f*=2.1;}return s/n;}
 const ROAD_SEGS=[
-    {x1:0,z1:-68,x2:0,z2:75,hw:8},{x1:-88,z1:0,x2:88,z2:0,hw:8},        // Main boulevards 16 wide
+    {x1:0,z1:-68,x2:0,z2:75,hw:8},{x1:-75,z1:0,x2:75,z2:0,hw:8},        // Main boulevards 16 wide
     {x1:-55,z1:-40,x2:55,z2:-40,hw:6},{x1:-48,z1:50,x2:48,z2:50,hw:6},   // Port & Creative roads 12 wide
     {x1:-50,z1:-22,x2:-50,z2:22,hw:5},{x1:50,z1:-22,x2:50,z2:22,hw:5},   // Tech & Science entries 10 wide
     {x1:-38,z1:-40,x2:-38,z2:50,hw:4},{x1:38,z1:-40,x2:38,z2:50,hw:4},   // Side connectors 8 wide
@@ -503,8 +544,14 @@ const roadMat=new THREE.MeshStandardMaterial({color:"#5a6050",roughness:.92}),li
 function addRoad(cx,cz,w,d){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),roadMat);m.rotation.x=-Math.PI/2;m.position.set(cx,ROAD_Y+.02,cz);scene.add(m);
 const hz=w>d,len=hz?w:d;for(let i=-len/2+3;i<len/2;i+=6){const mk=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.22),lineMat);mk.rotation.x=-Math.PI/2;
 if(hz)mk.position.set(cx-len/2+i+3,ROAD_Y+.04,cz);else{mk.rotation.z=Math.PI/2;mk.position.set(cx,ROAD_Y+.04,cz-len/2+i+3);}scene.add(mk);}}
-addRoad(0,3.5,16,143);addRoad(0,0,176,16);addRoad(0,-40,110,12);addRoad(0,50,96,12);
+addRoad(0,3.5,16,143);addRoad(0,0,150,16);addRoad(0,-40,110,12);addRoad(0,50,96,12);
 addRoad(-50,0,10,44);addRoad(50,0,10,44);addRoad(-38,5,8,90);addRoad(38,5,8,90);
+// Road-end roundabouts — small circular pads where roads terminate
+function addRoundabout(x,z,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r||5,24),roadMat);m.rotation.x=-Math.PI/2;m.position.set(x,ROAD_Y+.02,z);scene.add(m);}
+addRoundabout(-75,0,7);addRoundabout(75,0,7); // E-W endpoints
+addRoundabout(0,75,8);addRoundabout(0,-68,8); // N-S endpoints
+addRoundabout(-48,50,5);addRoundabout(48,50,5); // Creative road endpoints
+addRoundabout(-55,-40,5);addRoundabout(55,-40,5); // Port road endpoints
 
 /* ====== GRASS — always visible, reacts to car + wind ====== */
 const GRASS_N=PERF.grassBlades;
@@ -737,8 +784,11 @@ mkSign(10,-25,"PORT DISTRICT","#2a6a66");mkSign(-10,26,"CREATIVE VILLAGE","#8a40
 mkSign(24,10,"SCIENCE PARK","#3a4080");mkSign(-24,10,"TECH HUB","#8a6a20");
 // Lamp posts — NO collision, just decorative
 function mkLamp(x,z){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,4.2,8),botw("#383840","#1a1a20"));m.position.y=2.1;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.8),botw("#383840","#1a1a20"));m.position.set(0,3.9,.35);return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),new THREE.MeshBasicMaterial({color:"#ffe8a0"}));m.position.set(0,3.6,.65);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);scene.add(g);return g;}
-// Lamp posts at corners of town center — all outside road bands (x=-8..8, z=-8..8)
-[[11,11],[-11,11],[11,-11],[-11,-11],[15,11],[-15,11],[15,-11],[-15,-11]].forEach(([x,z])=>mkLamp(x,z));
+// Lamp posts at corners/edges of town center — outside road bands (x=-8..8, z=-8..8)
+[[12,12],[-12,12],[12,-12],[-12,-12],[18,12],[-18,12],[18,-12],[-18,-12],
+ // Along connector road edges
+ [-33,20],[-33,35],[-43,20],[-43,35],[33,20],[33,35],[43,20],[43,35]
+].forEach(([x,z])=>mkLamp(x,z));
 // Benches — dynamic (breakable)
 function mkBench(x,z,r){const g=new THREE.Group();g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.08,.5),botw("#a08060","#504020"));m.position.y=.5;return m;})());g.add((()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.6,.5,.06),botw("#907050","#483828"));m.position.set(0,.75,-.2);return m;})());g.position.set(x,Math.max(terrainHeight(x,z),ROAD_Y),z);g.rotation.y=r||0;scene.add(g);addDynamic(g);return g;}
 // Benches in town center quadrants — outside road bands (x=-8..8, z=-8..8)
@@ -1295,6 +1345,13 @@ window._completeQuest=function(id){
     dialogEl.classList.remove("show");
     state.mode="walking";
     updateModeBadge();updateQuestTracker();updateNPCIcon();
+    unlock("quest1");
+    if(id==="hotlap")unlock("hotlap");
+    if(QUESTS.every(q2=>q2.status==="done")){unlock("quests_all");
+        // Pacifist: all quests done and nothing destroyed
+        if(state.destroyCount===0)unlock("pacifist");
+    }
+    if(state.unlockedCars.length>=2)unlock("two_wheels");
     // Fanfare animation!
     showQuestFanfare(q);
     if(id==="hotlap"){
@@ -1527,8 +1584,12 @@ const _tracerLine=new THREE.Line(_tracerGeo,new THREE.LineBasicMaterial({color:0
 _tracerLine.visible=false;scene.add(_tracerLine);
 let _tracerTimer=0;
 
-// Destruction particle system (simple instanced spheres)
+// ====== DESTRUCTION PARTICLE + ANIMATION SYSTEM ======
 const _debrisPool=[];
+const _dustPool=[];
+const _destructAnims=[];
+
+// Generic debris — small chunks that fly out and tumble
 function spawnDebris(pos,color,count){
     for(let i=0;i<count;i++){
         const size=.15+Math.random()*.35;
@@ -1541,16 +1602,157 @@ function spawnDebris(pos,color,count){
         _debrisPool.push({mesh:m,vel,life:2+Math.random()});
     }
 }
+
+// Dust/smoke cloud — soft expanding spheres that fade out
+function spawnDustCloud(pos,color,count,spread){
+    for(let i=0;i<count;i++){
+        const size=.8+Math.random()*1.5;
+        const geo=new THREE.SphereGeometry(size,6,6);
+        const mat=new THREE.MeshBasicMaterial({color:color||"#c0b8a0",transparent:true,opacity:.6,depthWrite:false});
+        const m=new THREE.Mesh(geo,mat);
+        m.position.copy(pos);
+        m.position.x+=(Math.random()-.5)*(spread||3);
+        m.position.y+=Math.random()*2;
+        m.position.z+=(Math.random()-.5)*(spread||3);
+        const vel=new THREE.Vector3((Math.random()-.5)*3,1.5+Math.random()*2,(Math.random()-.5)*3);
+        scene.add(m);
+        _dustPool.push({mesh:m,mat,vel,life:1.5+Math.random(),maxLife:1.5+Math.random(),growRate:.5+Math.random()*.5});
+    }
+}
+
+// Fire particles — bright orange/yellow sparks that rise and fade
+function spawnFire(pos,count){
+    const fireColors=["#ff6600","#ff9900","#ffcc00","#ff3300","#ffaa22"];
+    for(let i=0;i<count;i++){
+        const size=.2+Math.random()*.4;
+        const geo=new THREE.SphereGeometry(size,5,5);
+        const col=fireColors[Math.floor(Math.random()*fireColors.length)];
+        const mat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.9});
+        const m=new THREE.Mesh(geo,mat);
+        m.position.copy(pos);m.position.x+=(Math.random()-.5)*1.5;m.position.z+=(Math.random()-.5)*1.5;
+        const vel=new THREE.Vector3((Math.random()-.5)*5,4+Math.random()*8,(Math.random()-.5)*5);
+        scene.add(m);
+        _debrisPool.push({mesh:m,vel,life:1+Math.random()*.8,isFire:true,mat});
+    }
+}
+
+// Water splash — blue/white particles that arc outward
+function spawnSplash(pos,count){
+    const splashColors=["#88bbee","#aaddff","#ffffff","#6699cc"];
+    for(let i=0;i<count;i++){
+        const size=.3+Math.random()*.5;
+        const geo=new THREE.SphereGeometry(size,5,5);
+        const col=splashColors[Math.floor(Math.random()*splashColors.length)];
+        const mat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.7});
+        const m=new THREE.Mesh(geo,mat);
+        m.position.copy(pos);m.position.x+=(Math.random()-.5)*4;m.position.z+=(Math.random()-.5)*4;m.position.y=ROAD_Y+.2;
+        const vel=new THREE.Vector3((Math.random()-.5)*10,6+Math.random()*10,(Math.random()-.5)*10);
+        scene.add(m);
+        _debrisPool.push({mesh:m,vel,life:1.5+Math.random(),isSplash:true,mat});
+    }
+}
+
+// Spark shower — tiny bright yellow/white fragments
+function spawnSparks(pos,count){
+    for(let i=0;i<count;i++){
+        const size=.05+Math.random()*.12;
+        const geo=new THREE.BoxGeometry(size,size,size*3);
+        const mat=new THREE.MeshBasicMaterial({color:Math.random()>.5?"#ffee88":"#ffffff",transparent:true,opacity:1});
+        const m=new THREE.Mesh(geo,mat);
+        m.position.copy(pos);m.position.x+=(Math.random()-.5);m.position.z+=(Math.random()-.5);
+        const vel=new THREE.Vector3((Math.random()-.5)*12,2+Math.random()*6,(Math.random()-.5)*12);
+        scene.add(m);
+        _debrisPool.push({mesh:m,vel,life:.6+Math.random()*.5,isSpark:true,mat});
+    }
+}
+
+// Building collapse — large rectangular chunks that fall like rubble
+function spawnBuildingRubble(pos,meshBox){
+    const w=meshBox.max.x-meshBox.min.x,h=meshBox.max.y-meshBox.min.y,d=meshBox.max.z-meshBox.min.z;
+    const rubbleColors=["#8a8a80","#706860","#9a9080","#605850","#b0a890"];
+    const n=8+Math.floor(Math.random()*8);
+    for(let i=0;i<n;i++){
+        const sx=.3+Math.random()*Math.min(w*.3,2),sy=.3+Math.random()*Math.min(h*.2,1.5),sz=.3+Math.random()*Math.min(d*.3,2);
+        const geo=new THREE.BoxGeometry(sx,sy,sz);
+        const col=rubbleColors[Math.floor(Math.random()*rubbleColors.length)];
+        const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:.9}));
+        m.position.set(
+            meshBox.min.x+Math.random()*w,
+            meshBox.min.y+Math.random()*h,
+            meshBox.min.z+Math.random()*d
+        );
+        const vel=new THREE.Vector3((Math.random()-.5)*4,1+Math.random()*3,(Math.random()-.5)*4);
+        const rotVel=new THREE.Vector3((Math.random()-.5)*3,(Math.random()-.5)*2,(Math.random()-.5)*3);
+        scene.add(m);
+        _debrisPool.push({mesh:m,vel,life:3+Math.random()*2,rotVel});
+    }
+}
+
+// Car parts — doors, wheels, hood pieces
+function spawnCarParts(pos){
+    const partDefs=[
+        {geo:new THREE.BoxGeometry(.8,.6,.05),color:"#556677",offy:.5},  // door
+        {geo:new THREE.BoxGeometry(.8,.05,.6),color:"#445566",offy:.8},  // hood
+        {geo:new THREE.CylinderGeometry(.25,.25,.15,8),color:"#222222",offy:.2}, // wheel
+        {geo:new THREE.CylinderGeometry(.25,.25,.15,8),color:"#222222",offy:.2}, // wheel
+        {geo:new THREE.BoxGeometry(.4,.3,.05),color:"#aaccff",offy:.6}, // window shard
+        {geo:new THREE.BoxGeometry(.3,.2,.05),color:"#ff2200",offy:.3}, // taillight
+    ];
+    for(const p of partDefs){
+        const m=new THREE.Mesh(p.geo,new THREE.MeshStandardMaterial({color:p.color,roughness:.5}));
+        m.position.copy(pos);m.position.y+=p.offy;
+        m.position.x+=(Math.random()-.5)*1.5;m.position.z+=(Math.random()-.5)*1.5;
+        const vel=new THREE.Vector3((Math.random()-.5)*10,5+Math.random()*8,(Math.random()-.5)*10);
+        const rotVel=new THREE.Vector3((Math.random()-.5)*8,(Math.random()-.5)*8,(Math.random()-.5)*8);
+        scene.add(m);
+        _debrisPool.push({mesh:m,vel,life:3+Math.random(),rotVel});
+    }
+}
+
+// Tick all debris (generic chunks, fire, sparks, splash, rubble)
 function tickDebris(dt){
     for(let i=_debrisPool.length-1;i>=0;i--){
         const d=_debrisPool[i];
         d.vel.y-=15*dt;
         d.mesh.position.addScaledVector(d.vel,dt);
-        d.mesh.rotation.x+=dt*3;d.mesh.rotation.z+=dt*2;
+        if(d.rotVel){
+            d.mesh.rotation.x+=d.rotVel.x*dt;
+            d.mesh.rotation.y+=d.rotVel.y*dt;
+            d.mesh.rotation.z+=d.rotVel.z*dt;
+        }else{
+            d.mesh.rotation.x+=dt*3;d.mesh.rotation.z+=dt*2;
+        }
         d.life-=dt;
+        // Fade out fire/spark/splash particles
+        if(d.mat&&(d.isFire||d.isSpark||d.isSplash)){
+            d.mat.opacity=Math.max(0,d.life/(d.isSpark?.4:1));
+        }
+        // Fire rises and shrinks
+        if(d.isFire){d.vel.y+=20*dt;d.mesh.scale.multiplyScalar(1-dt*.8);}
+        // Ground bounce
         const gy=Math.max(terrainHeight(d.mesh.position.x,d.mesh.position.z),ROAD_Y);
-        if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.vel.y*=-.3;d.vel.x*=.8;d.vel.z*=.8;}
-        if(d.life<=0){scene.remove(d.mesh);_debrisPool.splice(i,1);}
+        if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.vel.y*=-.3;d.vel.x*=.7;d.vel.z*=.7;}
+        if(d.life<=0){scene.remove(d.mesh);d.mesh.geometry.dispose();_debrisPool.splice(i,1);}
+    }
+    // Tick dust/smoke clouds
+    for(let i=_dustPool.length-1;i>=0;i--){
+        const d=_dustPool[i];
+        d.mesh.position.addScaledVector(d.vel,dt);
+        d.vel.y*=.98;d.vel.x*=.96;d.vel.z*=.96;
+        d.mesh.scale.addScalar(d.growRate*dt);
+        d.life-=dt;
+        d.mat.opacity=Math.max(0,.5*(d.life/d.maxLife));
+        if(d.life<=0){scene.remove(d.mesh);d.mesh.geometry.dispose();_dustPool.splice(i,1);}
+    }
+    // Tick destruction animations (collapse, explode, topple, sink)
+    for(let i=_destructAnims.length-1;i>=0;i--){
+        const a=_destructAnims[i];
+        a.elapsed+=dt;
+        a.update(a,dt);
+        if(a.elapsed>=a.duration){
+            a.finish(a);
+            _destructAnims.splice(i,1);
+        }
     }
 }
 
@@ -1590,6 +1792,9 @@ function tickFireball(dt){
 function killPlayer(){
     if(state.isDead)return;
     state.isDead=true;
+    state.deathCount++;
+    unlock("died");
+    if(state.deathCount>=3)unlock("phoenix");
     state.gunEquipped=false;
     _shooting=false;
     gunPivot.visible=false;
@@ -1712,30 +1917,229 @@ function destroyObject(dest){
     dest.alive=false;
     const pos=new THREE.Vector3();
     dest.mesh.getWorldPosition(pos);
-    // Compute bounding box BEFORE hiding
     const meshBox=new THREE.Box3().setFromObject(dest.mesh);
-    // Determine debris color from type
-    const colors={building:"#8a8a80",car:"#556677",billboard:"#3a3a40",ship:"#2a3a4a"};
-    const debrisCount={building:15,car:10,billboard:8,ship:25};
-    spawnDebris(pos,colors[dest.type]||"#888",debrisCount[dest.type]||10);
-    // Camera shake
-    _camShake=Math.max(_camShake,dest.type==="ship"?1.5:dest.type==="building"?.8:.4);
-    // Audio
-    audio.chime(60,.15);setTimeout(()=>audio.chime(40,.1),100);
-    // Hide mesh
-    dest.mesh.visible=false;
-    // Remove from staticCol — find matching box
+    // Remove from staticCol immediately so player can walk through
     for(let i=staticCol.length-1;i>=0;i--){
         const b=staticCol[i];
-        if(b.intersectsBox(meshBox)||b.containsPoint(pos)){
-            staticCol.splice(i,1);break;
-        }
+        if(b.intersectsBox(meshBox)||b.containsPoint(pos)){staticCol.splice(i,1);break;}
+    }
+    // Track destruction for achievements
+    state.destroyCount++;
+    if(dest.type==="building")state.destroyBuildings++;
+    if(dest.type==="car")state.destroyCars++;
+    if(dest.type==="billboard")state.destroyBillboards++;
+    if(dest.type==="ship")state.destroyShips++;
+    state.destroyTimestamps.push(performance.now());
+    // Trim old timestamps (keep last 30s)
+    const cutoff=performance.now()-30000;
+    state.destroyTimestamps=state.destroyTimestamps.filter(t=>t>cutoff);
+    // Achievement checks
+    unlock("first_kill");
+    if(state.destroyBuildings>=5)unlock("build5");
+    if(state.destroyCars>=5)unlock("car5");
+    if(state.destroyBillboards>=5)unlock("bb5");
+    if(dest.type==="ship")unlock("ship");
+    if(state.destroyCount>=10)unlock("destroy10");
+    if(state.destroyCount>=25)unlock("destroy25");
+    if(state.destroyTimestamps.length>=5)unlock("rampage5");
+    // Check if ALL destroyables are dead
+    if(destroyables.every(d=>!d.alive))unlock("destroy_all");
+    // Check if ALL buildings destroyed
+    if(destroyables.filter(d=>d.type==="building").every(d=>!d.alive))unlock("build_all");
+
+    // TYPE-SPECIFIC DESTRUCTION ANIMATIONS
+    if(dest.type==="building"){
+        // BUILDING COLLAPSE: rubble chunks burst out, dust cloud rises,
+        // the building itself shrinks downward and fades over ~2.5s
+        const h=meshBox.max.y-meshBox.min.y;
+        spawnBuildingRubble(pos,meshBox);
+        spawnDustCloud(new THREE.Vector3(pos.x,pos.y+h*.3,pos.z),"#c0b8a0",12,Math.max(meshBox.max.x-meshBox.min.x,meshBox.max.z-meshBox.min.z));
+        spawnSparks(pos,6);
+        audio.chime(40,.2);setTimeout(()=>audio.chime(30,.15),200);setTimeout(()=>audio.chime(25,.1),500);
+        _camShake=Math.max(_camShake,.8);
+        // Save original transforms for the animated collapse
+        const origScaleY=dest.mesh.scale.y;
+        const origY=dest.mesh.position.y;
+        _destructAnims.push({
+            mesh:dest.mesh,elapsed:0,duration:2.5,origScaleY,origY,
+            update(a,dt){
+                const t=Math.min(a.elapsed/a.duration,1);
+                // Building shrinks vertically and sinks into ground
+                const ease=t*t; // accelerating
+                a.mesh.scale.y=a.origScaleY*(1-ease*.95);
+                a.mesh.position.y=a.origY-ease*2;
+                // Fade mesh opacity
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material){
+                    if(!ch.material._origOpacity){ch.material._origOpacity=ch.material.opacity;ch.material.transparent=true;}
+                    ch.material.opacity=ch.material._origOpacity*(1-t);
+                }});
+                // Spawn trailing dust during collapse
+                if(Math.random()<dt*3){
+                    spawnDustCloud(new THREE.Vector3(
+                        pos.x+(Math.random()-.5)*3,pos.y+1,pos.z+(Math.random()-.5)*3
+                    ),"#b0a890",1,2);
+                }
+            },
+            finish(a){a.mesh.visible=false;
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
+            }
+        });
+
+    }else if(dest.type==="car"){
+        // CAR EXPLOSION: car parts fly off, fire + smoke, car flips upward and spins
+        spawnCarParts(pos);
+        spawnFire(pos,15);
+        spawnDustCloud(new THREE.Vector3(pos.x,pos.y+1,pos.z),"#333333",6,2);
+        spawnSparks(pos,12);
+        audio.chime(80,.2);setTimeout(()=>audio.chime(50,.15),80);setTimeout(()=>audio.chime(35,.1),200);
+        _camShake=Math.max(_camShake,.6);
+        // Flash light for explosion
+        const expLight=new THREE.PointLight(0xff6600,5,15);
+        expLight.position.copy(pos);expLight.position.y+=1.5;scene.add(expLight);
+        const origY=dest.mesh.position.y;
+        _destructAnims.push({
+            mesh:dest.mesh,elapsed:0,duration:2.0,expLight,origY,
+            update(a,dt){
+                const t=Math.min(a.elapsed/a.duration,1);
+                // Car launches up, spins, and falls
+                const upPhase=Math.min(t*3,1); // rises for first third
+                const arc=Math.sin(upPhase*Math.PI)*5; // parabolic arc
+                a.mesh.position.y=a.origY+arc;
+                a.mesh.rotation.x+=dt*4; // tumble
+                a.mesh.rotation.z+=dt*2.5;
+                // Fade explosion light
+                a.expLight.intensity=Math.max(0,5*(1-t*2));
+                // Shrink car as it burns
+                if(t>.5){
+                    const fade=(t-.5)*2;
+                    a.mesh.scale.multiplyScalar(1-dt*1.2);
+                    a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material){
+                        if(!ch.material._origOpacity){ch.material._origOpacity=ch.material.opacity;ch.material.transparent=true;}
+                        ch.material.opacity=ch.material._origOpacity*(1-fade);
+                    }});
+                }
+                // Trailing fire during explosion
+                if(t<.7&&Math.random()<dt*8){
+                    spawnFire(a.mesh.position,2);
+                }
+            },
+            finish(a){a.mesh.visible=false;scene.remove(a.expLight);
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
+            }
+        });
+
+    }else if(dest.type==="billboard"){
+        // BILLBOARD TOPPLE: leans to one side, falls over with a creak, shatters on impact
+        spawnSparks(pos,8);
+        spawnDebris(pos,"#3a3a40",6);
+        audio.chime(200,.1);setTimeout(()=>audio.chime(100,.08),300);setTimeout(()=>audio.chime(50,.12),800);
+        _camShake=Math.max(_camShake,.3);
+        const fallDir=Math.random()>.5?1:-1;
+        const origRotZ=dest.mesh.rotation.z;
+        const origRotX=dest.mesh.rotation.x;
+        const fallAngle=(Math.random()>.5?1:0); // fall on X or Z axis
+        _destructAnims.push({
+            mesh:dest.mesh,elapsed:0,duration:1.8,fallDir,origRotZ,origRotX,fallAngle,shattered:false,
+            update(a,dt){
+                const t=Math.min(a.elapsed/a.duration,1);
+                // Slow start, then accelerating fall (like gravity)
+                const angle=a.fallDir*(Math.PI/2)*Math.min(t*t*1.5,1);
+                if(a.fallAngle===0){
+                    a.mesh.rotation.z=a.origRotZ+angle;
+                }else{
+                    a.mesh.rotation.x=a.origRotX+angle;
+                }
+                // On impact (halfway through), spawn impact debris
+                if(t>.55&&!a.shattered){
+                    a.shattered=true;
+                    const impactPos=new THREE.Vector3();a.mesh.getWorldPosition(impactPos);
+                    spawnDebris(impactPos,"#555555",8);
+                    spawnDustCloud(impactPos,"#999999",4,3);
+                    audio.chime(50,.15);
+                    _camShake=Math.max(_camShake,.25);
+                }
+                // Fade out after hitting ground
+                if(t>.6){
+                    const fade=(t-.6)/0.4;
+                    a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material){
+                        if(!ch.material._origOpacity){ch.material._origOpacity=ch.material.opacity;ch.material.transparent=true;}
+                        ch.material.opacity=ch.material._origOpacity*(1-fade);
+                    }});
+                }
+            },
+            finish(a){a.mesh.visible=false;
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
+            }
+        });
+
+    }else if(dest.type==="ship"){
+        // SHIP SINKING: massive explosion, ship tilts and slowly sinks, water splashes
+        const shipH=meshBox.max.y-meshBox.min.y;
+        spawnFire(new THREE.Vector3(pos.x,pos.y+shipH*.5,pos.z),25);
+        spawnDustCloud(new THREE.Vector3(pos.x,pos.y+shipH*.6,pos.z),"#222222",15,8);
+        spawnSplash(pos,20);
+        spawnBuildingRubble(pos,meshBox); // ship hull fragments
+        spawnSparks(new THREE.Vector3(pos.x,pos.y+shipH*.3,pos.z),15);
+        audio.chime(30,.25);setTimeout(()=>audio.chime(25,.2),300);setTimeout(()=>audio.chime(20,.15),700);setTimeout(()=>audio.chime(15,.1),1200);
+        _camShake=Math.max(_camShake,1.5);
+        // Explosion flash
+        const expLight=new THREE.PointLight(0xff4400,8,30);
+        expLight.position.copy(pos);expLight.position.y+=shipH*.5;scene.add(expLight);
+        const origY=dest.mesh.position.y;
+        const origRotX=dest.mesh.rotation.x;
+        const origRotZ=dest.mesh.rotation.z;
+        const tiltDir=(Math.random()-.5)*.3;
+        _destructAnims.push({
+            mesh:dest.mesh,elapsed:0,duration:5.0,expLight,origY,origRotX,origRotZ,tiltDir,shipH,
+            update(a,dt){
+                const t=Math.min(a.elapsed/a.duration,1);
+                // Ship slowly tilts and sinks
+                const sinkEase=t*t; // accelerating sink
+                a.mesh.position.y=a.origY-sinkEase*a.shipH*1.2;
+                a.mesh.rotation.x=a.origRotX+t*a.tiltDir;
+                a.mesh.rotation.z=a.origRotZ+t*.15;
+                // Fade explosion light quickly
+                a.expLight.intensity=Math.max(0,8*(1-t*3));
+                // Ongoing fire while sinking
+                if(t<.6&&Math.random()<dt*5){
+                    const firePos=new THREE.Vector3(
+                        pos.x+(Math.random()-.5)*6,
+                        Math.max(a.mesh.position.y+a.shipH*.3,ROAD_Y),
+                        pos.z+(Math.random()-.5)*6
+                    );
+                    spawnFire(firePos,3);
+                }
+                // Water splashes as it sinks
+                if(t>.2&&t<.8&&Math.random()<dt*4){
+                    spawnSplash(new THREE.Vector3(pos.x+(Math.random()-.5)*8,ROAD_Y,pos.z+(Math.random()-.5)*8),3);
+                }
+                // Fade opacity in last 40%
+                if(t>.6){
+                    const fade=(t-.6)/0.4;
+                    a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material){
+                        if(!ch.material._origOpacity){ch.material._origOpacity=ch.material.opacity;ch.material.transparent=true;}
+                        ch.material.opacity=ch.material._origOpacity*(1-fade);
+                    }});
+                }
+            },
+            finish(a){a.mesh.visible=false;scene.remove(a.expLight);
+                a.mesh.traverse(ch=>{if(ch.isMesh&&ch.material&&ch.material._origOpacity){ch.material.opacity=ch.material._origOpacity;delete ch.material._origOpacity;}});
+            }
+        });
+
+    }else{
+        // FALLBACK: generic instant destruction
+        spawnDebris(pos,"#888888",10);
+        _camShake=Math.max(_camShake,.4);
+        audio.chime(60,.15);
+        dest.mesh.visible=false;
     }
 }
 
 // Wizard protection
 function handleWizardShot(){
     state.wizardWarnings++;
+    unlock("wizard_warn");
     if(state.wizardWarnings===1){
         // First warning
         speechBubble.textContent="Careful where you aim that, mortal...";
@@ -1768,6 +2172,7 @@ function toggleGun(){
         gunPivot.visible=true;
         crosshairEl.classList.add("show");
         gunHudEl.classList.add("show");
+        unlock("armed");
         _camPitch=0; // Level pitch for FPS
         // Request pointer lock for FPS aiming
         renderer.domElement.requestPointerLock();
@@ -2045,6 +2450,7 @@ window.addEventListener("keydown",e=>{
             state.carParkedAt=car.position.clone();
             state.canInteract=null;
             state.speed=0;
+            unlock("walker");
             // Place avatar next to car (driver side offset)
             const heading=car.rotation.y;
             // Place avatar to the left side of the car (driver door)
@@ -2059,11 +2465,12 @@ window.addEventListener("keydown",e=>{
             zoomFactor=3; // full zoom out
             avatar.visible=true;
             audio.chime(600,.08);
+            showToast("Press F near the car to get back in");
             updateModeBadge();
         }else if(state.mode==="walking"){
             // Check near car — enter directly or open garage
             const _fPos=avatar.position;
-            if(state.carParkedAt&&_fPos.distanceTo(state.carParkedAt)<4){
+            if(_fPos.distanceTo(car.position)<5){
                 if(state.unlockedCars.length>1){openGarage();return;}
                 enterCarMode();
                 audio.chime(800,.08);
@@ -2205,9 +2612,9 @@ if(PERF.extraGltf)glbLoader.load('models/buidlings/low_poly_public_buildings_pac
          // Along E-W road edges (z=±10, safe x values away from N-S road)
          [20,10],[-20,10],[20,-10],[-20,-10],[30,10],[-30,10],[30,-10],[-30,-10],
          // Port district road edges (z=-33 or z=-47, x values clear of N-S & connectors)
-         [20,-33],[-20,-33],[40,-33],[-40,-33],[20,-47],[-20,-47],
+         [20,-33],[-20,-33],[48,-33],[-48,-33],[20,-47],[-20,-47],
          // Creative district road edges (z=43 or z=57, x clear of N-S & connectors)
-         [20,43],[-20,43],[20,57],[-20,57],[44,57],[-44,57],
+         [20,43],[-20,43],[20,57],[-20,57],[46,57],[-46,57],
          // Science park (x=56 or x=44, z clear of E-W road)
          [56,14],[56,-14],[44,14],[44,-14],
          // Tech hub (x=-56 or x=-44, z clear of E-W road)
@@ -2405,9 +2812,14 @@ function tick(){
     if(wB){if(state.speed>.5){state.speed-=brake*dt;if(state.speed<0)state.speed=0;}else state.speed-=revRate*dt;}
     if(!wF&&!wB){if(Math.abs(state.speed)<.2)state.speed=0;else state.speed-=Math.sign(state.speed)*drag*dt;}
     state.speed=Math.max(mxR,Math.min(mxF,state.speed));
-    if(Math.abs(state.speed)>.8)unlock("ignite");state.maxSpeed=Math.max(state.maxSpeed,Math.abs(state.speed));if(state.maxSpeed*4.2>120)unlock("speed");
+    if(Math.abs(state.speed)>.8)unlock("ignite");state.maxSpeed=Math.max(state.maxSpeed,Math.abs(state.speed));if(state.maxSpeed*4.2>120)unlock("speed");if(state.maxSpeed*4.2>180)unlock("speed2");
+    // Distance tracking (speed is in units/s, *4.2 for km/h → /1000 for km)
+    state.totalDistance+=Math.abs(state.speed)*dt*4.2/1000;if(state.totalDistance>=10)unlock("distance");
     const si=(wL?1:0)-(wR?1:0);
-    if(Math.abs(state.speed)>.3){const sn2=Math.min(Math.abs(state.speed)/mxF,1);const steer=si*(2+sn2*2.5)*dt;car.rotation.y+=steer*(state.speed<0?-.6:1);state.speed*=1-Math.min(Math.abs(steer)*2.2,.12);}
+    if(Math.abs(state.speed)>.3){const sn2=Math.min(Math.abs(state.speed)/mxF,1);const steer=si*(2+sn2*2.5)*dt;car.rotation.y+=steer*(state.speed<0?-.6:1);state.speed*=1-Math.min(Math.abs(steer)*2.2,.12);
+        // Drift detection: steering hard at decent speed
+        if(Math.abs(steer)>.03&&Math.abs(state.speed)>5){state.driftTime+=dt;if(state.driftTime>=3)unlock("drift");}else{state.driftTime=Math.max(0,state.driftTime-dt*2);}
+    }else{state.driftTime=0;}
     const dir=new THREE.Vector3(-Math.sin(car.rotation.y),0,-Math.cos(car.rotation.y));
     car.position.addScaledVector(dir,state.speed*dt);
     car.position.x=THREE.MathUtils.clamp(car.position.x,-160,160);car.position.z=THREE.MathUtils.clamp(car.position.z,-68,160);
@@ -2427,7 +2839,7 @@ function tick(){
     // DYNAMIC COLLISIONS
     for(const d of dynCol){const dp=d.mesh.position;const dx=dp.x-cp.x,dz=dp.z-cp.z;const dist=Math.sqrt(dx*dx+dz*dz);
         if(dist<CAR_R+.8&&Math.abs(state.speed)>.5){const imp=new THREE.Vector3(dx,.5,dz).normalize().multiplyScalar(Math.max(Math.abs(state.speed)*1.5,3));
-        d.vel.add(imp);state.speed*=.92;state.crashes++;if(state.crashes>=10)unlock("crash");audio.chime(200,.08);}}
+        d.vel.add(imp);state.speed*=.92;state.crashes++;if(state.crashes>=10)unlock("crash");if(state.crashes>=50)unlock("crash50");audio.chime(200,.08);}}
     for(const d of dynCol){if(d.vel.lengthSq()<.01)continue;d.mesh.position.addScaledVector(d.vel,dt);d.mesh.rotation.x+=d.vel.z*dt*2;d.mesh.rotation.z-=d.vel.x*dt*2;d.vel.y-=15*dt;d.vel.multiplyScalar(.96);
     const gy2=terrainHeight(d.mesh.position.x,d.mesh.position.z);if(d.mesh.position.y<gy2+.3){d.mesh.position.y=gy2+.3;d.vel.y=Math.abs(d.vel.y)*.3;d.vel.x*=.85;d.vel.z*=.85;}}
     // NPC CAR COLLISIONS
@@ -2465,7 +2877,7 @@ function tick(){
         npc.userData._angVel=(Math.random()-.5)*npcImpulse*.5;
         npc.userData._crashed=Math.max(npc.userData._crashed,1.5+impactForce*.15);
         _camShake=Math.max(_camShake,Math.min(impactForce*.25,2.0));
-        state.crashes++;if(state.crashes>=10)unlock("crash");
+        state.crashes++;if(state.crashes>=10)unlock("crash");if(state.crashes>=50)unlock("crash50");
         audio.chime(80+impactForce*5,Math.min(impactForce*.04,.3));
     }
     // NPC car sliding physics
@@ -2512,7 +2924,7 @@ function tick(){
     speedEl.textContent=`${Math.round(Math.abs(state.speed)*4.2)} km/h`;
     districtEl.textContent=getDistrict(cp.x,cp.z);
     audio.update(state.speed,wF?1:0);
-    orbs.forEach(o=>{if(!o.visible)return;o.rotation.y+=.025;o.position.y+=Math.sin(t*3+o.position.x)*.004;if(cp.distanceTo(o.position)<2.2){o.visible=false;state.collectibles.add(o.userData.id);audio.chime(1100,.09);if(state.collectibles.size===orbs.length)unlock("collector");}});
+    orbs.forEach(o=>{if(!o.visible)return;o.rotation.y+=.025;o.position.y+=Math.sin(t*3+o.position.x)*.004;if(cp.distanceTo(o.position)<2.2){o.visible=false;state.collectibles.add(o.userData.id);audio.chime(1100,.09);if(state.collectibles.size>=Math.ceil(orbs.length/2))unlock("orbhalf");if(state.collectibles.size===orbs.length)unlock("collector");}});
     // Billboard proximity — park in bay
     let nearBB=null,nearD=Infinity;billboards.forEach(b=>{const d2=cp.distanceTo(b.bayPos);if(d2<nearD){nearD=d2;nearBB=b;}});
     const parked=nearD<4&&Math.abs(state.speed)<.4&&nearBB;
@@ -2639,10 +3051,11 @@ function tick(){
     }else{
         state.nearNPC=false;
         state.canInteract=null;
-        // Car proximity — show re-enter prompt
-        if(state.carParkedAt&&ap.distanceTo(state.carParkedAt)<4){
+        // Car proximity — show re-enter prompt (check actual car position)
+        if(ap.distanceTo(car.position)<5){
             promptEl.innerHTML=`Press <b>F</b> to enter car`;
             promptEl.classList.add("show");
+            renderer.domElement.style.cursor="pointer";
         }else{
             promptEl.classList.remove("show");
             renderer.domElement.style.cursor="default";
@@ -2706,6 +3119,18 @@ function tick(){
     // (No movement, camera stays put)
 
     // ====== SHARED: always runs ======
+    // Play time & district tracking
+    state.playTime+=dt;
+    if(state.playTime>=300)unlock("night"); // 5 minutes
+    const _cpForDist=state.mode==="driving"?car.position:avatar.position;
+    const _curDist=getDistrict(_cpForDist.x,_cpForDist.z);
+    state.visitedDistricts.add(_curDist);
+    if(state.visitedDistricts.size>=5)unlock("districts");
+    // Mountaineer: check if on high terrain
+    const _pTH=terrainHeight(_cpForDist.x,_cpForDist.z);
+    if(_pTH>5)unlock("mountain");
+    // Car collection check
+    if(state.unlockedCars.length>=Object.keys(CAR_MODELS||{}).length&&state.unlockedCars.length>=2)unlock("all_cars");
     // Combat systems tick
     if(_shootCooldown>0)_shootCooldown-=dt;
     if(_tracerTimer>0){_tracerTimer-=dt;if(_tracerTimer<=0)_tracerLine.visible=false;}
